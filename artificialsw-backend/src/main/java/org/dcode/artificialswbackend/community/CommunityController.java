@@ -4,6 +4,7 @@ import org.dcode.artificialswbackend.community.entity.Community;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class CommunityController {
@@ -14,8 +15,8 @@ public class CommunityController {
         this.communityService = communityService;
     }
 
-    @GetMapping("/api/community/home")
-    public List<Community> getHomeCommunity() {
-        return communityService.getAllCommunity();
+    @GetMapping("/api/community/home/{receiverId}")
+    public Map<String,Object> getHomeCommunity(@PathVariable Long receiverId) {
+        return communityService.getQuestionsWithUnsolvedCount(receiverId);
     }
 }
