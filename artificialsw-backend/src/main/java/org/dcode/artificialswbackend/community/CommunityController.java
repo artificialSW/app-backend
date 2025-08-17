@@ -8,13 +8,14 @@ import java.util.List;
 @RestController
 public class CommunityController {
 
-    private final CommunityRepository communityRepository;
-    public CommunityController(CommunityRepository communityRepository) {
-        this.communityRepository = communityRepository;
+    private final CommunityService communityService;
+
+    public CommunityController(CommunityService communityService) {
+        this.communityService = communityService;
     }
 
     @GetMapping("/api/community/home")
     public List<Community> getHomeCommunity() {
-        return communityRepository.findAll();
+        return communityService.getAllCommunity();
     }
 }
