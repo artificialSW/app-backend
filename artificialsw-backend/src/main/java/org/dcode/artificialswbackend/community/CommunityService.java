@@ -8,16 +8,12 @@ import java.util.List;
 
 @Service
 public class CommunityService {
-
-    private final List<Community> communities = new ArrayList<>();
-
-    public CommunityService() {
+    private final CommunityRepository communityRepository;
+    public CommunityService(CommunityRepository communityRepository) {
+        this.communityRepository = communityRepository;
     }
 
-    public List<Community> findAll() {
-        return communities;
-    }
-
-    public Community save(Community community) {
+    public List<Community> getAllCommunity() {
+        return communityRepository.findAll();
     }
 }

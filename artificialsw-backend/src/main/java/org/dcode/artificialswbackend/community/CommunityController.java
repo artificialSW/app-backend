@@ -6,24 +6,15 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/community")
 public class CommunityController {
 
-    private final CommunityService communityService;
-
-    public CommunityController(CommunityService communityService) {
-        this.communityService = communityService;
+    private final CommunityRepository communityRepository;
+    public CommunityController(CommunityRepository communityRepository) {
+        this.communityRepository = communityRepository;
     }
 
-    // 모든 커뮤니티 목록 조회
-    @GetMapping
-    public List<Community> getAllCommunities() {
-        return communityService.findAll();
-    }
-
-    // 새 커뮤니티 추가
-    @PostMapping
-    public Community addCommunity(@RequestBody Community community) {
-        return communityService.save(community);
+    @GetMapping("/api/community/home")
+    public List<Community> getHomeCommunity() {
+        return communityRepository.findAll();
     }
 }
