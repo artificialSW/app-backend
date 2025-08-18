@@ -7,6 +7,7 @@ import java.sql.Timestamp;
 public class Community {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    //questions 테이블
     private Long id;
 
     private String content;

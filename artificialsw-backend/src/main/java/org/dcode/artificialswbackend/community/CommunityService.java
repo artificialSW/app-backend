@@ -1,6 +1,6 @@
 package org.dcode.artificialswbackend.community;
 
-import org.dcode.artificialswbackend.community.dto.QuestionDto;
+import org.dcode.artificialswbackend.community.dto.PersonalQuestionDto;
 import org.dcode.artificialswbackend.community.entity.Community;
 import org.springframework.stereotype.Service;
 
@@ -20,8 +20,8 @@ public class CommunityService {
         List<Community> allQuestions = communityRepository.findAll();
         long unsolvedCount = communityRepository.countByReceiverAndSolvedFalse(receiverId);
 
-        List<QuestionDto> questions = allQuestions.stream()
-                .map(e -> new QuestionDto(
+        List<PersonalQuestionDto> questions = allQuestions.stream()
+                .map(e -> new PersonalQuestionDto(
                         e.getId(),
                         e.getContent(),
                         e.getSender(),
@@ -36,6 +36,28 @@ public class CommunityService {
         Map<String, Object> result = new HashMap<>();
         result.put("questions", questions);
         result.put("unsolved", unsolvedCount);
+
+        return result;
+    }
+
+    public Map<String, Object> getPublicQuestions(){
+        List<Community> publicQuestions = communityRepository.findByIsPublicTrue();
+
+        List<PersonalQuestionDto> questions = publicQuestions.stream()
+                .map(e-> new PersonalQuestionDto(
+                        e.getId(),
+                        e.getContent(),
+                        e.getSender(),
+                        e.getReceiver(),
+                        e.getIsPublic(),
+                        e.getSolved(),
+                        e.getLikes(),
+                        e.getCreated_at()
+                ))
+                .collect(Collectors.toList());
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("questions", questions);
 
         return result;
     }

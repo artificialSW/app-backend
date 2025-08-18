@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface CommunityRepository extends JpaRepository<Community, Long>{
     Long countByReceiverAndSolvedFalse(Long receiverId);
+    List<Community> findByIsPublicTrue();
 }

@@ -2,7 +2,7 @@ package org.dcode.artificialswbackend.community.dto;
 
 import java.sql.Timestamp;
 
-public class QuestionDto {
+public class PersonalQuestionDto {
 
     private Long id;
 
@@ -14,7 +14,7 @@ public class QuestionDto {
     private Integer likes;
     private Timestamp created;
 
-    public QuestionDto(Long id, String content, Long sender, Long receiver, Boolean isPublic, Boolean solved, Integer likes, Timestamp created) {
+    public PersonalQuestionDto(Long id, String content, Long sender, Long receiver, Boolean isPublic, Boolean solved, Integer likes, Timestamp created) {
         this.id = id;
         this.content = content;
         this.sender = sender;

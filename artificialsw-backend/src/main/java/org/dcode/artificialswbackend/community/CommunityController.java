@@ -19,4 +19,9 @@ public class CommunityController {
     public Map<String,Object> getHomeCommunity(@PathVariable Long receiverId) {
         return communityService.getQuestionsWithUnsolvedCount(receiverId);
     }
+
+    @GetMapping("/api/community/home/public")
+    public Map<String,Object> getPublicCommunity() {
+        return communityService.getPublicQuestions();
+    }
 }
