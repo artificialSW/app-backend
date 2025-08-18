@@ -1,7 +1,11 @@
 package org.dcode.artificialswbackend.community;
 
 import org.dcode.artificialswbackend.community.dto.PersonalQuestionDto;
+import org.dcode.artificialswbackend.community.dto.PublicQuestionDto;
 import org.dcode.artificialswbackend.community.entity.Community;
+import org.dcode.artificialswbackend.community.entity.PublicQuestions;
+import org.dcode.artificialswbackend.community.repository.CommunityRepository;
+import org.dcode.artificialswbackend.community.repository.PublicQuestionsRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -9,11 +13,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+
 @Service
 public class CommunityService {
     private final CommunityRepository communityRepository;
-    public CommunityService(CommunityRepository communityRepository) {
+    private final PublicQuestionsRepository publicQuestionsRepository;
+    public CommunityService(CommunityRepository communityRepository,  PublicQuestionsRepository publicQuestionsRepository) {
         this.communityRepository = communityRepository;
+        this.publicQuestionsRepository = publicQuestionsRepository;
     }
 
     public Map<String, Object> getQuestionsWithUnsolvedCount(Long receiverId){
@@ -39,20 +46,15 @@ public class CommunityService {
 
         return result;
     }
+    public Map<String, Object> getPublicQuestions() {
+        List<PublicQuestions> publicQuestions = publicQuestionsRepository.findAll();
 
-    public Map<String, Object> getPublicQuestions(){
-        List<Community> publicQuestions = communityRepository.findByIsPublicTrue();
-
-        List<PersonalQuestionDto> questions = publicQuestions.stream()
-                .map(e-> new PersonalQuestionDto(
+        List<PublicQuestionDto> questions = publicQuestions.stream()
+                .map(e -> new PublicQuestionDto(
                         e.getId(),
                         e.getContent(),
-                        e.getSender(),
-                        e.getReceiver(),
-                        e.getIsPublic(),
-                        e.getSolved(),
                         e.getLikes(),
-                        e.getCreated_at()
+                        e.getCounts()
                 ))
                 .collect(Collectors.toList());
 
@@ -61,4 +63,6 @@ public class CommunityService {
 
         return result;
     }
+
  }
+
