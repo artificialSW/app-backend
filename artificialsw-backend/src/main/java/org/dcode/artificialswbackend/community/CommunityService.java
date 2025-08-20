@@ -2,9 +2,9 @@ package org.dcode.artificialswbackend.community;
 
 import org.dcode.artificialswbackend.community.dto.PersonalQuestionDto;
 import org.dcode.artificialswbackend.community.dto.PublicQuestionDto;
-import org.dcode.artificialswbackend.community.entity.Community;
+import org.dcode.artificialswbackend.community.entity.PersonalQuestions;
 import org.dcode.artificialswbackend.community.entity.PublicQuestions;
-import org.dcode.artificialswbackend.community.repository.CommunityRepository;
+import org.dcode.artificialswbackend.community.repository.PersonalQuestionsRepository;
 import org.dcode.artificialswbackend.community.repository.PublicQuestionsRepository;
 import org.springframework.stereotype.Service;
 
@@ -16,16 +16,16 @@ import java.util.stream.Collectors;
 
 @Service
 public class CommunityService {
-    private final CommunityRepository communityRepository;
+    private final PersonalQuestionsRepository personalQuestionsRepository;
     private final PublicQuestionsRepository publicQuestionsRepository;
-    public CommunityService(CommunityRepository communityRepository,  PublicQuestionsRepository publicQuestionsRepository) {
-        this.communityRepository = communityRepository;
+    public CommunityService(PersonalQuestionsRepository personalQuestionsRepository, PublicQuestionsRepository publicQuestionsRepository) {
+        this.personalQuestionsRepository = personalQuestionsRepository;
         this.publicQuestionsRepository = publicQuestionsRepository;
     }
 
     public Map<String, Object> getQuestionsWithUnsolvedCount(Long receiverId){
-        List<Community> allQuestions = communityRepository.findAll();
-        long unsolvedCount = communityRepository.countByReceiverAndSolvedFalse(receiverId);
+        List<PersonalQuestions> allQuestions = personalQuestionsRepository.findAll();
+        long unsolvedCount = personalQuestionsRepository.countByReceiverAndSolvedFalse(receiverId);
 
         List<PersonalQuestionDto> questions = allQuestions.stream()
                 .map(e -> new PersonalQuestionDto(

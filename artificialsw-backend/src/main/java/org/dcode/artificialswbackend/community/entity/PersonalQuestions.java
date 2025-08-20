@@ -4,7 +4,7 @@ import java.sql.Timestamp;
 
 @Entity
 @Table(name = "questions")
-public class Community {
+public class PersonalQuestions {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     //questions 테이블
@@ -19,7 +19,7 @@ public class Community {
     private Timestamp created_at;
     private Timestamp updated_at;
 
-    public Community() {}
+    public PersonalQuestions() {}
 
     public Long getId() {
         return id;
