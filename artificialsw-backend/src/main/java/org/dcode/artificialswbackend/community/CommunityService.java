@@ -1,7 +1,11 @@
 package org.dcode.artificialswbackend.community;
 
-import org.dcode.artificialswbackend.community.dto.QuestionDto;
-import org.dcode.artificialswbackend.community.entity.Community;
+import org.dcode.artificialswbackend.community.dto.PersonalQuestionDto;
+import org.dcode.artificialswbackend.community.dto.PublicQuestionDto;
+import org.dcode.artificialswbackend.community.entity.PersonalQuestions;
+import org.dcode.artificialswbackend.community.entity.PublicQuestions;
+import org.dcode.artificialswbackend.community.repository.PersonalQuestionsRepository;
+import org.dcode.artificialswbackend.community.repository.PublicQuestionsRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -9,19 +13,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+
 @Service
 public class CommunityService {
-    private final CommunityRepository communityRepository;
-    public CommunityService(CommunityRepository communityRepository) {
-        this.communityRepository = communityRepository;
+    private final PersonalQuestionsRepository personalQuestionsRepository;
+    private final PublicQuestionsRepository publicQuestionsRepository;
+    public CommunityService(PersonalQuestionsRepository personalQuestionsRepository, PublicQuestionsRepository publicQuestionsRepository) {
+        this.personalQuestionsRepository = personalQuestionsRepository;
+        this.publicQuestionsRepository = publicQuestionsRepository;
     }
 
     public Map<String, Object> getQuestionsWithUnsolvedCount(Long receiverId){
-        List<Community> allQuestions = communityRepository.findAll();
-        long unsolvedCount = communityRepository.countByReceiverAndSolvedFalse(receiverId);
+        List<PersonalQuestions> allQuestions = personalQuestionsRepository.findAll();
+        long unsolvedCount = personalQuestionsRepository.countByReceiverAndSolvedFalse(receiverId);
 
-        List<QuestionDto> questions = allQuestions.stream()
-                .map(e -> new QuestionDto(
+        List<PersonalQuestionDto> questions = allQuestions.stream()
+                .map(e -> new PersonalQuestionDto(
                         e.getId(),
                         e.getContent(),
                         e.getSender(),
@@ -39,4 +46,23 @@ public class CommunityService {
 
         return result;
     }
+    public Map<String, Object> getPublicQuestions() {
+        List<PublicQuestions> publicQuestions = publicQuestionsRepository.findAll();
+
+        List<PublicQuestionDto> questions = publicQuestions.stream()
+                .map(e -> new PublicQuestionDto(
+                        e.getId(),
+                        e.getContent(),
+                        e.getLikes(),
+                        e.getCounts()
+                ))
+                .collect(Collectors.toList());
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("questions", questions);
+
+        return result;
+    }
+
  }
+

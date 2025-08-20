@@ -2,23 +2,21 @@ package org.dcode.artificialswbackend.community.entity;
 import jakarta.persistence.*;
 import java.sql.Timestamp;
 
+
 @Entity
-@Table(name = "questions")
-public class Community {
+@Table(name = "public_questions")
+public class PublicQuestions {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String content;
-    private Long sender;
-    private Long receiver;
-    private Boolean isPublic;
-    private Boolean solved;
     private Integer likes;
+    private Integer counts; // 댓글임.
     private Timestamp created_at;
     private Timestamp updated_at;
 
-    public Community() {}
+    public PublicQuestions() {}
 
     public Long getId() {
         return id;
@@ -36,44 +34,20 @@ public class Community {
         this.content = content;
     }
 
-    public Long getReceiver() {
-        return receiver;
-    }
-
-    public void setReceiver(Long receiver) {
-        this.receiver = receiver;
-    }
-
-    public Long getSender() {
-        return sender;
-    }
-
-    public void setSender(Long sender) {
-        this.sender = sender;
-    }
-
-    public Boolean getIsPublic() {
-        return isPublic;
-    }
-
-    public void setIsPublic(Boolean aPublic) {
-        isPublic = aPublic;
-    }
-
-    public Boolean getSolved() {
-        return solved;
-    }
-
-    public void setSolved(Boolean solved) {
-        this.solved = solved;
-    }
-
     public Integer getLikes() {
         return likes;
     }
 
     public void setLikes(Integer likes) {
         this.likes = likes;
+    }
+
+    public Integer getCounts() {
+        return counts;
+    }
+
+    public void setCounts(Integer counts) {
+        this.counts = counts;
     }
 
     public Timestamp getCreated_at() {
