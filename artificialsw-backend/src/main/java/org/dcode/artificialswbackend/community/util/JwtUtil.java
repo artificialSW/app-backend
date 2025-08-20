@@ -4,14 +4,18 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 
 import java.security.Key;
+import java.util.Base64;
 import java.util.Date;
 
 public class JwtUtil {
 
-    // 실제 서비스 시에는 이 키를 안전하게 관리해야 합니다.
-    private static final String SECRET_KEY = "your-256-bit-secret-your-256-bit-secret"; // 32자 이상 권장
-    private static final Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
-    private static final long EXPIRATION_TIME = 1000 * 60 * 60; // 1시간 (밀리초 단위)
+    // Base64 인코딩된 시크릿 키 (32자 이상 바이트 길이 필요)
+    private static final String SECRET_BASE64 = "";
+
+    // Base64 디코딩 후 Key 객체 생성
+    private static final Key key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(SECRET_BASE64));
+
+    private static final long EXPIRATION_TIME = 1000 * 60 * 60;
 
     // JWT 토큰에서 userId를 추출하고 유효성 검증
     public static String validateAndGetUserId(String token) {
