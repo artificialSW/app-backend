@@ -1,5 +1,7 @@
 package org.dcode.artificialswbackend.community.dto;
 
+import org.dcode.artificialswbackend.community.entity.PersonalQuestions;
+
 import java.sql.Timestamp;
 
 public class PersonalQuestionDto {
@@ -23,6 +25,20 @@ public class PersonalQuestionDto {
         this.solved = solved;
         this.likes = likes;
         this.created = created;
+    }
+
+    // 엔티티를 DTO로 변환해주는 정적 메서드
+    public static PersonalQuestionDto fromEntity(PersonalQuestions entity) {
+        return new PersonalQuestionDto(
+                entity.getId(),
+                entity.getContent(),
+                entity.getSender(),
+                entity.getReceiver(),
+                entity.getIsPublic(),
+                entity.getSolved(),
+                entity.getLikes(),
+                entity.getCreated_at()
+        );
     }
 
     public Long getId() {
