@@ -14,7 +14,9 @@
           <factory-entry name="artificialsw-backend.main" value="f308d5f0-d83b-4419-9ac3-aca90f9df1b7" />
           <factory-entry name="entityManagerFactory" />
         </datasource-mapping>
-        <naming-strategy-map />
+        <naming-strategy-map>
+          <unit-entry name="entityManagerFactory" />
+        </naming-strategy-map>
       </configuration>
     </facet>
   </component>

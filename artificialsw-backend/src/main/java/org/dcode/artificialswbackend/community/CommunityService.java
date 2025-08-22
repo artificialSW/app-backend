@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 public class CommunityService {
     private final PersonalQuestionsRepository personalQuestionsRepository;
     private final PublicQuestionsRepository publicQuestionsRepository;
+
     public CommunityService(PersonalQuestionsRepository personalQuestionsRepository, PublicQuestionsRepository publicQuestionsRepository) {
         this.personalQuestionsRepository = personalQuestionsRepository;
         this.publicQuestionsRepository = publicQuestionsRepository;
@@ -62,6 +63,14 @@ public class CommunityService {
         result.put("questions", questions);
 
         return result;
+    }
+
+
+    public List<PersonalQuestionDto> getMyQuestions(String userId) {
+        Long userIdLong = Long.valueOf(userId);
+        List<PersonalQuestions> questions = personalQuestionsRepository.findByReceiver(userIdLong);
+
+        return questions.stream().map(PersonalQuestionDto::fromEntity).collect(Collectors.toList());
     }
 
  }
