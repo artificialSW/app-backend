@@ -97,6 +97,9 @@ public class CommunityService {
     public void addLike(String type, Long id) {
         switch (type) {
             case "question" -> personalQuestionsRepository.increaseLikes(id);
+            case "public_question" -> publicQuestionsRepository.increaseLikes(id);
+            case "comment" -> commentRepository.increaseLikes(id);
+
             default -> throw new IllegalArgumentException("Unknown like type: " + type);
         }
     }
