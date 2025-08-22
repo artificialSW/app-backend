@@ -1,5 +1,6 @@
 package org.dcode.artificialswbackend.community;
 
+import jakarta.transaction.Transactional;
 import org.dcode.artificialswbackend.community.dto.PersonalQuestionDto;
 import org.dcode.artificialswbackend.community.dto.PublicQuestionDto;
 import org.dcode.artificialswbackend.community.dto.CommentRequestDto;
@@ -90,6 +91,14 @@ public class CommunityService {
         comment.setLikes(0);
 
         return commentRepository.save(comment).getId();
+    }
+
+    @Transactional
+    public void addLike(String type, Long id) {
+        switch (type) {
+            case "question" -> personalQuestionsRepository.increaseLikes(id);
+            default -> throw new IllegalArgumentException("Unknown like type: " + type);
+        }
     }
 
  }

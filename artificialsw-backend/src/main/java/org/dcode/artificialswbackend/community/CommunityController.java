@@ -1,5 +1,6 @@
 package org.dcode.artificialswbackend.community;
 import org.dcode.artificialswbackend.community.dto.CommentRequestDto;
+import org.dcode.artificialswbackend.community.dto.LikeRequestDto;
 import org.dcode.artificialswbackend.community.dto.PersonalQuestionDto;
 import org.dcode.artificialswbackend.community.util.JwtUtil;
 import org.springframework.http.ResponseEntity;
@@ -45,6 +46,12 @@ public class CommunityController {
         Long replyId = communityService.saveComment(userId, request);
 
         return ResponseEntity.ok(Map.of("success", true, "replyId", replyId));
+    }
+
+    @PostMapping("/api/community/like")
+    public ResponseEntity<?> like(@RequestBody LikeRequestDto likeRequestDto) {
+        communityService.addLike(likeRequestDto.getType(), likeRequestDto.getId());
+        return ResponseEntity.ok(Map.of("success", true));
     }
 
 }
