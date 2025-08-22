@@ -1,7 +1,9 @@
 package org.dcode.artificialswbackend.community;
-
+import org.dcode.artificialswbackend.community.dto.CommentRequestDto;
+import org.dcode.artificialswbackend.community.dto.LikeRequestDto;
 import org.dcode.artificialswbackend.community.dto.PersonalQuestionDto;
 import org.dcode.artificialswbackend.community.util.JwtUtil;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,10 +18,14 @@ public class CommunityController {
         this.communityService = communityService;
     }
 
-    @GetMapping("/api/community/home/{receiverId}")
-    public Map<String,Object> getHomeCommunity(@PathVariable Long receiverId) {
+    @GetMapping("/api/community/home")
+    public Map<String,Object> getHomeCommunity(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
+        String userId = JwtUtil.validateAndGetUserId(token);
+        Long receiverId = Long.valueOf(userId);
         return communityService.getQuestionsWithUnsolvedCount(receiverId);
     }
+
 
     @GetMapping("/api/community/home/public")
     public Map<String,Object> getPublicCommunity() {
@@ -32,4 +38,24 @@ public class CommunityController {
         String userId = JwtUtil.validateAndGetUserId(token);
         return communityService.getMyQuestions(userId);
     }
+
+    @PostMapping("/api/community/reply")
+    public ResponseEntity<?> createReply(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody CommentRequestDto request) {
+        String token = authHeader.replace("Bearer ", "");
+        String userIdStr = JwtUtil.validateAndGetUserId(token);
+        Long userId = Long.valueOf(userIdStr);
+
+        Long replyId = communityService.saveComment(userId, request);
+
+        return ResponseEntity.ok(Map.of("success", true, "replyId", replyId));
+    }
+
+    @PostMapping("/api/community/like")
+    public ResponseEntity<?> like(@RequestBody LikeRequestDto likeRequestDto) {
+        communityService.addLike(likeRequestDto.getType(), likeRequestDto.getId());
+        return ResponseEntity.ok(Map.of("success", true));
+    }
+
 }
