@@ -1,7 +1,8 @@
 package org.dcode.artificialswbackend.community;
-
+import org.dcode.artificialswbackend.community.dto.CommentRequestDto;
 import org.dcode.artificialswbackend.community.dto.PersonalQuestionDto;
 import org.dcode.artificialswbackend.community.util.JwtUtil;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,4 +33,18 @@ public class CommunityController {
         String userId = JwtUtil.validateAndGetUserId(token);
         return communityService.getMyQuestions(userId);
     }
+
+    @PostMapping("/api/community/reply")
+    public ResponseEntity<?> createReply(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody CommentRequestDto request) {
+        String token = authHeader.replace("Bearer ", "");
+        String userIdStr = JwtUtil.validateAndGetUserId(token);
+        Long userId = Long.valueOf(userIdStr);
+
+        Long replyId = communityService.saveComment(userId, request);
+
+        return ResponseEntity.ok(Map.of("success", true, "replyId", replyId));
+    }
+
 }

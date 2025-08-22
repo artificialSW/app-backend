@@ -2,10 +2,16 @@ package org.dcode.artificialswbackend.community;
 
 import org.dcode.artificialswbackend.community.dto.PersonalQuestionDto;
 import org.dcode.artificialswbackend.community.dto.PublicQuestionDto;
+import org.dcode.artificialswbackend.community.dto.CommentRequestDto;
+
 import org.dcode.artificialswbackend.community.entity.PersonalQuestions;
 import org.dcode.artificialswbackend.community.entity.PublicQuestions;
+import org.dcode.artificialswbackend.community.entity.Comment;
+
+import org.dcode.artificialswbackend.community.repository.CommentRepository;
 import org.dcode.artificialswbackend.community.repository.PersonalQuestionsRepository;
 import org.dcode.artificialswbackend.community.repository.PublicQuestionsRepository;
+
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -18,10 +24,12 @@ import java.util.stream.Collectors;
 public class CommunityService {
     private final PersonalQuestionsRepository personalQuestionsRepository;
     private final PublicQuestionsRepository publicQuestionsRepository;
+    private final CommentRepository commentRepository;
 
-    public CommunityService(PersonalQuestionsRepository personalQuestionsRepository, PublicQuestionsRepository publicQuestionsRepository) {
+    public CommunityService(PersonalQuestionsRepository personalQuestionsRepository, PublicQuestionsRepository publicQuestionsRepository,  CommentRepository commentRepository) {
         this.personalQuestionsRepository = personalQuestionsRepository;
         this.publicQuestionsRepository = publicQuestionsRepository;
+        this.commentRepository = commentRepository;
     }
 
     public Map<String, Object> getQuestionsWithUnsolvedCount(Long receiverId){
@@ -71,6 +79,17 @@ public class CommunityService {
         List<PersonalQuestions> questions = personalQuestionsRepository.findByReceiver(userIdLong);
 
         return questions.stream().map(PersonalQuestionDto::fromEntity).collect(Collectors.toList());
+    }
+
+    public Long saveComment(Long userId, CommentRequestDto request) {
+        Comment comment = new Comment();
+        comment.setQuestionId(request.getQuestionId());
+        comment.setContent(request.getContent());
+        comment.setWriter(userId);
+        comment.setReplyTo(request.getReplyTo()); // null 가능
+        comment.setLikes(0);
+
+        return commentRepository.save(comment).getId();
     }
 
  }
