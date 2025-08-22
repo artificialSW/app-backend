@@ -18,10 +18,14 @@ public class CommunityController {
         this.communityService = communityService;
     }
 
-    @GetMapping("/api/community/home/{receiverId}")
-    public Map<String,Object> getHomeCommunity(@PathVariable Long receiverId) {
+    @GetMapping("/api/community/home")
+    public Map<String,Object> getHomeCommunity(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
+        String userId = JwtUtil.validateAndGetUserId(token);
+        Long receiverId = Long.valueOf(userId);
         return communityService.getQuestionsWithUnsolvedCount(receiverId);
     }
+
 
     @GetMapping("/api/community/home/public")
     public Map<String,Object> getPublicCommunity() {
