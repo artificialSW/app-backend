@@ -90,7 +90,8 @@ public class CommunityService {
         comment.setReplyTo(request.getReplyTo()); // null 가능
         comment.setLikes(0);
 
-        return commentRepository.save(comment).getId();
+        Comment saved = commentRepository.save(comment);
+        return saved.getId();
     }
 
     @Transactional
