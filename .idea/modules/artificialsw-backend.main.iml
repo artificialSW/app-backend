@@ -12,7 +12,7 @@
         <setting name="provider-name" value="Hibernate" />
         <datasource-mapping>
           <factory-entry name="artificialsw-backend.main" value="f308d5f0-d83b-4419-9ac3-aca90f9df1b7" />
-          <factory-entry name="entityManagerFactory" />
+          <factory-entry name="entityManagerFactory" value="f308d5f0-d83b-4419-9ac3-aca90f9df1b7" />
         </datasource-mapping>
         <naming-strategy-map>
           <unit-entry name="entityManagerFactory" />
