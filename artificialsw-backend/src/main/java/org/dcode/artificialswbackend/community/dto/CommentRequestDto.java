@@ -1,24 +1,24 @@
 package org.dcode.artificialswbackend.community.dto;
 
 public class CommentRequestDto {
-    private Long questionId;
+    private Long questionRefId;
     private String content;
     private Long replyTo;
 
     public CommentRequestDto() {}
 
-    public CommentRequestDto(Long questionId, String content, Long replyTo) {
-        this.questionId = questionId;
+    public CommentRequestDto(Long questionRefId, String content, Long replyTo) {
+        this.questionRefId = questionRefId;
         this.content = content;
         this.replyTo = replyTo;
     }
 
-    public Long getQuestionId() {
-        return questionId;
+    public Long getQuestionRefId() {
+        return questionRefId;
     }
 
-    public void setQuestionId(Long questionId) {
-        this.questionId = questionId;
+    public void setQuestionRefId(Long questionRefId) {
+        this.questionRefId = questionRefId;
     }
 
     public String getContent() {
