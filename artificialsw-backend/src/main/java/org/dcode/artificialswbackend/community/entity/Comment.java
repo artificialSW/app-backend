@@ -11,7 +11,7 @@ public class Comment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long questionId;
+    private Long questionRefId;
     private Long writer;
     private String content;
     private Long replyTo;
@@ -29,12 +29,12 @@ public class Comment {
         this.id = id;
     }
 
-    public Long getQuestionId() {
-        return questionId;
+    public Long getQuestionRefId() {
+        return questionRefId;
     }
 
-    public void setQuestionId(Long questionId) {
-        this.questionId = questionId;
+    public void setQuestionRefId(Long questionRefId) {
+        this.questionRefId = questionRefId;
     }
 
     public Long getWriter() {
