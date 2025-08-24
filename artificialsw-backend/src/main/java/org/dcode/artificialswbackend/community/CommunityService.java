@@ -84,7 +84,7 @@ public class CommunityService {
 
     public Long saveComment(Long userId, CommentRequestDto request) {
         Comment comment = new Comment();
-        comment.setQuestionId(request.getQuestionId());
+        comment.setQuestionRefId(request.getQuestionRefId());
         comment.setContent(request.getContent());
         comment.setWriter(userId);
         comment.setReplyTo(request.getReplyTo()); // null 가능

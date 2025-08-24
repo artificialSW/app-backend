@@ -75,3 +75,25 @@ CREATE TABLE comments (
                               FOREIGN KEY (reply_to) REFERENCES comments(id)
                                   ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DELIMITER //
+
+CREATE TRIGGER trg_after_insert_questions
+    AFTER INSERT ON questions
+    FOR EACH ROW
+BEGIN
+    INSERT INTO question_reference (question_id, question_type)
+    VALUES (NEW.id, 'personal');
+END;
+//
+
+CREATE TRIGGER trg_after_insert_public_questions
+    AFTER INSERT ON public_questions
+    FOR EACH ROW
+BEGIN
+    INSERT INTO question_reference (question_id, question_type)
+    VALUES (NEW.id, 'public');
+END;
+//
+
+DELIMITER ;
