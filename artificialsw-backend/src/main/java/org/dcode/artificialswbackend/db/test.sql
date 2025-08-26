@@ -1,27 +1,18 @@
 USE test;
 
 CREATE TABLE users (
-                       id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                       id BIGINT AUTO_INCREMENT PRIMARY KEY,
                        name VARCHAR(100) NOT NULL,
                        phone VARCHAR(20) NOT NULL UNIQUE,
+                       age INT UNSIGNED NULL,
                        birthday DATE NULL,
                        gender ENUM('M', 'F') NOT NULL,
-                       loginId VARCHAR(50) NOT NULL UNIQUE,
                        password VARCHAR(255) NOT NULL,
                        nickname VARCHAR(50) NOT NULL UNIQUE,
                        profilePhoto VARCHAR(255) NULL,
-                       age INT UNSIGNED NULL,
-                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-
-CREATE TABLE family_member (
-                               id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                               user_id BIGINT NOT NULL,
-                               type ENUM('자녀', '아빠', '엄마', '할아버지', '할머니') NOT NULL,
-                               FOREIGN KEY (user_id) REFERENCES users(id)
-                                   ON DELETE CASCADE ON UPDATE CASCADE
+                       family_type ENUM('자녀', '아빠', '엄마', '할아버지', '할머니') NULL,
+                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NULL,
+                       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
@@ -35,12 +26,8 @@ CREATE TABLE questions (
                            likes INT UNSIGNED DEFAULT 0,
                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                           CONSTRAINT fk_questions_sender
-                               FOREIGN KEY (sender) REFERENCES users(id)
-                                   ON DELETE CASCADE ON UPDATE CASCADE,
-                           CONSTRAINT fk_questions_receiver
-                               FOREIGN KEY (receiver) REFERENCES users(id)
-                                   ON DELETE CASCADE ON UPDATE CASCADE
+                           CONSTRAINT fk_questions_sender FOREIGN KEY (sender) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+                           CONSTRAINT fk_questions_receiver FOREIGN KEY (receiver) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE public_questions (
@@ -75,17 +62,9 @@ CREATE TABLE comments (
                           created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                           updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-                          CONSTRAINT fk_comments_question_ref
-                              FOREIGN KEY (question_ref_id) REFERENCES question_reference(id)
-                                  ON DELETE CASCADE ON UPDATE CASCADE,
-
-                          CONSTRAINT fk_comments_writer
-                              FOREIGN KEY (writer) REFERENCES users(id)
-                                  ON DELETE CASCADE ON UPDATE CASCADE,
-
-                          CONSTRAINT fk_comments_reply
-                              FOREIGN KEY (reply_to) REFERENCES comments(id)
-                                  ON DELETE CASCADE ON UPDATE CASCADE
+                          CONSTRAINT fk_comments_question_ref FOREIGN KEY (question_ref_id) REFERENCES question_reference(id) ON DELETE CASCADE ON UPDATE CASCADE,
+                          CONSTRAINT fk_comments_writer FOREIGN KEY (writer) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+                          CONSTRAINT fk_comments_reply FOREIGN KEY (reply_to) REFERENCES comments(id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 DELIMITER //

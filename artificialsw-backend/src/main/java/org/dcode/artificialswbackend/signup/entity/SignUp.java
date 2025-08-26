@@ -14,7 +14,6 @@ public class SignUp {
 
     private String name;
     private String phone;
-    private String loginId;
     private String password;
     private String nickname;
     private LocalDate birthday;
@@ -25,6 +24,8 @@ public class SignUp {
     private String profilePhoto;
     private Integer age;
     public enum Gender { M, F }
+
+    private String familyType;
 
     public SignUp() {}
 
@@ -50,14 +51,6 @@ public class SignUp {
 
     public void setPhone(String phone) {
         this.phone = phone;
-    }
-
-    public String getLoginId() {
-        return loginId;
-    }
-
-    public void setLoginId(String loginId) {
-        this.loginId = loginId;
     }
 
     public String getPassword() {
@@ -106,5 +99,13 @@ public class SignUp {
 
     public void setAge(Integer age) {
         this.age = age;
+    }
+
+    public String getFamilyType() {
+        return familyType;
+    }
+
+    public void setFamilyType(String familyType) {
+        this.familyType = familyType;
     }
 }

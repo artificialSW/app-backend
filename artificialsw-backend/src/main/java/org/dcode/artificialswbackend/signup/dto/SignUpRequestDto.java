@@ -3,20 +3,19 @@ package org.dcode.artificialswbackend.signup.dto;
 public class SignUpRequestDto {
     private String name;
     private String phone;
-    private String loginId;
     private String password;
     private String nickname;
     private String birthday; // yyyy-MM-dd 형식 문자열
     private String gender;   // 'M' 또는 'F'
     private String profilePhoto; // 이미지 경로나 URL
     private Integer age;
+    private String familyType;
 
     public SignUpRequestDto() {}
 
-    public SignUpRequestDto(String name, String phone, String loginId, String password, String nickname, String birthday, String gender, String profilePhoto, Integer age) {
+    public SignUpRequestDto(String name, String phone, String password, String nickname, String birthday, String gender, String profilePhoto, Integer age) {
         this.name = name;
         this.phone = phone;
-        this.loginId = loginId;
         this.password = password;
         this.nickname = nickname;
         this.birthday = birthday;
@@ -41,13 +40,6 @@ public class SignUpRequestDto {
         this.phone = phone;
     }
 
-    public String getLoginId() {
-        return loginId;
-    }
-
-    public void setLoginId(String loginId) {
-        this.loginId = loginId;
-    }
 
     public String getPassword() {
         return password;
@@ -95,5 +87,13 @@ public class SignUpRequestDto {
 
     public void setAge(Integer age) {
         this.age = age;
+    }
+
+    public String getFamilyType() {
+        return familyType;
+    }
+
+    public void setFamilyType(String familyType) {
+        this.familyType = familyType;
     }
 }
