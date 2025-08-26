@@ -1,12 +1,16 @@
 package org.dcode.artificialswbackend.community;
-
-import org.dcode.artificialswbackend.community.entity.Community;
+import org.dcode.artificialswbackend.community.dto.CommentRequestDto;
+import org.dcode.artificialswbackend.community.dto.LikeRequestDto;
+import org.dcode.artificialswbackend.community.dto.PersonalQuestionDto;
+import org.dcode.artificialswbackend.community.util.JwtUtil;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/community")
 public class CommunityController {
 
     private final CommunityService communityService;
@@ -15,15 +19,50 @@ public class CommunityController {
         this.communityService = communityService;
     }
 
-    // 모든 커뮤니티 목록 조회
-    @GetMapping
-    public List<Community> getAllCommunities() {
-        return communityService.findAll();
+    @GetMapping("/api/community/home")
+    public Map<String,Object> getHomeCommunity(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
+        String userId = JwtUtil.validateAndGetUserId(token);
+        Long receiverId = Long.valueOf(userId);
+        return communityService.getQuestionsWithUnsolvedCount(receiverId);
     }
 
-    // 새 커뮤니티 추가
-    @PostMapping
-    public Community addCommunity(@RequestBody Community community) {
-        return communityService.save(community);
+
+    @GetMapping("/api/community/home/public")
+    public Map<String,Object> getPublicCommunity() {
+        return communityService.getPublicQuestions();
     }
+
+    @GetMapping("/api/community/question/my")
+    public List<PersonalQuestionDto> getMyQuestions(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
+        String userId = JwtUtil.validateAndGetUserId(token);
+        return communityService.getMyQuestions(userId);
+    }
+
+    @PostMapping("/api/community/reply")
+    public ResponseEntity<Map<String, Object>> createReply(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody CommentRequestDto request) {
+
+        String token = authHeader.replace("Bearer ", "");
+        String userIdStr = JwtUtil.validateAndGetUserId(token);
+        Long userId = Long.valueOf(userIdStr);
+
+        Long replyId = communityService.saveComment(userId, request);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("replyId", replyId);
+
+        return ResponseEntity.ok(response);
+    }
+
+
+    @PostMapping("/api/community/like")
+    public ResponseEntity<?> like(@RequestBody LikeRequestDto likeRequestDto) {
+        communityService.addLike(likeRequestDto.getType(), likeRequestDto.getId());
+        return ResponseEntity.ok(Map.of("success", true));
+    }
+
 }
