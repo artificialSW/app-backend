@@ -3,15 +3,27 @@ USE test;
 CREATE TABLE users (
                        id BIGINT PRIMARY KEY AUTO_INCREMENT,
                        name VARCHAR(100) NOT NULL,
-                       age INT UNSIGNED,
-                       birthday DATE,
+                       phone VARCHAR(20) NOT NULL UNIQUE,
+                       birthday DATE NULL,
+                       gender ENUM('M', 'F') NOT NULL,
                        loginId VARCHAR(50) NOT NULL UNIQUE,
                        password VARCHAR(255) NOT NULL,
-                       profilePhoto VARCHAR(255),
-                       role VARCHAR(50) NOT NULL,
+                       nickname VARCHAR(50) NOT NULL UNIQUE,
+                       profilePhoto VARCHAR(255) NULL,
+                       age INT UNSIGNED NULL,
                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+CREATE TABLE family_member (
+                               id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                               user_id BIGINT NOT NULL,
+                               type ENUM('자녀', '아빠', '엄마', '할아버지', '할머니') NOT NULL,
+                               FOREIGN KEY (user_id) REFERENCES users(id)
+                                   ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 
 CREATE TABLE questions (
                            id BIGINT PRIMARY KEY AUTO_INCREMENT,
