@@ -1,4 +1,4 @@
 package org.dcode.artificialswbackend.signup.repository;
 
-public interface SignupRepositury {
+public interface SignupRepository {
 }
