@@ -84,13 +84,14 @@ public class CommunityService {
 
     public Long saveComment(Long userId, CommentRequestDto request) {
         Comment comment = new Comment();
-        comment.setQuestionId(request.getQuestionId());
+        comment.setQuestionRefId(request.getQuestionRefId());
         comment.setContent(request.getContent());
         comment.setWriter(userId);
         comment.setReplyTo(request.getReplyTo()); // null 가능
         comment.setLikes(0);
 
-        return commentRepository.save(comment).getId();
+        Comment saved = commentRepository.save(comment);
+        return saved.getId();
     }
 
     @Transactional

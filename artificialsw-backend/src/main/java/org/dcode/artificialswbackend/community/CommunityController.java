@@ -6,6 +6,7 @@ import org.dcode.artificialswbackend.community.util.JwtUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,17 +41,23 @@ public class CommunityController {
     }
 
     @PostMapping("/api/community/reply")
-    public ResponseEntity<?> createReply(
+    public ResponseEntity<Map<String, Object>> createReply(
             @RequestHeader("Authorization") String authHeader,
             @RequestBody CommentRequestDto request) {
+
         String token = authHeader.replace("Bearer ", "");
         String userIdStr = JwtUtil.validateAndGetUserId(token);
         Long userId = Long.valueOf(userIdStr);
 
         Long replyId = communityService.saveComment(userId, request);
 
-        return ResponseEntity.ok(Map.of("success", true, "replyId", replyId));
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("replyId", replyId);
+
+        return ResponseEntity.ok(response);
     }
+
 
     @PostMapping("/api/community/like")
     public ResponseEntity<?> like(@RequestBody LikeRequestDto likeRequestDto) {
