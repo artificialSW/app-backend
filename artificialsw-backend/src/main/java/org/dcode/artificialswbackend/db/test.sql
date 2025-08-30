@@ -136,7 +136,7 @@ CREATE TABLE flowers (
                          flower_catalog_id BIGINT NOT NULL,
                          question_ref_id BIGINT NULL,
                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                         FOREIGN KEY (tree_id) REFERENCES trees(id),
+                         FOREIGN KEY (tree_id) REFERENCES tree(id),
                          FOREIGN KEY (flower_catalog_id) REFERENCES flower_catalog(id),
                          FOREIGN KEY (question_ref_id) REFERENCES question_reference(id)
 );
@@ -148,7 +148,7 @@ CREATE TABLE fruits (
                         fruit_catalog_id BIGINT NOT NULL,
                         question_ref_id BIGINT NULL,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY (tree_id) REFERENCES trees(id),
+                        FOREIGN KEY (tree_id) REFERENCES tree(id),
                         FOREIGN KEY (fruit_catalog_id) REFERENCES fruit_catalog(id),
                         FOREIGN KEY (question_ref_id) REFERENCES question_reference(id)
 );
@@ -160,5 +160,5 @@ CREATE TABLE custom_tree_featured_items (
                                             item_type ENUM('flower', 'fruit') NOT NULL,
                                             item_id BIGINT NOT NULL, -- item_type에 따라 달라지는 flower, fruit id
                                             display_order INT NOT NULL DEFAULT 0,
-                                            FOREIGN KEY (tree_id) REFERENCES trees(id)
+                                            FOREIGN KEY (tree_id) REFERENCES tree(id)
 );
