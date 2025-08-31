@@ -162,3 +162,13 @@ CREATE TABLE custom_tree_featured_items (
                                             display_order INT NOT NULL DEFAULT 0,
                                             FOREIGN KEY (tree_id) REFERENCES tree(id)
 );
+
+CREATE TABLE puzzle (
+                        puzzle_id INT PRIMARY KEY AUTO_INCREMENT,
+                        image_path VARCHAR(255) NOT NULL,
+                        size INT NULL,
+                        game_state ENUM('Unplayed', 'Ongoing', 'Completed') NOT NULL,
+                        contributors JSON NULL,
+                        completed_pieces JSON NULL
+);
+
