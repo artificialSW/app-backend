@@ -11,6 +11,7 @@ public class SignUpService {
 
     private final SignUpRepository signUpRepository;
 
+
     public SignUpService(SignUpRepository signUpRepository) {
         this.signUpRepository = signUpRepository;
     }
