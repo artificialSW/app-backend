@@ -10,7 +10,7 @@ CREATE TABLE users (
                        gender ENUM('M', 'F') NOT NULL,
                        password VARCHAR(255) NOT NULL,
                        nickname VARCHAR(50) NOT NULL UNIQUE,
-                       profilePhoto VARCHAR(255) NULL,
+                       profile_photo varchar(255) NULL,
                        family_type ENUM('자녀', '아빠', '엄마', '할아버지', '할머니') NULL,
                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NULL,
                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP
