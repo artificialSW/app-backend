@@ -45,11 +45,12 @@ public class SignUpService {
         }
 
         SignUp user = userOpt.get();
-        if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
+        if (!rawPassword.equals(user.getPassword())) {
             throw new RuntimeException("비밀번호가 일치하지 않습니다.");
         }
 
-        return JwtUtil.generateToken(phone);
+        // 임시로 간단한 토큰 또는 메시지 리턴
+        return "로그인 성공";
     }
 
 }

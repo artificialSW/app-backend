@@ -25,8 +25,8 @@ public class SignUpController {
     }
 
     @PostMapping("/api/login")
-    public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto request) {
-        String token = signUpService.login(request.getId(), request.getPassword());
-        return ResponseEntity.ok(new LoginResponseDto(token));
+    public ResponseEntity<String> login(@RequestBody LoginRequestDto request) {
+        String result = signUpService.login(request.getId(), request.getPassword());
+        return ResponseEntity.ok(result);
     }
 }
