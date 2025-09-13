@@ -65,11 +65,12 @@ CREATE TABLE question_reference (
                                     CONSTRAINT fk_question_reference_family FOREIGN KEY (family_id) REFERENCES families(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- comments 테이블
+-- comments 테이블 (family_id 컬럼 추가)
 CREATE TABLE comments (
                           id BIGINT AUTO_INCREMENT PRIMARY KEY,
                           question_ref_id BIGINT NOT NULL,
                           writer BIGINT NOT NULL,
+                          family_id BIGINT NOT NULL,
                           content TEXT NOT NULL,
                           reply_to BIGINT DEFAULT NULL,
                           likes INT UNSIGNED NOT NULL DEFAULT 0,
@@ -77,7 +78,8 @@ CREATE TABLE comments (
                           updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                           CONSTRAINT fk_comments_question_ref FOREIGN KEY (question_ref_id) REFERENCES question_reference(id) ON DELETE CASCADE ON UPDATE CASCADE,
                           CONSTRAINT fk_comments_writer FOREIGN KEY (writer) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
-                          CONSTRAINT fk_comments_reply FOREIGN KEY (reply_to) REFERENCES comments(id) ON DELETE CASCADE ON UPDATE CASCADE
+                          CONSTRAINT fk_comments_reply FOREIGN KEY (reply_to) REFERENCES comments(id) ON DELETE CASCADE ON UPDATE CASCADE,
+                          CONSTRAINT fk_comments_family FOREIGN KEY (family_id) REFERENCES families(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- question_list 테이블 (family_id 포함하지 않음, 관리용)
@@ -174,6 +176,7 @@ DELIMITER //
 
 DROP TRIGGER IF EXISTS trg_after_insert_questions;
 DROP TRIGGER IF EXISTS trg_after_insert_public_questions;
+DROP TRIGGER IF EXISTS trg_before_insert_comments;
 
 CREATE TRIGGER trg_after_insert_questions
     AFTER INSERT ON questions
@@ -190,6 +193,19 @@ CREATE TRIGGER trg_after_insert_public_questions
 BEGIN
     INSERT INTO question_reference (question_id, question_type, family_id)
     VALUES (NEW.id, 'public', NEW.family_id);
+END;
+//
+
+CREATE TRIGGER trg_before_insert_comments
+    BEFORE INSERT ON comments
+    FOR EACH ROW
+BEGIN
+    DECLARE ref_family_id BIGINT;
+    SELECT family_id INTO ref_family_id
+    FROM question_reference
+    WHERE id = NEW.question_ref_id
+    LIMIT 1;
+    SET NEW.family_id = ref_family_id;
 END;
 //
 
