@@ -162,7 +162,6 @@ CREATE TABLE custom_tree_featured_items (
                                             FOREIGN KEY (tree_id) REFERENCES tree(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- puzzle 테이블 (family_id 불필요)
 CREATE TABLE puzzle (
                         puzzle_id INT AUTO_INCREMENT PRIMARY KEY,
                         image_path VARCHAR(255) NOT NULL,
@@ -173,7 +172,9 @@ CREATE TABLE puzzle (
                         isPlayingPuzzle BOOLEAN NOT NULL DEFAULT FALSE,
                         solverId BIGINT NULL,
                         contributors JSON NULL,
-                        CONSTRAINT fk_puzzle_solver FOREIGN KEY (solverId) REFERENCES users(id)
+                        families_id BIGINT NOT NULL,
+                        CONSTRAINT fk_puzzle_solver FOREIGN KEY (solverId) REFERENCES users(id),
+                        CONSTRAINT fk_puzzle_families FOREIGN KEY (families_id) REFERENCES families(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE puzzle_category (
