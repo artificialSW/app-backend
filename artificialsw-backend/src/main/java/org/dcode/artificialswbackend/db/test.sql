@@ -167,10 +167,15 @@ CREATE TABLE puzzle (
                         puzzle_id INT AUTO_INCREMENT PRIMARY KEY,
                         image_path VARCHAR(255) NOT NULL,
                         size INT NULL,
-                        game_state ENUM('Unplayed', 'Ongoing', 'Completed') NOT NULL,
+                        category VARCHAR(50) NULL,
+                        completedPuzzleID INT NULL,
+                        completed BOOLEAN NOT NULL DEFAULT FALSE,
+                        isPlayingPuzzle BOOLEAN NOT NULL DEFAULT FALSE,
+                        solverId BIGINT NULL,
                         contributors JSON NULL,
-                        completed_pieces JSON NULL
+                        CONSTRAINT fk_puzzle_solver FOREIGN KEY (solverId) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 
 DELIMITER //
 
