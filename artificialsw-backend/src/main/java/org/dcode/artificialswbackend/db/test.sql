@@ -190,6 +190,15 @@ CREATE TABLE puzzle_ai_keyword (
                                    FOREIGN KEY (puzzle_id) REFERENCES puzzle(puzzle_id) ON DELETE CASCADE
 );
 
+CREATE TABLE puzzle_pieces (
+                               id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                               puzzle_id INT NOT NULL,
+                               piece_id VARCHAR(50) NOT NULL,
+                               position JSON NOT NULL,
+                               FOREIGN KEY (puzzle_id) REFERENCES puzzle(puzzle_id) ON DELETE CASCADE,
+                               UNIQUE KEY uq_puzzle_piece(puzzle_id, piece_id)
+);
+
 
 
 DELIMITER //
