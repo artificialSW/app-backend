@@ -65,11 +65,12 @@ CREATE TABLE question_reference (
                                     CONSTRAINT fk_question_reference_family FOREIGN KEY (family_id) REFERENCES families(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- comments 테이블
+-- comments 테이블 (family_id 컬럼 추가)
 CREATE TABLE comments (
                           id BIGINT AUTO_INCREMENT PRIMARY KEY,
                           question_ref_id BIGINT NOT NULL,
                           writer BIGINT NOT NULL,
+                          family_id BIGINT NOT NULL,
                           content TEXT NOT NULL,
                           reply_to BIGINT DEFAULT NULL,
                           likes INT UNSIGNED NOT NULL DEFAULT 0,
@@ -77,7 +78,8 @@ CREATE TABLE comments (
                           updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                           CONSTRAINT fk_comments_question_ref FOREIGN KEY (question_ref_id) REFERENCES question_reference(id) ON DELETE CASCADE ON UPDATE CASCADE,
                           CONSTRAINT fk_comments_writer FOREIGN KEY (writer) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
-                          CONSTRAINT fk_comments_reply FOREIGN KEY (reply_to) REFERENCES comments(id) ON DELETE CASCADE ON UPDATE CASCADE
+                          CONSTRAINT fk_comments_reply FOREIGN KEY (reply_to) REFERENCES comments(id) ON DELETE CASCADE ON UPDATE CASCADE,
+                          CONSTRAINT fk_comments_family FOREIGN KEY (family_id) REFERENCES families(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- question_list 테이블 (family_id 포함하지 않음, 관리용)
@@ -160,20 +162,51 @@ CREATE TABLE custom_tree_featured_items (
                                             FOREIGN KEY (tree_id) REFERENCES tree(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- puzzle 테이블 (family_id 불필요)
 CREATE TABLE puzzle (
                         puzzle_id INT AUTO_INCREMENT PRIMARY KEY,
                         image_path VARCHAR(255) NOT NULL,
                         size INT NULL,
-                        game_state ENUM('Unplayed', 'Ongoing', 'Completed') NOT NULL,
+                        category VARCHAR(50) NULL,
+                        completedPiecesID JSON NULL,
+                        completed BOOLEAN NOT NULL DEFAULT FALSE,
+                        isPlayingPuzzle BOOLEAN NOT NULL DEFAULT FALSE,
+                        solverId BIGINT NULL,
                         contributors JSON NULL,
-                        completed_pieces JSON NULL
+                        families_id BIGINT NOT NULL,
+                        CONSTRAINT fk_puzzle_solver FOREIGN KEY (solverId) REFERENCES users(id),
+                        CONSTRAINT fk_puzzle_families FOREIGN KEY (families_id) REFERENCES families(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE puzzle_category (
+                                 id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                                 puzzle_id INT NOT NULL,
+                                 category VARCHAR(50) NOT NULL,
+                                 FOREIGN KEY (puzzle_id) REFERENCES puzzle(puzzle_id) ON DELETE CASCADE
+);
+
+CREATE TABLE puzzle_ai_keyword (
+                                   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                                   puzzle_id INT NOT NULL,
+                                   keyword VARCHAR(100) NOT NULL,
+                                   FOREIGN KEY (puzzle_id) REFERENCES puzzle(puzzle_id) ON DELETE CASCADE
+);
+
+CREATE TABLE puzzle_pieces (
+                               id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                               puzzle_id INT NOT NULL,
+                               piece_id VARCHAR(50) NOT NULL,
+                               position JSON NOT NULL,
+                               FOREIGN KEY (puzzle_id) REFERENCES puzzle(puzzle_id) ON DELETE CASCADE,
+                               UNIQUE KEY uq_puzzle_piece(puzzle_id, piece_id)
+);
+
+
 
 DELIMITER //
 
 DROP TRIGGER IF EXISTS trg_after_insert_questions;
 DROP TRIGGER IF EXISTS trg_after_insert_public_questions;
+DROP TRIGGER IF EXISTS trg_before_insert_comments;
 
 CREATE TRIGGER trg_after_insert_questions
     AFTER INSERT ON questions
@@ -190,6 +223,19 @@ CREATE TRIGGER trg_after_insert_public_questions
 BEGIN
     INSERT INTO question_reference (question_id, question_type, family_id)
     VALUES (NEW.id, 'public', NEW.family_id);
+END;
+//
+
+CREATE TRIGGER trg_before_insert_comments
+    BEFORE INSERT ON comments
+    FOR EACH ROW
+BEGIN
+    DECLARE ref_family_id BIGINT;
+    SELECT family_id INTO ref_family_id
+    FROM question_reference
+    WHERE id = NEW.question_ref_id
+    LIMIT 1;
+    SET NEW.family_id = ref_family_id;
 END;
 //
 
