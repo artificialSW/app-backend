@@ -166,7 +166,6 @@ CREATE TABLE puzzle (
                         puzzle_id INT AUTO_INCREMENT PRIMARY KEY,
                         image_path VARCHAR(255) NOT NULL,
                         size INT NULL,
-                        category VARCHAR(50) NULL,
                         completedPiecesID JSON NULL,
                         completed BOOLEAN NOT NULL DEFAULT FALSE,
                         isPlayingPuzzle BOOLEAN NOT NULL DEFAULT FALSE,
