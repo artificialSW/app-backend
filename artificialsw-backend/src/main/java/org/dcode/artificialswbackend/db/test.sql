@@ -168,13 +168,28 @@ CREATE TABLE puzzle (
                         image_path VARCHAR(255) NOT NULL,
                         size INT NULL,
                         category VARCHAR(50) NULL,
-                        completedPuzzleID INT NULL,
+                        completedPiecesID JSON NULL,
                         completed BOOLEAN NOT NULL DEFAULT FALSE,
                         isPlayingPuzzle BOOLEAN NOT NULL DEFAULT FALSE,
                         solverId BIGINT NULL,
                         contributors JSON NULL,
                         CONSTRAINT fk_puzzle_solver FOREIGN KEY (solverId) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE puzzle_category (
+                                 id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                                 puzzle_id INT NOT NULL,
+                                 category VARCHAR(50) NOT NULL,
+                                 FOREIGN KEY (puzzle_id) REFERENCES puzzle(puzzle_id) ON DELETE CASCADE
+);
+
+CREATE TABLE puzzle_ai_keyword (
+                                   id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                                   puzzle_id INT NOT NULL,
+                                   keyword VARCHAR(100) NOT NULL,
+                                   FOREIGN KEY (puzzle_id) REFERENCES puzzle(puzzle_id) ON DELETE CASCADE
+);
+
 
 
 DELIMITER //
