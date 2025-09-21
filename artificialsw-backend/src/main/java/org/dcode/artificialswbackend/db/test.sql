@@ -203,10 +203,6 @@ CREATE TABLE puzzle_pieces (
 
 DELIMITER //
 
-DROP TRIGGER IF EXISTS trg_after_insert_questions;
-DROP TRIGGER IF EXISTS trg_after_insert_public_questions;
-DROP TRIGGER IF EXISTS trg_before_insert_comments;
-
 CREATE TRIGGER trg_after_insert_questions
     AFTER INSERT ON questions
     FOR EACH ROW
