@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourcePerFileMappings">
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/b94a448d-3c8e-4c2d-a310-637d14e93402/console.sql" value="b94a448d-3c8e-4c2d-a310-637d14e93402" />
     <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/f308d5f0-d83b-4419-9ac3-aca90f9df1b7/console.sql" value="f308d5f0-d83b-4419-9ac3-aca90f9df1b7" />
+    <file url="file://$PROJECT_DIR$/artificialsw-backend/src/main/java/org/dcode/artificialswbackend/db/asw.sql" value="b94a448d-3c8e-4c2d-a310-637d14e93402" />
     <file url="file://$PROJECT_DIR$/artificialsw-backend/src/main/java/org/dcode/artificialswbackend/db/test.sql" value="f308d5f0-d83b-4419-9ac3-aca90f9df1b7" />
   </component>
 </project>
