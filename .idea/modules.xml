@@ -2,9 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/artificialsw-backend.iml" filepath="$PROJECT_DIR$/.idea/modules/artificialsw-backend.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/artificialsw-backend.main.iml" filepath="$PROJECT_DIR$/.idea/modules/artificialsw-backend.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/artificialsw-backend.test.iml" filepath="$PROJECT_DIR$/.idea/modules/artificialsw-backend.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/artificialsw-backend.iml" filepath="$PROJECT_DIR$/.idea/modules/artificialsw-backend.iml" group="artificialsw-backend" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/artificialsw-backend_main.iml" filepath="$PROJECT_DIR$/.idea/modules/artificialsw-backend_main.iml" group="artificialsw-backend" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/artificialsw-backend_test.iml" filepath="$PROJECT_DIR$/.idea/modules/artificialsw-backend_test.iml" group="artificialsw-backend" />
     </modules>
   </component>
 </project>
