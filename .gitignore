@@ -1,5 +1,5 @@
 HELP.md
-.gradle
+artificialsw-backend/.gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
