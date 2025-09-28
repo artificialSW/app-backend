@@ -2,7 +2,7 @@ package org.dcode.artificialswbackend.community;
 import org.dcode.artificialswbackend.community.dto.CommentRequestDto;
 import org.dcode.artificialswbackend.community.dto.LikeRequestDto;
 import org.dcode.artificialswbackend.community.dto.PersonalQuestionDto;
-import org.dcode.artificialswbackend.community.util.JwtUtil;
+import org.dcode.artificialswbackend.util.JwtUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
