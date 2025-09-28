@@ -10,7 +10,7 @@ import java.util.Date;
 public class JwtUtil {
 
     // Base64 인코딩된 시크릿 키 (32자 이상 바이트 길이 필요)
-    private static final String SECRET_BASE64 = "cOGy9rwPeTIImdSXi9sbWE0TQe7ZF+AfH8SF8IByFYY=";
+    private static final String SECRET_BASE64 = "gJHvvnNyUaa7Ge/YqN1nw9ozQakHBJq7WDc51awR5RM=";
 
     // Base64 디코딩 후 Key 객체 생성
     private static final Key key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(SECRET_BASE64));
