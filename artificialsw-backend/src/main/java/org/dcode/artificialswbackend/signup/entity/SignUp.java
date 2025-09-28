@@ -12,7 +12,7 @@ public class SignUp {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String familyId;
+    private Long familyId;
     private String name;
     private String phone;
     private String password;
@@ -34,7 +34,7 @@ public class SignUp {
         return familyId;
     }
 
-    public void setFamilyId(String familyId) {
+    public void setFamilyId(Long familyId) {
         this.familyId = familyId;
     }
 

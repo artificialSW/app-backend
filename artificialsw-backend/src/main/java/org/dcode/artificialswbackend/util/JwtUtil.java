@@ -31,5 +31,17 @@ public class JwtUtil {
         }
     }
 
-    // 토큰 검증 등 추가 메서드 필요시 구현
+    public static Long validateAndGetFamilyId(String token) {
+        try {
+            Jws<Claims> claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token);
+            // familyId는 Long 타입으로 저장했으니, Number로 받아서 Long으로 변환
+            return claims.getBody().get("familyId", Number.class).longValue();
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new RuntimeException("Invalid or expired JWT token");
+        }
+    }
+
 }
