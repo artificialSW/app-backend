@@ -3,7 +3,7 @@ USE asw;
 -- families 테이블
 CREATE TABLE `families` (
                             `id` bigint NOT NULL AUTO_INCREMENT,
-                            `name` varchar(100) NOT NULL,
+                            `verification_code` varchar(100) NOT NULL,
                             `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
                             `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                             PRIMARY KEY (`id`)
