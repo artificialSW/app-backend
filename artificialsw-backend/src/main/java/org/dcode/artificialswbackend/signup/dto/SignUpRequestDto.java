@@ -10,10 +10,11 @@ public class SignUpRequestDto {
     private String profilePhoto; // 이미지 경로나 URL
     private Integer age;
     private String familyType;
+    private String familyVerificationCode;
 
     public SignUpRequestDto() {}
 
-    public SignUpRequestDto(String name, String phone, String password, String nickname, String birthday, String gender, String profilePhoto, Integer age) {
+    public SignUpRequestDto(String name, String phone, String password, String nickname, String birthday, String gender, String profilePhoto, Integer age, String familyType, String familyVerificationCode) {
         this.name = name;
         this.phone = phone;
         this.password = password;
@@ -22,6 +23,8 @@ public class SignUpRequestDto {
         this.gender = gender;
         this.profilePhoto = profilePhoto;
         this.age = age;
+        this.familyType = familyType;
+        this.familyVerificationCode = familyVerificationCode;
     }
 
     public String getName() {
@@ -95,5 +98,13 @@ public class SignUpRequestDto {
 
     public void setFamilyType(String familyType) {
         this.familyType = familyType;
+    }
+
+    public String getFamilyVerificationCode() {
+        return familyVerificationCode;
+    }
+
+    public void setFamilyVerificationCode(String familyVerificationCode) {
+        this.familyVerificationCode = familyVerificationCode;
     }
 }
