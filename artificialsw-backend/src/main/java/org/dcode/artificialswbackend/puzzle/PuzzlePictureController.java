@@ -1,4 +1,4 @@
 package org.dcode.artificialswbackend.puzzle;
 
-public class PuzzleSercive {
+public class PuzzlePictureController {
 }
