@@ -146,7 +146,7 @@ CREATE TABLE `tree` (
                         KEY `archive_id` (`archive_id`),
                         KEY `fk_tree_family` (`family_id`),
                         CONSTRAINT `fk_tree_family` FOREIGN KEY (`family_id`) REFERENCES `families` (`id`),
-                        CONSTRAINT `tree_ibfk_1` FOREIGN KEY (`archive_id`) REFERENCES `archives` (`id`)
+                        CONSTRAINT `tree_ibfk_1` FOREIGN KEY (`archive_id`) REFERENCES `island_archive` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- flowers 테이블 (tree_id 통해 family_id 간접관리)
@@ -197,7 +197,7 @@ CREATE TABLE `puzzle` (
 -- puzzle_category 테이블 (puzzle_id 통해 family_id 간접관리)
 CREATE TABLE `puzzle_category` (
                                    `id` bigint NOT NULL AUTO_INCREMENT,
-                                   `puzzle_id` int NOT NULL,
+                                   `puzzle_id` int NULL,
                                    `category` varchar(50) NOT NULL,
                                    PRIMARY KEY (`id`),
                                    KEY `puzzle_id` (`puzzle_id`),
