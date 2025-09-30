@@ -1,4 +1,4 @@
-package org.dcode.artificialswbackend.signup;
+package org.dcode.artificialswbackend.signup.service;
 
 import org.dcode.artificialswbackend.signup.dto.SignUpRequestDto;
 import org.dcode.artificialswbackend.signup.entity.SignUp;
