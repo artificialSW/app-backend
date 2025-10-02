@@ -3,7 +3,7 @@ USE asw;
 -- families 테이블
 CREATE TABLE `families` (
                             `id` bigint NOT NULL AUTO_INCREMENT,
-                            `name` varchar(100) NOT NULL,
+                            `verification_code` varchar(100) NOT NULL,
                             `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
                             `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                             PRIMARY KEY (`id`)
@@ -170,10 +170,12 @@ CREATE TABLE `fruits` (
                           `puzzle_id` int DEFAULT NULL,
                           PRIMARY KEY (`id`),
                           KEY `tree_id` (`tree_id`),
+                          KEY `fk_fruits_puzzle` (`puzzle_id`),
+                          CONSTRAINT `fk_fruits_puzzle` FOREIGN KEY (`puzzle_id`) REFERENCES `puzzle` (`puzzle_id`),
                           CONSTRAINT `fruits_ibfk_1` FOREIGN KEY (`tree_id`) REFERENCES `tree` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- puzzle 테이블 (멀티 테넌트 용 family_id 포함)
+-- puzzle 테이블 (멀티 테넌트 용 family_id 포함)) - puzzle 아카이브로 만들어야겠네.....
 CREATE TABLE `puzzle` (
                           `puzzle_id` int NOT NULL AUTO_INCREMENT,
                           `image_path` varchar(255) NOT NULL,
@@ -201,6 +203,7 @@ CREATE TABLE `puzzle_category` (
                                    CONSTRAINT `puzzle_category_ibfk_1` FOREIGN KEY (`puzzle_id`) REFERENCES `puzzle` (`puzzle_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+
 -- puzzle_ai_keyword 테이블 (puzzle_id 통해 family_id 간접관리)
 CREATE TABLE `puzzle_ai_keyword` (
                                      `id` bigint NOT NULL AUTO_INCREMENT,
@@ -222,7 +225,7 @@ CREATE TABLE `puzzle_pieces` (
                                  CONSTRAINT `puzzle_pieces_ibfk_1` FOREIGN KEY (`puzzle_id`) REFERENCES `puzzle` (`puzzle_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- 트리거 정의
+
 DELIMITER //
 
 CREATE TRIGGER trg_after_insert_questions
