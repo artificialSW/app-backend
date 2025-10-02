@@ -3,7 +3,7 @@ USE asw;
 -- families 테이블
 CREATE TABLE `families` (
                             `id` bigint NOT NULL AUTO_INCREMENT,
-                            `name` varchar(100) NOT NULL,
+                            `verification_code` varchar(100) NOT NULL,
                             `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
                             `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                             PRIMARY KEY (`id`)
@@ -122,8 +122,8 @@ CREATE TABLE `fruit_catalog` (
                                  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- archives 테이블 (멀티 테넌트 용 family_id 포함)
-CREATE TABLE `archives` (
+-- island_archives 테이블 (멀티 테넌트 용 family_id 포함)
+CREATE TABLE `island_archives` (
                             `id` bigint NOT NULL AUTO_INCREMENT,
                             `family_id` bigint NOT NULL,
                             `month` int NOT NULL,
@@ -146,7 +146,7 @@ CREATE TABLE `tree` (
                         KEY `archive_id` (`archive_id`),
                         KEY `fk_tree_family` (`family_id`),
                         CONSTRAINT `fk_tree_family` FOREIGN KEY (`family_id`) REFERENCES `families` (`id`),
-                        CONSTRAINT `tree_ibfk_1` FOREIGN KEY (`archive_id`) REFERENCES `archives` (`id`)
+                        CONSTRAINT `tree_ibfk_1` FOREIGN KEY (`archive_id`) REFERENCES `island_archive` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- flowers 테이블 (tree_id 통해 family_id 간접관리)
@@ -186,6 +186,7 @@ CREATE TABLE `puzzle` (
                           `solverId` bigint DEFAULT NULL,
                           `contributors` json DEFAULT NULL,
                           `families_id` bigint NOT NULL,
+                          `message` varchar(255) NULL,
                           PRIMARY KEY (`puzzle_id`),
                           KEY `fk_puzzle_solver` (`solverId`),
                           KEY `fk_puzzle_families` (`families_id`),
@@ -196,7 +197,7 @@ CREATE TABLE `puzzle` (
 -- puzzle_category 테이블 (puzzle_id 통해 family_id 간접관리)
 CREATE TABLE `puzzle_category` (
                                    `id` bigint NOT NULL AUTO_INCREMENT,
-                                   `puzzle_id` int NOT NULL,
+                                   `puzzle_id` int NULL,
                                    `category` varchar(50) NOT NULL,
                                    PRIMARY KEY (`id`),
                                    KEY `puzzle_id` (`puzzle_id`),
@@ -223,6 +224,15 @@ CREATE TABLE `puzzle_pieces` (
                                  PRIMARY KEY (`id`),
                                  UNIQUE KEY `uq_puzzle_piece` (`puzzle_id`,`piece_id`),
                                  CONSTRAINT `puzzle_pieces_ibfk_1` FOREIGN KEY (`puzzle_id`) REFERENCES `puzzle` (`puzzle_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- 퍼즐 아카이브 테이블
+CREATE TABLE `puzzle_archive` (
+                                  `id` bigint NOT NULL AUTO_INCREMENT,
+                                  `puzzle_id` int NOT NULL,
+                                  PRIMARY KEY (`id`),
+                                  KEY `fk_archivedPuzzle_puzzle` (`puzzle_id`),
+                                  CONSTRAINT `fk_archivedPuzzle_puzzle` FOREIGN KEY (`puzzle_id`) REFERENCES `puzzle` (`puzzle_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 

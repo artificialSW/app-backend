@@ -1,9 +1,9 @@
-package org.dcode.artificialswbackend.signup;
+package org.dcode.artificialswbackend.signup.controller;
 
 
 import org.dcode.artificialswbackend.signup.dto.LoginRequestDto;
-import org.dcode.artificialswbackend.signup.dto.LoginResponseDto;
 import org.dcode.artificialswbackend.signup.dto.SignUpRequestDto;
+import org.dcode.artificialswbackend.signup.service.SignUpService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

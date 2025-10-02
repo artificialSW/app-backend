@@ -1,25 +1,26 @@
-# 프로젝트 도움말 및 빌드 시스템
+
 HELP.md
-.gradle/
+artificialsw-backend/.gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
+
 
 # Spring Tool Suite (STS)
 .apt_generated
 .classpath
 .factorypath
 .project
-.settings/
+.settings
 .springBeans
 .sts4-cache
 bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
 
-# IntelliJ IDEA
-.idea/
+### IntelliJ IDEA ###
+.idea
 *.iws
 *.iml
 *.ipr
@@ -27,12 +28,14 @@ out/
 !**/src/main/**/out/
 !**/src/test/**/out/
 
+
 # NetBeans
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
+
 
 # VS Code
 .vscode/
@@ -51,4 +54,3 @@ Thumbs.db
 *.tmp
 *.swp
 *.swo
-
