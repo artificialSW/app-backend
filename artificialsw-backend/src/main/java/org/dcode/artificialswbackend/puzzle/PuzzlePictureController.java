@@ -12,9 +12,11 @@ import java.util.Map;
 @RequestMapping("/api/puzzle/picture")
 public class PuzzlePictureController {
     private final PuzzlePictureService puzzlePictureService;
+    private final JwtUtil jwtUtil;
 
-    public PuzzlePictureController(PuzzlePictureService puzzlePictureService) {
+    public PuzzlePictureController(PuzzlePictureService puzzlePictureService,  JwtUtil jwtUtil) {
         this.puzzlePictureService = puzzlePictureService;
+        this.jwtUtil = jwtUtil;
     }
 
     @PostMapping("/upload")
@@ -22,8 +24,8 @@ public class PuzzlePictureController {
             @RequestHeader("Authorization") String authHeader,
             @RequestBody PictureUploadRequest request) {
         String token = authHeader.replace("Bearer ", "");
-        Long userId = Long.valueOf(JwtUtil.validateAndGetUserId(token));
-        Long familyId = JwtUtil.validateAndGetFamilyId(token);
+        Long userId = Long.valueOf(jwtUtil.validateAndGetUserId(token));
+        Long familyId = jwtUtil.validateAndGetFamilyId(token);
         List<String> imageUrls = puzzlePictureService.savePictures(request.getPictureData(), userId, familyId);
         return ResponseEntity.ok(Map.of("imageUrls", imageUrls));
     }
