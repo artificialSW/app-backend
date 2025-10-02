@@ -12,17 +12,18 @@ import java.util.Map;
 
 @RestController
 public class CommunityController {
-
     private final CommunityService communityService;
+    private final JwtUtil jwtUtil;
 
-    public CommunityController(CommunityService communityService) {
+    public CommunityController(CommunityService communityService,  JwtUtil jwtUtil) {
         this.communityService = communityService;
+        this.jwtUtil = jwtUtil;
     }
 
     @GetMapping("/api/community/home")
     public Map<String,Object> getHomeCommunity(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
-        String userId = JwtUtil.validateAndGetUserId(token);
+        String userId = jwtUtil.validateAndGetUserId(token);
         Long receiverId = Long.valueOf(userId);
         return communityService.getQuestionsWithUnsolvedCount(receiverId);
     }
@@ -36,7 +37,7 @@ public class CommunityController {
     @GetMapping("/api/community/question/my")
     public List<PersonalQuestionDto> getMyQuestions(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
-        String userId = JwtUtil.validateAndGetUserId(token);
+        String userId = jwtUtil.validateAndGetUserId(token);
         return communityService.getMyQuestions(userId);
     }
 
@@ -46,7 +47,7 @@ public class CommunityController {
             @RequestBody CommentRequestDto request) {
 
         String token = authHeader.replace("Bearer ", "");
-        String userIdStr = JwtUtil.validateAndGetUserId(token);
+        String userIdStr = jwtUtil.validateAndGetUserId(token);
         Long userId = Long.valueOf(userIdStr);
 
         Long replyId = communityService.saveComment(userId, request);
