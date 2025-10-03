@@ -41,7 +41,7 @@
 - `feature/signup-form`, `hotfix/crash-on-load`, `release/v1.0.2`
 
 ## 🔗 참고 링크
-- [GitHub 협업 이것만은 알자 (Velog)](https://velog.io/@pgmjun/Github-%ED%98%91%EC%97%85-%EC%9D%B4%EA%B2%83%EB%A7%8C%EC%9D%80-%EC%95%8C%EC%9E%90-Branch)
+- GitHub 협업 이것만은 알자 (Velog)
 
-- [Git Flow VS GitHub Flow (Velog)](https://velog.io/@gmlstjq123/Git-Flow-VS-Github-Flow)
+- Git Flow VS GitHub Flow (Velog)
 
