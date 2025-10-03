@@ -10,9 +10,14 @@ public class PublicQuestions {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "family_id", nullable = false)
+    private Long familyId;
+
+    @Column(columnDefinition = "TEXT")
     private String content;
-    private Integer likes;
-    private Integer counts; // 댓글임.
+    
+    private Integer likes = 0;
+    private Integer counts = 0; // 질문 번호
     private Timestamp created_at;
     private Timestamp updated_at;
 
@@ -24,6 +29,14 @@ public class PublicQuestions {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getFamilyId() {
+        return familyId;
+    }
+
+    public void setFamilyId(Long familyId) {
+        this.familyId = familyId;
     }
 
     public String getContent() {

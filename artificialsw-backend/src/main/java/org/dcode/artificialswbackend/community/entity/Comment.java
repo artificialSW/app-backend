@@ -13,11 +13,21 @@ public class Comment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "question_ref_id", nullable = false)
     private Long questionRefId;
+    
     private Long writer;
+    
+    @Column(name = "family_id", nullable = false)
+    private Long familyId;
+    
+    @Column(columnDefinition = "TEXT")
     private String content;
+    
+    @Column(name = "reply_to")
     private Long replyTo;
-    private int likes;
+    
+    private Integer likes = 0;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -53,6 +63,14 @@ public class Comment {
         this.writer = writer;
     }
 
+    public Long getFamilyId() {
+        return familyId;
+    }
+
+    public void setFamilyId(Long familyId) {
+        this.familyId = familyId;
+    }
+
     public String getContent() {
         return content;
     }
@@ -69,11 +87,11 @@ public class Comment {
         this.replyTo = replyTo;
     }
 
-    public int getLikes() {
+    public Integer getLikes() {
         return likes;
     }
 
-    public void setLikes(int likes) {
+    public void setLikes(Integer likes) {
         this.likes = likes;
     }
 

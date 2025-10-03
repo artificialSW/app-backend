@@ -7,21 +7,22 @@ import java.sql.Timestamp;
 public class PersonalQuestionDto {
 
     private Long id;
-
+    private Long familyId;
     private String content;
     private Long sender;
     private Long receiver;
-    private Boolean isPublic;
+    private Boolean visibility; // isPublic에서 visibility로 변경
     private Boolean solved;
     private Integer likes;
     private Timestamp created;
 
-    public PersonalQuestionDto(Long id, String content, Long sender, Long receiver, Boolean isPublic, Boolean solved, Integer likes, Timestamp created) {
+    public PersonalQuestionDto(Long id, Long familyId, String content, Long sender, Long receiver, Boolean visibility, Boolean solved, Integer likes, Timestamp created) {
         this.id = id;
+        this.familyId = familyId;
         this.content = content;
         this.sender = sender;
         this.receiver = receiver;
-        this.isPublic = isPublic;
+        this.visibility = visibility;
         this.solved = solved;
         this.likes = likes;
         this.created = created;
@@ -31,10 +32,11 @@ public class PersonalQuestionDto {
     public static PersonalQuestionDto fromEntity(PersonalQuestions entity) {
         return new PersonalQuestionDto(
                 entity.getId(),
+                entity.getFamilyId(),
                 entity.getContent(),
                 entity.getSender(),
                 entity.getReceiver(),
-                entity.getIsPublic(),
+                entity.getVisibility(),
                 entity.getSolved(),
                 entity.getLikes(),
                 entity.getCreated_at()
@@ -73,12 +75,20 @@ public class PersonalQuestionDto {
         this.receiver = receiver;
     }
 
-    public Boolean getIsPublic() {
-        return isPublic;
+    public Long getFamilyId() {
+        return familyId;
     }
 
-    public void setIsPublic(Boolean aPublic) {
-        isPublic = aPublic;
+    public void setFamilyId(Long familyId) {
+        this.familyId = familyId;
+    }
+
+    public Boolean getVisibility() {
+        return visibility;
+    }
+
+    public void setVisibility(Boolean visibility) {
+        this.visibility = visibility;
     }
 
     public Boolean getSolved() {
