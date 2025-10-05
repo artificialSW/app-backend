@@ -5,6 +5,7 @@ import org.dcode.artificialswbackend.puzzle.entity.Puzzle;
 import org.dcode.artificialswbackend.puzzle.entity.PuzzleCategory;
 import org.dcode.artificialswbackend.puzzle.repository.PuzzleCategoryRepository;
 import org.dcode.artificialswbackend.puzzle.repository.PuzzleRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -19,6 +20,9 @@ public class PuzzlePictureService {
     private final PuzzleRepository puzzleRepository;
     private final PuzzleCategoryRepository puzzleCategoryRepository;
 
+    @Value("${puzzle.image.url.base}")
+    private String imageBaseUrl;
+
     public PuzzlePictureService(PuzzleRepository puzzleRepository, PuzzleCategoryRepository puzzleCategoryRepository) {
         this.puzzleRepository = puzzleRepository;
         this.puzzleCategoryRepository = puzzleCategoryRepository;
@@ -27,6 +31,7 @@ public class PuzzlePictureService {
     public List<String> savePictures(List<PictureData> pictureDataList, Long userId, Long familyId) {
         List<String> imageUrls = new ArrayList<>();
         for (PictureData data : pictureDataList) {
+
             // 1. 이미지 저장
             String uploadDir = "/home/ubuntu/app/images/";
             String fileName = System.currentTimeMillis() + ".png";
@@ -36,7 +41,7 @@ public class PuzzlePictureService {
             } catch (IOException e) {
                 throw new RuntimeException("이미지 저장 실패");
             }
-            String imageUrl = "http://3.39.10.132/images/" + fileName;
+            String imageUrl = imageBaseUrl  + fileName;
 
             // 2. puzzle 테이블 저장
             Puzzle puzzle = new Puzzle();
