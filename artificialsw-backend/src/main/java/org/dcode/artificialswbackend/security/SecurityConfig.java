@@ -7,6 +7,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
@@ -14,7 +17,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/signup", "/api/login", "/api/family").permitAll()
                         .anyRequest().authenticated()
@@ -22,4 +27,21 @@ public class SecurityConfig {
         return http.build();
     }
 
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.addAllowedOriginPattern("*"); // 모든 Origin 허용 (실서비스는 도메인 제한 추천)
+        configuration.addAllowedMethod("GET");
+        configuration.addAllowedMethod("POST");
+        configuration.addAllowedMethod("PUT");
+        configuration.addAllowedMethod("DELETE");
+        configuration.addAllowedMethod("OPTIONS");
+        configuration.addAllowedHeader("*");
+        configuration.setAllowCredentials(true); // 인증정보 포함 허용
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+
+    }
 }
