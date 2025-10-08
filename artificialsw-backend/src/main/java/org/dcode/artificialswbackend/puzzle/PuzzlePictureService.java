@@ -2,6 +2,7 @@ package org.dcode.artificialswbackend.puzzle;
 
 import jakarta.transaction.Transactional;
 import org.dcode.artificialswbackend.puzzle.dto.PictureData;
+import org.dcode.artificialswbackend.puzzle.dto.PuzzleCreateResponse;
 import org.dcode.artificialswbackend.puzzle.entity.Puzzle;
 import org.dcode.artificialswbackend.puzzle.entity.PuzzleCategory;
 import org.dcode.artificialswbackend.puzzle.repository.PuzzleCategoryRepository;
@@ -62,4 +63,27 @@ public class PuzzlePictureService {
         }
         return imageUrls;
     }
+    @Transactional
+    public PuzzleCreateResponse createPuzzle(int size, String userId) {
+        // 1. 랜덤 퍼즐 선택
+        Puzzle puzzle = puzzleRepository.findRandomBePuzzleZero();
+        if (puzzle == null) throw new RuntimeException("랜덤 퍼즐이 없습니다.");
+
+        // 2. 퍼즐 정보 갱신
+        puzzle.setSize(size);
+        puzzle.setContributors("[\"" + userId + "\"]");
+        puzzle.setBe_puzzle(1); // 반드시 여기서 bePuzzle 값 1로 변경!
+
+        puzzleRepository.save(puzzle);
+
+        return new PuzzleCreateResponse(
+                puzzle.getPuzzleId(),
+                puzzle.getImagePath(),
+                puzzle.getCategory().getCategory(),
+                "퍼즐이 생성되었습니다."
+        );
+    }
+
+
+
 }
