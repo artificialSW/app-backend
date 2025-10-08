@@ -10,7 +10,6 @@ public class PuzzleCategory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Integer puzzleId;
     private String category;
 
     public PuzzleCategory() {
@@ -22,14 +21,6 @@ public class PuzzleCategory {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public Integer getPuzzleId() {
-        return puzzleId;
-    }
-
-    public void setPuzzleId(Integer puzzleId) {
-        this.puzzleId = puzzleId;
     }
 
     public String getCategory() {
