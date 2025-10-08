@@ -44,17 +44,19 @@ public class PuzzlePictureService {
             }
             String imageUrl = imageBaseUrl  + fileName;
 
-            // 2. puzzle 테이블 저장
+            // 2. 카테고리 엔티티 조회 (DB에 반드시 존재한다고 가정)
+            PuzzleCategory categoryEntity = puzzleCategoryRepository.findByCategory(data.getCategory());
+            if (categoryEntity == null) {
+                throw new RuntimeException("카테고리가 DB에 존재하지 않습니다: " + data.getCategory());
+            }
+
+            // 3. puzzle 테이블 저장, 카테고리 FK로 연결
             Puzzle puzzle = new Puzzle();
             puzzle.setImagePath(imageUrl);
             puzzle.setFamiliesId(familyId);
             puzzle.setMessage(data.getComment());
+            puzzle.setCategory(categoryEntity); // 카테고리 엔티티 연결
             puzzleRepository.save(puzzle);
-
-            // 3. puzzle_category 연결 (카테고리 값은 이미 DB에 존재한다고 가정)
-            PuzzleCategory categoryEntity = puzzleCategoryRepository.findByCategory(data.getCategory());
-            categoryEntity.setPuzzleId(puzzle.getPuzzleId());
-            puzzleCategoryRepository.save(categoryEntity);
 
             imageUrls.add(imageUrl);
         }

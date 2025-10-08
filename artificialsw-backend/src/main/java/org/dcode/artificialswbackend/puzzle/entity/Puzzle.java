@@ -32,74 +32,22 @@ public class Puzzle {
     @Column(nullable = false)
     private Long familiesId;
 
-
     private String message;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private PuzzleCategory category;
+
 
     public Puzzle() {
     }
 
-    public String getMessage() {
-        return message;
+    public Integer getPuzzleId() {
+        return puzzleId;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public Long getFamiliesId() {
-        return familiesId;
-    }
-
-    public void setFamiliesId(Long familiesId) {
-        this.familiesId = familiesId;
-    }
-
-    public String getContributors() {
-        return contributors;
-    }
-
-    public void setContributors(String contributors) {
-        this.contributors = contributors;
-    }
-
-    public Long getSolverId() {
-        return solverId;
-    }
-
-    public void setSolverId(Long solverId) {
-        this.solverId = solverId;
-    }
-
-    public boolean getIsPlayingPuzzle() {
-        return isPlayingPuzzle;
-    }
-
-    public void setIsPlayingPuzzle(boolean playingPuzzle) {
-        isPlayingPuzzle = playingPuzzle;
-    }
-
-    public boolean getCompleted() {
-        return completed;
-    }
-
-    public void setCompleted(boolean completed) {
-        this.completed = completed;
-    }
-
-    public String getCompletedPiecesID() {
-        return completedPiecesID;
-    }
-
-    public void setCompletedPiecesID(String completedPiecesID) {
-        this.completedPiecesID = completedPiecesID;
-    }
-
-    public Integer getSize() {
-        return size;
-    }
-
-    public void setSize(Integer size) {
-        this.size = size;
+    public void setPuzzleId(Integer puzzleId) {
+        this.puzzleId = puzzleId;
     }
 
     public String getImagePath() {
@@ -110,11 +58,75 @@ public class Puzzle {
         this.imagePath = imagePath;
     }
 
-    public Integer getPuzzleId() {
-        return puzzleId;
+    public Integer getSize() {
+        return size;
     }
 
-    public void setPuzzleId(Integer puzzleId) {
-        this.puzzleId = puzzleId;
+    public void setSize(Integer size) {
+        this.size = size;
+    }
+
+    public String getCompletedPiecesID() {
+        return completedPiecesID;
+    }
+
+    public void setCompletedPiecesID(String completedPiecesID) {
+        this.completedPiecesID = completedPiecesID;
+    }
+
+    public boolean isCompleted() {
+        return completed;
+    }
+
+    public void setCompleted(boolean completed) {
+        this.completed = completed;
+    }
+
+    public boolean isPlayingPuzzle() {
+        return isPlayingPuzzle;
+    }
+
+    public void setPlayingPuzzle(boolean playingPuzzle) {
+        isPlayingPuzzle = playingPuzzle;
+    }
+
+    public Long getSolverId() {
+        return solverId;
+    }
+
+    public void setSolverId(Long solverId) {
+        this.solverId = solverId;
+    }
+
+    public String getContributors() {
+        return contributors;
+    }
+
+    public void setContributors(String contributors) {
+        this.contributors = contributors;
+    }
+
+    public Long getFamiliesId() {
+        return familiesId;
+    }
+
+    public void setFamiliesId(Long familiesId) {
+        this.familiesId = familiesId;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public PuzzleCategory getCategory() {
+        return category;
+    }
+
+    public void setCategory(PuzzleCategory category) {
+        this.category = category;
     }
 }
