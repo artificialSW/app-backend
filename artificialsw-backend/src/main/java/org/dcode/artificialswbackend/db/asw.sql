@@ -47,12 +47,19 @@ CREATE TABLE `puzzle` (
                           `contributors` json DEFAULT NULL,
                           `families_id` bigint NOT NULL,
                           `message` varchar(255) NULL,
+                          `category_id` bigint NOT NULL,
+                          `ai_keyword_id` bigint NOT NULL,
                           PRIMARY KEY (`puzzle_id`),
                           KEY `fk_puzzle_solver` (`solverId`),
                           KEY `fk_puzzle_families` (`families_id`),
-                          CONSTRAINT `fk_puzzle_families` FOREIGN KEY (`families_id`) REFERENCES `families` (`id`),
-                          CONSTRAINT `fk_puzzle_solver` FOREIGN KEY (`solverId`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+                          KEY `fk_puzzle_category` (`category_id`),
+                          KEY `fk_ai_keyword` (`ai_keyword_id`),
+                          CONSTRAINT `fk_puzzle_families` FOREIGN KEY (`families_id`) REFERENCES `families`(`id`),
+                          CONSTRAINT `fk_puzzle_solver` FOREIGN KEY (`solverId`) REFERENCES `users`(`id`),
+                          CONSTRAINT `fk_puzzle_category` FOREIGN KEY (`category_id`) REFERENCES `puzzle_category`(`id`),
+                          CONSTRAINT `fk_ai_keyword` FOREIGN KEY (`ai_keyword_id`) REFERENCES `ai_keyword`(`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 
 
 -- island_archives 테이블 (멀티 테넌트 용 family_id 포함)
@@ -87,23 +94,18 @@ CREATE TABLE `tree` (
 -- puzzle_category 테이블 (puzzle_id 통해 family_id 간접관리)
 CREATE TABLE `puzzle_category` (
                                    `id` bigint NOT NULL AUTO_INCREMENT,
-                                   `puzzle_id` int NULL,
                                    `category` varchar(50) NOT NULL,
-                                   PRIMARY KEY (`id`),
-                                   KEY `puzzle_id` (`puzzle_id`),
-                                   CONSTRAINT `puzzle_category_ibfk_1` FOREIGN KEY (`puzzle_id`) REFERENCES `puzzle` (`puzzle_id`) ON DELETE CASCADE
+                                   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 -- puzzle_ai_keyword 테이블 (puzzle_id 통해 family_id 간접관리)
-CREATE TABLE `puzzle_ai_keyword` (
-                                     `id` bigint NOT NULL AUTO_INCREMENT,
-                                     `puzzle_id` int NOT NULL,
-                                     `keyword` varchar(100) NOT NULL,
-                                     PRIMARY KEY (`id`),
-                                     KEY `puzzle_id` (`puzzle_id`),
-                                     CONSTRAINT `puzzle_ai_keyword_ibfk_1` FOREIGN KEY (`puzzle_id`) REFERENCES `puzzle` (`puzzle_id`) ON DELETE CASCADE
+CREATE TABLE `ai_keyword` (
+                              `id` bigint NOT NULL AUTO_INCREMENT,
+                              `keyword` varchar(100) NOT NULL,
+                              PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 
 -- puzzle_pieces 테이블
 CREATE TABLE `puzzle_pieces` (

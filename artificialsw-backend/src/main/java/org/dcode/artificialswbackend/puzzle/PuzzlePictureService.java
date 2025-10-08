@@ -1,5 +1,6 @@
 package org.dcode.artificialswbackend.puzzle;
 
+import jakarta.transaction.Transactional;
 import org.dcode.artificialswbackend.puzzle.dto.PictureData;
 import org.dcode.artificialswbackend.puzzle.entity.Puzzle;
 import org.dcode.artificialswbackend.puzzle.entity.PuzzleCategory;
@@ -27,7 +28,7 @@ public class PuzzlePictureService {
         this.puzzleRepository = puzzleRepository;
         this.puzzleCategoryRepository = puzzleCategoryRepository;
     }
-
+    @Transactional
     public List<String> savePictures(List<PictureData> pictureDataList, Long userId, Long familyId) {
         List<String> imageUrls = new ArrayList<>();
         for (PictureData data : pictureDataList) {
@@ -51,10 +52,9 @@ public class PuzzlePictureService {
             puzzleRepository.save(puzzle);
 
             // 3. puzzle_category 연결 (카테고리 값은 이미 DB에 존재한다고 가정)
-            PuzzleCategory puzzleCategory = new PuzzleCategory();
-            puzzleCategory.setPuzzleId(puzzle.getPuzzleId());
-            puzzleCategory.setCategory(data.getCategory());
-            puzzleCategoryRepository.save(puzzleCategory);
+            PuzzleCategory categoryEntity = puzzleCategoryRepository.findByCategory(data.getCategory());
+            categoryEntity.setPuzzleId(puzzle.getPuzzleId());
+            puzzleCategoryRepository.save(categoryEntity);
 
             imageUrls.add(imageUrl);
         }
