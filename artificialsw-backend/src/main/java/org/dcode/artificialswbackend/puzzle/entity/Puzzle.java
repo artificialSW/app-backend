@@ -2,6 +2,7 @@ package org.dcode.artificialswbackend.puzzle.entity;
 
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "puzzle")
@@ -11,15 +12,27 @@ public class Puzzle {
     private Integer puzzleId;
 
     private String imagePath;
+
     private Integer size;
+
     @Column(columnDefinition = "json")
     private String completedPiecesID;
-    private Boolean completed;
-    private Boolean isPlayingPuzzle;
+
+    @Column(nullable = false)
+    private boolean completed = false;
+
+    @Column(name = "isPlayingPuzzle", nullable = false)
+    private boolean isPlayingPuzzle;
+
     private Long solverId;
+
     @Column(columnDefinition = "json")
     private String contributors;
+
+    @Column(nullable = false)
     private Long familiesId;
+
+
     private String message;
 
     public Puzzle() {
@@ -57,19 +70,19 @@ public class Puzzle {
         this.solverId = solverId;
     }
 
-    public Boolean getIsPlayingPuzzle() {
+    public boolean getIsPlayingPuzzle() {
         return isPlayingPuzzle;
     }
 
-    public void setIsPlayingPuzzle(Boolean playingPuzzle) {
+    public void setIsPlayingPuzzle(boolean playingPuzzle) {
         isPlayingPuzzle = playingPuzzle;
     }
 
-    public Boolean getCompleted() {
+    public boolean getCompleted() {
         return completed;
     }
 
-    public void setCompleted(Boolean completed) {
+    public void setCompleted(boolean completed) {
         this.completed = completed;
     }
 
