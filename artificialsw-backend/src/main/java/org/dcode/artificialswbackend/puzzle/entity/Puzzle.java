@@ -38,6 +38,8 @@ public class Puzzle {
     @JoinColumn(name = "category_id")
     private PuzzleCategory category;
 
+    private Integer bePuzzle;
+
 
     public Puzzle() {
     }
@@ -128,5 +130,13 @@ public class Puzzle {
 
     public void setCategory(PuzzleCategory category) {
         this.category = category;
+    }
+
+    public Integer getBePuzzle() {
+        return bePuzzle;
+    }
+
+    public void setBePuzzle(Integer bePuzzle) {
+        this.bePuzzle = bePuzzle;
     }
 }
