@@ -43,6 +43,7 @@ CREATE TABLE `puzzle` (
                           `completedPiecesID` json DEFAULT NULL,
                           `completed` tinyint(1) NOT NULL DEFAULT '0',
                           `isPlayingPuzzle` tinyint(1) NOT NULL DEFAULT '0',
+                          `be_puzzle` tinyint(1) NOT NULL DEFAULT '0',
                           `solverId` bigint DEFAULT NULL,
                           `contributors` json DEFAULT NULL,
                           `families_id` bigint NOT NULL,
