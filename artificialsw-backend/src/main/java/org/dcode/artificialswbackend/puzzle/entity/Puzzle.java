@@ -15,22 +15,22 @@ public class Puzzle {
 
     private Integer size;
 
-    @Column(columnDefinition = "json")
-    private String completedPiecesID;
+    @Column(name = "completed_pieces_id", columnDefinition = "json")
+    private String completed_pieces_id;
 
     @Column(nullable = false)
     private boolean completed = false;
 
-    @Column(name = "isPlayingPuzzle", nullable = false)
-    private boolean isPlayingPuzzle;
+    @Column(name = "is_playing_puzzle", nullable = false)
+    private boolean is_playing_puzzle;
 
     private Long solverId;
 
     @Column(columnDefinition = "json")
     private String contributors;
 
-    @Column(nullable = false)
-    private Long familiesId;
+    @Column(name = "families_id", nullable = false)
+    private Long families_id;
 
     private String message;
 
@@ -68,12 +68,12 @@ public class Puzzle {
         this.size = size;
     }
 
-    public String getCompletedPiecesID() {
-        return completedPiecesID;
+    public String getCompleted_pieces_id() {
+        return completed_pieces_id;
     }
 
-    public void setCompletedPiecesID(String completedPiecesID) {
-        this.completedPiecesID = completedPiecesID;
+    public void setCompleted_pieces_id(String completedPiecesID) {
+        this.completed_pieces_id = completedPiecesID;
     }
 
     public boolean isCompleted() {
@@ -84,12 +84,12 @@ public class Puzzle {
         this.completed = completed;
     }
 
-    public boolean isPlayingPuzzle() {
-        return isPlayingPuzzle;
+    public boolean isIs_playing_puzzle() {
+        return is_playing_puzzle;
     }
 
     public void setPlayingPuzzle(boolean playingPuzzle) {
-        isPlayingPuzzle = playingPuzzle;
+        is_playing_puzzle = playingPuzzle;
     }
 
     public Long getSolverId() {
@@ -108,12 +108,12 @@ public class Puzzle {
         this.contributors = contributors;
     }
 
-    public Long getFamiliesId() {
-        return familiesId;
+    public Long getFamilies_id() {
+        return families_id;
     }
 
-    public void setFamiliesId(Long familiesId) {
-        this.familiesId = familiesId;
+    public void setFamilies_id(Long familiesId) {
+        this.families_id = familiesId;
     }
 
     public String getMessage() {
