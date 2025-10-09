@@ -39,6 +39,7 @@ CREATE TABLE `users` (
 CREATE TABLE `puzzle` (
                           `puzzle_id` int NOT NULL AUTO_INCREMENT,
                           `image_path` varchar(255) NOT NULL,
+                          `capture_image_path` varchar(255) DEFAULT NULL,
                           `size` int DEFAULT NULL,
                           `completed_pieces_id` json DEFAULT NULL,
                           `completed` tinyint(1) NOT NULL DEFAULT '0',

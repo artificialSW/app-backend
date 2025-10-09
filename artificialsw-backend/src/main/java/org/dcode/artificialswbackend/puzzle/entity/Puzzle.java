@@ -2,7 +2,6 @@ package org.dcode.artificialswbackend.puzzle.entity;
 
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "puzzle")
@@ -12,6 +11,8 @@ public class Puzzle {
     private Integer puzzleId;
 
     private String imagePath;
+
+    private String capture_image_path;
 
     private Integer size;
 
@@ -60,6 +61,22 @@ public class Puzzle {
         this.imagePath = imagePath;
     }
 
+    public String getCapture_image_path() {
+        return capture_image_path;
+    }
+
+    public void setCapture_image_path(String capture_image_path) {
+        this.capture_image_path = capture_image_path;
+    }
+
+    public boolean getIs_playing_puzzle() {
+        return is_playing_puzzle;
+    }
+
+    public void setIs_playing_puzzle(boolean is_playing_puzzle) {
+        this.is_playing_puzzle = is_playing_puzzle;
+    }
+
     public Integer getSize() {
         return size;
     }
@@ -84,13 +101,6 @@ public class Puzzle {
         this.completed = completed;
     }
 
-    public boolean isIs_playing_puzzle() {
-        return is_playing_puzzle;
-    }
-
-    public void setPlayingPuzzle(boolean playingPuzzle) {
-        is_playing_puzzle = playingPuzzle;
-    }
 
     public Long getSolverId() {
         return solverId;
