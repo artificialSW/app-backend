@@ -1,8 +1,11 @@
 package org.dcode.artificialswbackend.puzzle;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import org.dcode.artificialswbackend.puzzle.dto.PictureData;
 import org.dcode.artificialswbackend.puzzle.dto.PuzzleCreateResponse;
+import org.dcode.artificialswbackend.puzzle.dto.SavePuzzleProgressRequest;
 import org.dcode.artificialswbackend.puzzle.entity.Puzzle;
 import org.dcode.artificialswbackend.puzzle.entity.PuzzleCategory;
 import org.dcode.artificialswbackend.puzzle.repository.PuzzleCategoryRepository;
@@ -13,9 +16,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class PuzzlePictureService {
@@ -85,5 +86,86 @@ public class PuzzlePictureService {
     }
 
 
+    public String saveCaptureImage(String base64Image) {
+        String uploadDir = "/home/ubuntu/app/images/capture/";
+        String fileName = System.currentTimeMillis() + ".png";
+
+        byte[] decodedBytes = Base64.getDecoder().decode(base64Image);
+        try {
+            Files.write(Paths.get(uploadDir + fileName), decodedBytes);
+        } catch (IOException e) {
+            throw new RuntimeException("캡쳐 이미지 저장 실패", e);
+        }
+
+        return uploadDir + fileName;
+    }
+
+    public Puzzle getPuzzleById(Integer puzzleId) {
+        Optional<Puzzle> optionalPuzzle = puzzleRepository.findById(puzzleId);
+        if (optionalPuzzle.isEmpty()) {
+            throw new RuntimeException("Puzzle not found with id: " + puzzleId);
+        }
+        return optionalPuzzle.get();
+    }
+
+    public void updatePuzzleStatus(Puzzle puzzle, String savedCaptureImagePath, boolean completed, boolean isPlayingPuzzle) {
+        puzzle.setCapture_image_path(savedCaptureImagePath);
+        puzzle.setCompleted(completed);
+        puzzle.setIs_playing_puzzle(isPlayingPuzzle);
+    }
+
+    public void updatePuzzlePieces(Puzzle puzzle, Map<String , SavePuzzleProgressRequest.Coordinate> piecesMap) {
+        piecesMap.forEach((pieceId, coord) -> {
+            puzzle.getPieces().stream()
+                    .filter(piece -> piece.getPiece_id().equals(Integer.parseInt(pieceId)))
+                    .findFirst()
+                    .ifPresent(piece -> {
+                        piece.setX(coord.getX());
+                        piece.setY(coord.getY());
+                    });
+        });
+    }
+
+    public void updateCompletedPiecesId(Puzzle puzzle, List<Integer> completedPiecesId) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            String json = mapper.writeValueAsString(completedPiecesId);
+            puzzle.setCompleted_pieces_id(json);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("completedPiecesId JSON 변환 실패", e);
+        }
+    }
+
+    // contributor 반영
+    public void updateContributor(Puzzle puzzle, Long userId) {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            // 이미 contributors가 있으면 merge, 없으면 새로 추가(최소 한 명 저장)
+            String contributorsJson = puzzle.getContributors();
+            List<Long> contributorsList;
+            if (contributorsJson != null && !contributorsJson.isEmpty()) {
+                contributorsList = mapper.readValue(contributorsJson, mapper.getTypeFactory().constructCollectionType(List.class, Long.class));
+                if (!contributorsList.contains(userId)) {
+                    contributorsList.add(userId);
+                }
+            } else {
+                contributorsList = List.of(userId);
+            }
+            puzzle.setContributors(mapper.writeValueAsString(contributorsList));
+        } catch (Exception e) {
+            throw new RuntimeException("Contributors JSON 처리 실패", e);
+        }
+    }
+
+    @Transactional
+    public void savePuzzleProgress(Long userId, SavePuzzleProgressRequest request) {
+        Puzzle puzzle = getPuzzleById(request.getPuzzleId());
+        String savedCaptureImagePath = saveCaptureImage(request.getCaptureImagePath());
+        updatePuzzleStatus(puzzle, savedCaptureImagePath, request.isCompleted(), request.isPlayingPuzzle());
+        updatePuzzlePieces(puzzle, request.getPieces());
+        updateCompletedPiecesId(puzzle, request.getCompletedPiecesId());
+        updateContributor(puzzle, userId); // **기여자 추가**
+        puzzleRepository.save(puzzle);
+    }
 
 }
