@@ -92,6 +92,16 @@ CREATE TABLE `tree` (
                         CONSTRAINT `tree_ibfk_1` FOREIGN KEY (`archive_id`) REFERENCES `island_archives` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+CREATE TABLE puzzle_piece (
+                              piece_id INT NOT NULL AUTO_INCREMENT,
+                              puzzle_id INT NOT NULL,
+                              x DOUBLE NOT NULL,
+                              y DOUBLE NOT NULL,
+                              PRIMARY KEY (piece_id),
+                              FOREIGN KEY (puzzle_id) REFERENCES puzzle(puzzle_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
 
 -- puzzle_category 테이블 (puzzle_id 통해 family_id 간접관리)
 CREATE TABLE `puzzle_category` (

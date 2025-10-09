@@ -3,6 +3,9 @@ package org.dcode.artificialswbackend.puzzle.entity;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "puzzle")
 public class Puzzle {
@@ -41,6 +44,8 @@ public class Puzzle {
 
     private Integer be_puzzle;
 
+    @OneToMany(mappedBy = "puzzle", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PuzzlePiece> pieces = new ArrayList<>();
 
     public Puzzle() {
     }
@@ -148,5 +153,13 @@ public class Puzzle {
 
     public void setBe_puzzle(Integer be_puzzle) {
         this.be_puzzle = be_puzzle;
+    }
+
+    public List<PuzzlePiece> getPieces() {
+        return pieces;
+    }
+
+    public void setPieces(List<PuzzlePiece> pieces) {
+        this.pieces = pieces;
     }
 }
