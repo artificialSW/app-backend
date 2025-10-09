@@ -39,23 +39,25 @@ CREATE TABLE `users` (
 CREATE TABLE `puzzle` (
                           `puzzle_id` int NOT NULL AUTO_INCREMENT,
                           `image_path` varchar(255) NOT NULL,
+                          `capture_image_path` varchar(255) DEFAULT NULL,
                           `size` int DEFAULT NULL,
-                          `completedPiecesID` json DEFAULT NULL,
+                          `completed_pieces_id` json DEFAULT NULL,
                           `completed` tinyint(1) NOT NULL DEFAULT '0',
-                          `isPlayingPuzzle` tinyint(1) NOT NULL DEFAULT '0',
-                          `solverId` bigint DEFAULT NULL,
+                          `is_playing_puzzle` tinyint(1) NOT NULL DEFAULT '0',
+                          `be_puzzle` tinyint(1) NOT NULL DEFAULT '0',
+                          `solver_id` bigint DEFAULT NULL,
                           `contributors` json DEFAULT NULL,
                           `families_id` bigint NOT NULL,
                           `message` varchar(255) NULL,
                           `category_id` bigint NOT NULL,
                           `ai_keyword_id` bigint NOT NULL,
                           PRIMARY KEY (`puzzle_id`),
-                          KEY `fk_puzzle_solver` (`solverId`),
+                          KEY `fk_puzzle_solver` (`solver_id`),
                           KEY `fk_puzzle_families` (`families_id`),
                           KEY `fk_puzzle_category` (`category_id`),
                           KEY `fk_ai_keyword` (`ai_keyword_id`),
                           CONSTRAINT `fk_puzzle_families` FOREIGN KEY (`families_id`) REFERENCES `families`(`id`),
-                          CONSTRAINT `fk_puzzle_solver` FOREIGN KEY (`solverId`) REFERENCES `users`(`id`),
+                          CONSTRAINT `fk_puzzle_solver` FOREIGN KEY (`solver_id`) REFERENCES `users`(`id`),
                           CONSTRAINT `fk_puzzle_category` FOREIGN KEY (`category_id`) REFERENCES `puzzle_category`(`id`),
                           CONSTRAINT `fk_ai_keyword` FOREIGN KEY (`ai_keyword_id`) REFERENCES `ai_keyword`(`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -89,6 +91,16 @@ CREATE TABLE `tree` (
                         CONSTRAINT `fk_tree_family` FOREIGN KEY (`family_id`) REFERENCES `families` (`id`),
                         CONSTRAINT `tree_ibfk_1` FOREIGN KEY (`archive_id`) REFERENCES `island_archives` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE puzzle_piece (
+                              piece_id INT NOT NULL AUTO_INCREMENT,
+                              puzzle_id INT NOT NULL,
+                              x DOUBLE NOT NULL,
+                              y DOUBLE NOT NULL,
+                              PRIMARY KEY (piece_id),
+                              FOREIGN KEY (puzzle_id) REFERENCES puzzle(puzzle_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 
 
 -- puzzle_category 테이블 (puzzle_id 통해 family_id 간접관리)

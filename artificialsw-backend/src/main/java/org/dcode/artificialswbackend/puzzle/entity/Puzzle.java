@@ -2,7 +2,9 @@ package org.dcode.artificialswbackend.puzzle.entity;
 
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "puzzle")
@@ -13,24 +15,26 @@ public class Puzzle {
 
     private String imagePath;
 
+    private String capture_image_path;
+
     private Integer size;
 
-    @Column(columnDefinition = "json")
-    private String completedPiecesID;
+    @Column(name = "completed_pieces_id", columnDefinition = "json")
+    private String completed_pieces_id;
 
     @Column(nullable = false)
     private boolean completed = false;
 
-    @Column(name = "isPlayingPuzzle", nullable = false)
-    private boolean isPlayingPuzzle;
+    @Column(name = "is_playing_puzzle", nullable = false)
+    private boolean is_playing_puzzle;
 
     private Long solverId;
 
     @Column(columnDefinition = "json")
     private String contributors;
 
-    @Column(nullable = false)
-    private Long familiesId;
+    @Column(name = "families_id", nullable = false)
+    private Long families_id;
 
     private String message;
 
@@ -38,6 +42,10 @@ public class Puzzle {
     @JoinColumn(name = "category_id")
     private PuzzleCategory category;
 
+    private Integer be_puzzle;
+
+    @OneToMany(mappedBy = "puzzle", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PuzzlePiece> pieces = new ArrayList<>();
 
     public Puzzle() {
     }
@@ -58,6 +66,22 @@ public class Puzzle {
         this.imagePath = imagePath;
     }
 
+    public String getCapture_image_path() {
+        return capture_image_path;
+    }
+
+    public void setCapture_image_path(String capture_image_path) {
+        this.capture_image_path = capture_image_path;
+    }
+
+    public boolean getIs_playing_puzzle() {
+        return is_playing_puzzle;
+    }
+
+    public void setIs_playing_puzzle(boolean is_playing_puzzle) {
+        this.is_playing_puzzle = is_playing_puzzle;
+    }
+
     public Integer getSize() {
         return size;
     }
@@ -66,12 +90,12 @@ public class Puzzle {
         this.size = size;
     }
 
-    public String getCompletedPiecesID() {
-        return completedPiecesID;
+    public String getCompleted_pieces_id() {
+        return completed_pieces_id;
     }
 
-    public void setCompletedPiecesID(String completedPiecesID) {
-        this.completedPiecesID = completedPiecesID;
+    public void setCompleted_pieces_id(String completedPiecesID) {
+        this.completed_pieces_id = completedPiecesID;
     }
 
     public boolean isCompleted() {
@@ -82,13 +106,6 @@ public class Puzzle {
         this.completed = completed;
     }
 
-    public boolean isPlayingPuzzle() {
-        return isPlayingPuzzle;
-    }
-
-    public void setPlayingPuzzle(boolean playingPuzzle) {
-        isPlayingPuzzle = playingPuzzle;
-    }
 
     public Long getSolverId() {
         return solverId;
@@ -106,12 +123,12 @@ public class Puzzle {
         this.contributors = contributors;
     }
 
-    public Long getFamiliesId() {
-        return familiesId;
+    public Long getFamilies_id() {
+        return families_id;
     }
 
-    public void setFamiliesId(Long familiesId) {
-        this.familiesId = familiesId;
+    public void setFamilies_id(Long familiesId) {
+        this.families_id = familiesId;
     }
 
     public String getMessage() {
@@ -128,5 +145,21 @@ public class Puzzle {
 
     public void setCategory(PuzzleCategory category) {
         this.category = category;
+    }
+
+    public Integer getBe_puzzle() {
+        return be_puzzle;
+    }
+
+    public void setBe_puzzle(Integer be_puzzle) {
+        this.be_puzzle = be_puzzle;
+    }
+
+    public List<PuzzlePiece> getPieces() {
+        return pieces;
+    }
+
+    public void setPieces(List<PuzzlePiece> pieces) {
+        this.pieces = pieces;
     }
 }
