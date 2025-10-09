@@ -97,7 +97,7 @@ public class PuzzlePictureService {
             throw new RuntimeException("캡쳐 이미지 저장 실패", e);
         }
 
-        return uploadDir + fileName;
+        return imageBaseUrl + "capture/" + fileName;
     }
 
     public Puzzle getPuzzleById(Integer puzzleId) {
@@ -158,8 +158,8 @@ public class PuzzlePictureService {
     }
 
     @Transactional
-    public void savePuzzleProgress(Long userId, SavePuzzleProgressRequest request) {
-        Puzzle puzzle = getPuzzleById(request.getPuzzleId());
+    public void savePuzzleProgress(Long userId,Integer puzzleId, SavePuzzleProgressRequest request) {
+        Puzzle puzzle = getPuzzleById(puzzleId);
         String savedCaptureImagePath = saveCaptureImage(request.getCaptureImagePath());
         updatePuzzleStatus(puzzle, savedCaptureImagePath, request.isCompleted(), request.isPlayingPuzzle());
         updatePuzzlePieces(puzzle, request.getPieces());

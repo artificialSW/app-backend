@@ -47,15 +47,16 @@ public class PuzzlePictureController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/save-progress")
+    @PostMapping("/{puzzleId}/save-progress")
     public ResponseEntity<?> saveProgress(
             @RequestHeader("Authorization") String authHeader,
+            @PathVariable("puzzleId") Integer puzzleId,
             @RequestBody SavePuzzleProgressRequest request
     ) {
         String token = authHeader.replace("Bearer ", "");
         Long userId = Long.valueOf(jwtUtil.validateAndGetUserId(token));
 
-        puzzlePictureService.savePuzzleProgress(userId, request);
+        puzzlePictureService.savePuzzleProgress(userId,puzzleId,request);
         return ResponseEntity.ok(Map.of("message", "저장 성공"));
     }
 
