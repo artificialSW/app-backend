@@ -54,7 +54,7 @@ public class PuzzlePictureService {
             // 3. puzzle 테이블 저장, 카테고리 FK로 연결
             Puzzle puzzle = new Puzzle();
             puzzle.setImagePath(imageUrl);
-            puzzle.setFamiliesId(familyId);
+            puzzle.setFamilies_id(familyId);
             puzzle.setMessage(data.getComment());
             puzzle.setCategory(categoryEntity); // 카테고리 엔티티 연결
             puzzleRepository.save(puzzle);
