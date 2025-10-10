@@ -8,7 +8,9 @@ import org.dcode.artificialswbackend.puzzle.dto.PuzzleCreateResponse;
 import org.dcode.artificialswbackend.puzzle.dto.SavePuzzleProgressRequest;
 import org.dcode.artificialswbackend.puzzle.entity.Puzzle;
 import org.dcode.artificialswbackend.puzzle.entity.PuzzleCategory;
+import org.dcode.artificialswbackend.puzzle.entity.PuzzlePieces;
 import org.dcode.artificialswbackend.puzzle.repository.PuzzleCategoryRepository;
+import org.dcode.artificialswbackend.puzzle.repository.PuzzlePiecesRepository;
 import org.dcode.artificialswbackend.puzzle.repository.PuzzleRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -22,13 +24,17 @@ import java.util.*;
 public class PuzzlePictureService {
     private final PuzzleRepository puzzleRepository;
     private final PuzzleCategoryRepository puzzleCategoryRepository;
+    private final PuzzlePiecesRepository puzzlePiecesRepository;
+    private final ObjectMapper objectMapper;
 
     @Value("${puzzle.image.url.base}")
     private String imageBaseUrl;
 
-    public PuzzlePictureService(PuzzleRepository puzzleRepository, PuzzleCategoryRepository puzzleCategoryRepository) {
+    public PuzzlePictureService(PuzzleRepository puzzleRepository, PuzzleCategoryRepository puzzleCategoryRepository, PuzzlePiecesRepository puzzlePiecesRepository, ObjectMapper objectMapper) {
         this.puzzleRepository = puzzleRepository;
         this.puzzleCategoryRepository = puzzleCategoryRepository;
+        this.puzzlePiecesRepository = puzzlePiecesRepository;
+        this.objectMapper = objectMapper;
     }
     @Transactional
     public List<String> savePictures(List<PictureData> pictureDataList, Long userId, Long familyId) {
@@ -114,16 +120,30 @@ public class PuzzlePictureService {
         puzzle.setIs_playing_puzzle(isPlayingPuzzle);
     }
 
-    public void updatePuzzlePieces(Puzzle puzzle, Map<String , SavePuzzleProgressRequest.Coordinate> piecesMap) {
-        piecesMap.forEach((pieceId, coord) -> {
-            puzzle.getPieces().stream()
-                    .filter(piece -> piece.getPiece_id().equals(Integer.parseInt(pieceId)))
-                    .findFirst()
-                    .ifPresent(piece -> {
-                        piece.setX(coord.getX());
-                        piece.setY(coord.getY());
+
+    @Transactional
+    public void updatePuzzlePieces(Puzzle puzzle, Map<String, SavePuzzleProgressRequest.Coordinate> piecesMap) {
+        try {
+            // piecesMap을 "pieces" 키로 감싸 JSON 문자열로 변환
+            Map<String, Object> positionMap = new HashMap<>();
+            positionMap.put("pieces", piecesMap);
+            String positionJson = objectMapper.writeValueAsString(positionMap);
+
+            // 퍼즐에 해당하는 PuzzlePieces 엔티티 조회 또는 생성
+            PuzzlePieces puzzlePieces = puzzlePiecesRepository.findByPuzzleId(puzzle.getPuzzleId())
+                    .orElseGet(() -> {
+                        PuzzlePieces newPiece = new PuzzlePieces();
+                        newPiece.setPuzzleId(puzzle.getPuzzleId());
+                        return newPiece;
                     });
-        });
+
+            // position 필드에 JSON 문자열 저장
+            puzzlePieces.setPosition(positionJson);
+            puzzlePiecesRepository.save(puzzlePieces);
+
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("퍼즐 조각 위치 JSON 변환 실패", e);
+        }
     }
 
     public void updateCompletedPiecesId(Puzzle puzzle, List<Integer> completedPiecesId) {
