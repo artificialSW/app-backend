@@ -37,9 +37,10 @@ public class PuzzlePictureController {
     ) {
         String token = authHeader.replace("Bearer ", "");
         String userId = jwtUtil.validateAndGetUserId(token);
+        Long familyId = jwtUtil.validateAndGetFamilyId(token);
 
         // 퍼즐 생성 시 userId를 contributors로 전달
-        PuzzleCreateResponse response = puzzlePictureService.createPuzzle(request.getSize(), userId);
+        PuzzleCreateResponse response = puzzlePictureService.createPuzzle(request.getSize(), userId,  familyId);
 
         return ResponseEntity.ok(response);
     }
