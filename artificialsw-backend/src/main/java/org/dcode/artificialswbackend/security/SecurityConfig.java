@@ -16,7 +16,7 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/signup", "/api/login", "/api/family", "/api/mypage", "/api/mypage/edit", "/api/mypage/comments").permitAll()
+                        .requestMatchers("/api/signup", "/api/login", "/api/family", "/api/mypage", "/api/mypage/edit", "/api/mypage/comments", "/api/mypage/questions").permitAll()
                         .anyRequest().authenticated()
                 ); // JWT 인증 필터 등록 등 추가 설정 가능
         return http.build();

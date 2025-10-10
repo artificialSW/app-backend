@@ -12,6 +12,7 @@ import java.util.List;
 public interface PersonalQuestionsRepository extends JpaRepository<PersonalQuestions, Long> {
     Long countByReceiverAndSolvedFalse(Long receiverId);
     List<PersonalQuestions> findByReceiver(Long receiver);
+    List<PersonalQuestions> findBySender(Long sender);
 
     @Modifying
     @Query("UPDATE PersonalQuestions p SET p.likes = p.likes + 1 WHERE p.id = :id")

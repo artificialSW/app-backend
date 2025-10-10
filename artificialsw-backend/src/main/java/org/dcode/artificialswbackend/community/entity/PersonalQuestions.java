@@ -3,7 +3,7 @@ import jakarta.persistence.*;
 import java.sql.Timestamp;
 
 @Entity
-@Table(name = "questions")
+@Table(name = "personal_questions")
 public class PersonalQuestions {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
