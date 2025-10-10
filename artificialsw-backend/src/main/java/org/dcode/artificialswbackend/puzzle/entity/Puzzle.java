@@ -44,8 +44,6 @@ public class Puzzle {
 
     private Integer be_puzzle;
 
-    @OneToMany(mappedBy = "puzzle", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PuzzlePiece> pieces = new ArrayList<>();
 
     public Puzzle() {
     }
@@ -155,11 +153,4 @@ public class Puzzle {
         this.be_puzzle = be_puzzle;
     }
 
-    public List<PuzzlePiece> getPieces() {
-        return pieces;
-    }
-
-    public void setPieces(List<PuzzlePiece> pieces) {
-        this.pieces = pieces;
-    }
 }
