@@ -1,9 +1,6 @@
 package org.dcode.artificialswbackend.puzzle;
 
-import org.dcode.artificialswbackend.puzzle.dto.PictureUploadRequest;
-import org.dcode.artificialswbackend.puzzle.dto.PuzzleCreateRequest;
-import org.dcode.artificialswbackend.puzzle.dto.PuzzleCreateResponse;
-import org.dcode.artificialswbackend.puzzle.dto.SavePuzzleProgressRequest;
+import org.dcode.artificialswbackend.puzzle.dto.*;
 import org.dcode.artificialswbackend.util.JwtUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -60,5 +57,21 @@ public class PuzzlePictureController {
         return ResponseEntity.ok(Map.of("message", "저장 성공"));
     }
 
+
+    @GetMapping("/{puzzleId}/progress")
+    public ResponseEntity<?> getPuzzleProgress(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable Integer puzzleId) {
+
+        String token = authHeader.replace("Bearer ", "");
+        Long userId = Long.valueOf(jwtUtil.validateAndGetUserId(token));
+
+        try {
+            PuzzleProgressResponse response = puzzlePictureService.getPuzzleProgress(puzzleId);
+            return ResponseEntity.ok(response);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(423).body(Map.of("message", e.getMessage()));
+        }
+    }
 }
 

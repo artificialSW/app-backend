@@ -1,10 +1,12 @@
 package org.dcode.artificialswbackend.puzzle;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import org.dcode.artificialswbackend.puzzle.dto.PictureData;
 import org.dcode.artificialswbackend.puzzle.dto.PuzzleCreateResponse;
+import org.dcode.artificialswbackend.puzzle.dto.PuzzleProgressResponse;
 import org.dcode.artificialswbackend.puzzle.dto.SavePuzzleProgressRequest;
 import org.dcode.artificialswbackend.puzzle.entity.Puzzle;
 import org.dcode.artificialswbackend.puzzle.entity.PuzzleCategory;
@@ -186,6 +188,53 @@ public class PuzzlePictureService {
         updateCompletedPiecesId(puzzle, request.getCompletedPiecesId());
         updateContributor(puzzle, userId); // **기여자 추가**
         puzzleRepository.save(puzzle);
+    }
+
+
+    @Transactional
+    public PuzzleProgressResponse getPuzzleProgress(Integer puzzleId) {
+        Puzzle puzzle = puzzleRepository.findById(puzzleId)
+                .orElseThrow(() -> new RuntimeException("Puzzle not found with id: " + puzzleId));
+
+        if (puzzle.getIs_playing_puzzle()) {
+            throw new IllegalStateException("다른 사람이 퍼즐을 풀고 있습니다");
+        }
+
+        // 진행 상태로 변경
+        puzzle.setIs_playing_puzzle(true);
+        puzzleRepository.save(puzzle);
+
+        Optional<PuzzlePieces> puzzlePiecesOpt = puzzlePiecesRepository.findByPuzzleId(puzzleId);
+
+        Map<String, PuzzleProgressResponse.PiecePosition> pieces = new HashMap<>();
+
+        if (puzzlePiecesOpt.isPresent()) {
+            PuzzlePieces puzzlePieces = puzzlePiecesOpt.get();
+            String positionJson = puzzlePieces.getPosition();
+
+            try {
+                JsonNode rootNode = objectMapper.readTree(positionJson);
+                JsonNode piecesNode = rootNode.get("pieces");
+                if (piecesNode != null) {
+                    Iterator<String> fieldNames = piecesNode.fieldNames();
+                    while (fieldNames.hasNext()) {
+                        String key = fieldNames.next();
+                        JsonNode posNode = piecesNode.get(key);
+                        double x = posNode.get("x").asDouble();
+                        double y = posNode.get("y").asDouble();
+                        pieces.put(key, new PuzzleProgressResponse.PiecePosition(x, y));
+                    }
+                }
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException("Error parsing pieces JSON", e);
+            }
+        }
+
+        return new PuzzleProgressResponse(
+                puzzle.getImagePath(),
+                puzzle.getSize(),
+                pieces
+        );
     }
 
 }
