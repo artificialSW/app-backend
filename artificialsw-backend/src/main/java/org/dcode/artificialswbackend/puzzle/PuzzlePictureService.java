@@ -73,9 +73,9 @@ public class PuzzlePictureService {
         return imageUrls;
     }
     @Transactional
-    public PuzzleCreateResponse createPuzzle(int size, String userId) {
+    public PuzzleCreateResponse createPuzzle(int size, String userId, Long familyId) {
         // 1. 랜덤 퍼즐 선택
-        Puzzle puzzle = puzzleRepository.findRandomBePuzzleZero();
+        Puzzle puzzle = puzzleRepository.findRandomBePuzzleZeroByFamilyId(familyId);
         if (puzzle == null) throw new RuntimeException("랜덤 퍼즐이 없습니다.");
 
         // 2. 퍼즐 정보 갱신

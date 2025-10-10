@@ -42,7 +42,7 @@ public class Puzzle {
     @JoinColumn(name = "category_id")
     private PuzzleCategory category;
 
-    private Integer be_puzzle;
+    private Integer be_puzzle = 0;
 
 
     public Puzzle() {
