@@ -15,6 +15,11 @@ public class IslandArchives {
     private Integer year;
     private Integer period;
 
+    @Column(name = "puzzle_score")
+    private Integer puzzleScore;
+    @Column(name = "community_score")
+    private Integer communityScore;
+
     private LocalDateTime createdAt;
 
     @PrePersist
@@ -68,5 +73,19 @@ public class IslandArchives {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Integer getPuzzleScore() {
+        return puzzleScore;
+    }
+    public void setPuzzleScore(Integer puzzleScore) {
+        this.puzzleScore = puzzleScore;
+    }
+
+    public Integer getCommunityScore() {
+        return communityScore;
+    }
+    public void setCommunityScore(Integer communityScore) {
+        this.communityScore = communityScore;
     }
 }

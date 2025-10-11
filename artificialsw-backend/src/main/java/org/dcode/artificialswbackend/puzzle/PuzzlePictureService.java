@@ -4,22 +4,26 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
-import org.dcode.artificialswbackend.puzzle.dto.PictureData;
-import org.dcode.artificialswbackend.puzzle.dto.PuzzleCreateResponse;
-import org.dcode.artificialswbackend.puzzle.dto.PuzzleProgressResponse;
-import org.dcode.artificialswbackend.puzzle.dto.SavePuzzleProgressRequest;
+import org.dcode.artificialswbackend.archive.entity.IslandArchives;
+import org.dcode.artificialswbackend.archive.repository.IslandArchivesRepository;
+import org.dcode.artificialswbackend.puzzle.dto.*;
+import org.dcode.artificialswbackend.puzzle.entity.FruitCatalog;
 import org.dcode.artificialswbackend.puzzle.entity.Puzzle;
 import org.dcode.artificialswbackend.puzzle.entity.PuzzleCategory;
 import org.dcode.artificialswbackend.puzzle.entity.PuzzlePieces;
+import org.dcode.artificialswbackend.puzzle.repository.FruitCatalogRepository;
 import org.dcode.artificialswbackend.puzzle.repository.PuzzleCategoryRepository;
 import org.dcode.artificialswbackend.puzzle.repository.PuzzlePiecesRepository;
 import org.dcode.artificialswbackend.puzzle.repository.PuzzleRepository;
+import org.dcode.artificialswbackend.signup.repository.SignUpRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
 
 @Service
@@ -27,15 +31,21 @@ public class PuzzlePictureService {
     private final PuzzleRepository puzzleRepository;
     private final PuzzleCategoryRepository puzzleCategoryRepository;
     private final PuzzlePiecesRepository puzzlePiecesRepository;
+    private final FruitCatalogRepository fruitCatalogRepository;
+    private final SignUpRepository signUpRepository;
+    private final IslandArchivesRepository islandArchivesRepository;
     private final ObjectMapper objectMapper;
 
     @Value("${puzzle.image.url.base}")
     private String imageBaseUrl;
 
-    public PuzzlePictureService(PuzzleRepository puzzleRepository, PuzzleCategoryRepository puzzleCategoryRepository, PuzzlePiecesRepository puzzlePiecesRepository, ObjectMapper objectMapper) {
+    public PuzzlePictureService(PuzzleRepository puzzleRepository, PuzzleCategoryRepository puzzleCategoryRepository, PuzzlePiecesRepository puzzlePiecesRepository, FruitCatalogRepository fruitCatalogRepository, SignUpRepository signUpRepository, IslandArchivesRepository islandArchivesRepository, ObjectMapper objectMapper) {
         this.puzzleRepository = puzzleRepository;
         this.puzzleCategoryRepository = puzzleCategoryRepository;
         this.puzzlePiecesRepository = puzzlePiecesRepository;
+        this.fruitCatalogRepository = fruitCatalogRepository;
+        this.signUpRepository = signUpRepository;
+        this.islandArchivesRepository = islandArchivesRepository;
         this.objectMapper = objectMapper;
     }
     @Transactional
@@ -63,7 +73,7 @@ public class PuzzlePictureService {
             // 3. puzzle 테이블 저장, 카테고리 FK로 연결
             Puzzle puzzle = new Puzzle();
             puzzle.setImagePath(imageUrl);
-            puzzle.setFamilies_id(familyId);
+            puzzle.setFamiliesId(familyId);
             puzzle.setMessage(data.getComment());
             puzzle.setCategory(categoryEntity); // 카테고리 엔티티 연결
             puzzleRepository.save(puzzle);
@@ -81,7 +91,7 @@ public class PuzzlePictureService {
         // 2. 퍼즐 정보 갱신
         puzzle.setSize(size);
         puzzle.setContributors("[\"" + userId + "\"]");
-        puzzle.setBe_puzzle(1); // 반드시 여기서 bePuzzle 값 1로 변경!
+        puzzle.setBePuzzle(1); // 반드시 여기서 bePuzzle 값 1로 변경!
 
         puzzleRepository.save(puzzle);
 
@@ -237,4 +247,166 @@ public class PuzzlePictureService {
         );
     }
 
+
+
+    @Transactional
+    public PuzzleCompleteResponse completePuzzle(
+            Integer puzzleId,
+            Long solverId,
+            Long familyId,
+            int month // 프론트에서 전달받음
+    ) {
+        // 1. 현재 날짜로 year, day, period 계산
+        LocalDate now = LocalDate.now(ZoneId.of("Asia/Seoul"));
+        int archiveYear = now.getYear();
+        int archiveMonth = now.getMonthValue();
+        int day = now.getDayOfMonth();
+        int period = (day <= 15) ? 1 : 2;
+
+
+        // 2. 퍼즐 조회 및 완료 처리
+        Puzzle puzzle = getPuzzleById(puzzleId);
+        puzzle.setCompleted(true);
+        puzzle.setSolverId(solverId);
+        puzzleRepository.save(puzzle);
+
+        // 3. 계절별 랜덤 과일 선정 (month는 프론트에서 전달받음)
+        FruitCatalog fruit = selectSeasonalRandomFruit(month);
+        String fruitName = fruit.getFruitName();
+        String fruitMessage = getFruitMessage(fruit.getId(), fruitName);
+
+        // 4. contributors 닉네임 리스트 생성 (solverId 닉네임 중복 없이 추가)
+        List<Long> contributorIds = parseContributors(puzzle.getContributors());
+        List<String> contributorNicknames = new ArrayList<>();
+        for (Long id : contributorIds) {
+            signUpRepository.findByIdAndFamilyId(id, familyId)
+                    .ifPresent(user -> contributorNicknames.add(user.getNickname()));
+        }
+        // **solverId 닉네임을 중복 없이 추가**
+        signUpRepository.findByIdAndFamilyId(solverId, familyId)
+                .ifPresent(user -> {
+                    if (!contributorNicknames.contains(user.getNickname())) {
+                        contributorNicknames.add(user.getNickname());
+                    }
+                });
+
+        // 5. 퍼즐 점수 증가 (최대 7점)
+        IslandArchives island = islandArchivesRepository
+                .findByFamilyIdAndYearAndMonthAndPeriod(familyId, archiveYear, archiveMonth, period)
+                .orElseThrow(() -> new RuntimeException("아카이브 레코드가 없습니다"));
+        int currentScore = island.getPuzzleScore() != null ? island.getPuzzleScore() : 0;
+        if (currentScore < 7) {
+            island.setPuzzleScore(currentScore + 1);
+            islandArchivesRepository.save(island);
+        }
+
+        // 6. 응답 DTO 생성
+        return new PuzzleCompleteResponse(
+                puzzle.getPuzzleId().longValue(),
+                puzzle.getMessage(),
+                fruitName,
+                fruitMessage,
+                contributorNicknames
+        );
+    }
+
+    // 계절별 과일 ID 매핑
+    private static final Map<String, List<Integer>> SEASON_FRUIT_IDS = Map.of(
+            "spring", List.of(1,2,3,4),
+            "summer", List.of(5,6,7),
+            "fall", List.of(8,9,10,11,12),
+            "winter", List.of(13,14,15,16)
+    );
+
+    private FruitCatalog selectSeasonalRandomFruit(int month) {
+        String season;
+        if (month >= 3 && month <= 5) season = "spring";
+        else if (month >= 6 && month <= 9) season = "summer";
+        else if (month >= 10 && month <= 11) season = "fall";
+        else season = "winter";
+
+        List<Integer> ids = SEASON_FRUIT_IDS.get(season);
+        int fruitId = ids.get(new Random().nextInt(ids.size()));
+        return fruitCatalogRepository.findById(fruitId)
+                .orElseThrow(() -> new RuntimeException("해당 id의 과일 없음"));
+    }
+
+    private String getFruitMessage(Integer fruitId, String fruitName) {
+        return switch (fruitId) {
+            case 1 -> "사랑스러운 봄의 체리 획득!";
+            case 2 -> "사랑스러운 봄의 딸기 획득!";
+            case 3 -> "사랑스러운 봄의 참외 획득!";
+            case 4 -> "사랑스러운 봄의 산딸기 획득!";
+            case 5 -> "향긋한 여름의 망고 획득!";
+            case 6 -> "향긋한 여름의 복숭아 획득!";
+            case 7 -> "향긋한 여름의 레몬 획득!";
+            case 8 -> "포근한 가을의 감 획득!";
+            case 9 -> "포근한 가을의 무화과 획득!";
+            case 10 -> "포근한 가을의 포도 획득!";
+            case 11 -> "포근한 가을의 배 획득!";
+            case 12 -> "포근한 가을의 대추 획득!";
+            case 13 -> "탐스러운 겨울 유자 획득!";
+            case 14 -> "탐스러운 겨울 석류 획득!";
+            case 15 -> "탐스러운 겨울 사과 획득!";
+            case 16 -> "탐스러운 겨울 귤 획득!";
+            default -> fruitName + " 획득!";
+        };
+    }
+
+    private List<Long> parseContributors(String contributorsJson) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.readValue(
+                    contributorsJson,
+                    mapper.getTypeFactory().constructCollectionType(List.class, Long.class)
+            );
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
+
+    @Transactional
+    public List<PuzzleInProgressResponse> getInProgressPuzzles(Long familyId) {
+        // be_puzzle = 1, completed = false 인 puzzle 만 조회
+        List<Puzzle> puzzles = puzzleRepository.findByFamiliesIdAndCompletedAndBePuzzle(familyId, false, 1);
+        List<PuzzleInProgressResponse> responses = new ArrayList<>();
+        for (Puzzle puzzle : puzzles) {
+            // contributors JSON -> List<String> 변환
+            List<String> contributorsList = new ArrayList<>();
+            try {
+                if (puzzle.getContributors() != null) {
+                    contributorsList = objectMapper.readValue(
+                            puzzle.getContributors(),
+                            objectMapper.getTypeFactory().constructCollectionType(List.class, String.class)
+                    );
+                }
+            } catch (Exception e) {
+                // parsing 실패 시 빈 리스트
+            }
+
+            // completed_pieces_id JSON -> List<Integer> -> 길이
+            int completedPiecesCount = 0;
+            try {
+                if (puzzle.getCompleted_pieces_id() != null) {
+                    List<Integer> completedPieces = objectMapper.readValue(
+                            puzzle.getCompleted_pieces_id(),
+                            objectMapper.getTypeFactory().constructCollectionType(List.class, Integer.class)
+                    );
+                    completedPiecesCount = completedPieces.size();
+                }
+            } catch (Exception e) {
+                completedPiecesCount = 0;
+            }
+
+            responses.add(new PuzzleInProgressResponse(
+                    puzzle.getPuzzleId(),
+                    puzzle.getCapture_image_path(),
+                    contributorsList,
+                    puzzle.getCategory().getCategory(),
+                    completedPiecesCount,
+                    puzzle.getSize() != null ? puzzle.getSize() : 0
+            ));
+        }
+        return responses;
+    }
 }
