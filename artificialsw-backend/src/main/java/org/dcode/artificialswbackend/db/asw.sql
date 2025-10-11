@@ -72,6 +72,8 @@ CREATE TABLE `island_archives` (
                                    `year` int NOT NULL,
                                    `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
                                    `period` int NOT NULL,
+                                   `puzzle_score` integer NOT NULL DEFAULT '0',
+                                   `community_score` integer NOT NULL DEFAULT '0' ,
                                    PRIMARY KEY (`id`),
                                    KEY `fk_archives_family` (`family_id`),
                                    CONSTRAINT `fk_archives_family` FOREIGN KEY (`family_id`) REFERENCES `families` (`id`)
