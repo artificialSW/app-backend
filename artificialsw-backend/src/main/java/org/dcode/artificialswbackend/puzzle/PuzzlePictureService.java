@@ -7,14 +7,8 @@ import jakarta.transaction.Transactional;
 import org.dcode.artificialswbackend.archive.entity.IslandArchives;
 import org.dcode.artificialswbackend.archive.repository.IslandArchivesRepository;
 import org.dcode.artificialswbackend.puzzle.dto.*;
-import org.dcode.artificialswbackend.puzzle.entity.FruitCatalog;
-import org.dcode.artificialswbackend.puzzle.entity.Puzzle;
-import org.dcode.artificialswbackend.puzzle.entity.PuzzleCategory;
-import org.dcode.artificialswbackend.puzzle.entity.PuzzlePieces;
-import org.dcode.artificialswbackend.puzzle.repository.FruitCatalogRepository;
-import org.dcode.artificialswbackend.puzzle.repository.PuzzleCategoryRepository;
-import org.dcode.artificialswbackend.puzzle.repository.PuzzlePiecesRepository;
-import org.dcode.artificialswbackend.puzzle.repository.PuzzleRepository;
+import org.dcode.artificialswbackend.puzzle.entity.*;
+import org.dcode.artificialswbackend.puzzle.repository.*;
 import org.dcode.artificialswbackend.signup.repository.SignUpRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -34,18 +28,20 @@ public class PuzzlePictureService {
     private final FruitCatalogRepository fruitCatalogRepository;
     private final SignUpRepository signUpRepository;
     private final IslandArchivesRepository islandArchivesRepository;
+    private final PuzzleArchiveRepository puzzleArchiveRepository;
     private final ObjectMapper objectMapper;
 
     @Value("${puzzle.image.url.base}")
     private String imageBaseUrl;
 
-    public PuzzlePictureService(PuzzleRepository puzzleRepository, PuzzleCategoryRepository puzzleCategoryRepository, PuzzlePiecesRepository puzzlePiecesRepository, FruitCatalogRepository fruitCatalogRepository, SignUpRepository signUpRepository, IslandArchivesRepository islandArchivesRepository, ObjectMapper objectMapper) {
+    public PuzzlePictureService(PuzzleRepository puzzleRepository, PuzzleCategoryRepository puzzleCategoryRepository, PuzzlePiecesRepository puzzlePiecesRepository, FruitCatalogRepository fruitCatalogRepository, SignUpRepository signUpRepository, IslandArchivesRepository islandArchivesRepository, PuzzleArchiveRepository puzzleArchiveRepository, ObjectMapper objectMapper) {
         this.puzzleRepository = puzzleRepository;
         this.puzzleCategoryRepository = puzzleCategoryRepository;
         this.puzzlePiecesRepository = puzzlePiecesRepository;
         this.fruitCatalogRepository = fruitCatalogRepository;
         this.signUpRepository = signUpRepository;
         this.islandArchivesRepository = islandArchivesRepository;
+        this.puzzleArchiveRepository = puzzleArchiveRepository;
         this.objectMapper = objectMapper;
     }
     @Transactional
@@ -494,5 +490,25 @@ public class PuzzlePictureService {
                 "imageUrl", imageUrl,
                 "size", size
         );
+    }
+
+    @Transactional
+    public void archivePuzzle(Integer puzzleId, Long familyId) {
+        Puzzle puzzle = puzzleRepository.findById(puzzleId)
+                .orElseThrow(() -> new IllegalArgumentException("퍼즐을 찾을 수 없습니다."));
+        if (!puzzle.getFamiliesId().equals(familyId)) {
+            throw new IllegalArgumentException("가족 정보가 일치하지 않습니다.");
+        }
+        // 반드시 완성된 퍼즐인지 확인
+        if (!puzzle.isCompleted()) {
+            throw new IllegalStateException("완성된 퍼즐만 아카이브할 수 있습니다.");
+        }
+
+        PuzzleArchive archive = new PuzzleArchive();
+        archive.setImagePath(puzzle.getImagePath());
+        archive.setCategory(puzzle.getCategory().getCategory());
+        archive.setContributors(puzzle.getContributors());
+        archive.setFamiliesId(familyId);
+        puzzleArchiveRepository.save(archive);
     }
 }
