@@ -539,4 +539,14 @@ public class PuzzlePictureService {
         }
         return responses;
     }
+
+    @Transactional
+    public void deleteArchivedPuzzle(Long familyId, Long puzzleArchiveId) {
+        PuzzleArchive archive = puzzleArchiveRepository.findById(puzzleArchiveId)
+                .orElseThrow(() -> new IllegalArgumentException("아카이브 퍼즐을 찾을 수 없습니다."));
+        if (!archive.getFamiliesId().equals(familyId)) {
+            throw new IllegalArgumentException("가족 정보가 일치하지 않습니다.");
+        }
+        puzzleArchiveRepository.deleteById(puzzleArchiveId);
+    }
 }

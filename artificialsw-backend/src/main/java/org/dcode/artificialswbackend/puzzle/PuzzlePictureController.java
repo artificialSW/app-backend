@@ -153,5 +153,19 @@ public class PuzzlePictureController {
         List<PuzzleArchiveResponse> responses = puzzlePictureService.getArchivedPuzzles(familyId);
         return ResponseEntity.ok(responses);
     }
+
+    @DeleteMapping("/{puzzleArchiveId}/archive")
+    public ResponseEntity<Map<String, Object>> deleteArchivedPuzzle(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable("puzzleArchiveId") Long puzzleArchiveId
+    ) {
+        String token = authHeader.replace("Bearer ", "");
+        Long familyId = jwtUtil.validateAndGetFamilyId(token);
+        puzzlePictureService.deleteArchivedPuzzle(familyId, puzzleArchiveId);
+        return ResponseEntity.ok(Map.of(
+                "puzzle_archive_id", puzzleArchiveId.toString(),
+                "message", "퍼즐이 아카이브에서 삭제되었습니다."
+        ));
+    }
 }
 
