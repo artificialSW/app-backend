@@ -11,4 +11,6 @@ public interface PuzzleRepository extends JpaRepository<Puzzle, Integer> {
     Puzzle findRandomBePuzzleZeroByFamilyId(Long familyId);
 
     List<Puzzle> findByFamiliesIdAndCompletedAndBePuzzle(Long familiesId, boolean completed, Integer bePuzzle);
+
+    List<Puzzle> findByFamiliesIdAndCompleted(Long familiesId, boolean completed);
 }
