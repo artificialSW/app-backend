@@ -134,5 +134,16 @@ public class PuzzlePictureController {
         Map<String, Object> resp = puzzlePictureService.retryPuzzle(puzzleId, familyId);
         return ResponseEntity.ok(resp);
     }
+
+    @PostMapping("/{puzzleId}/archive")
+    public ResponseEntity<Map<String, String>> archivePuzzle(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable("puzzleId") Integer puzzleId
+    ) {
+        String token = authHeader.replace("Bearer ", "");
+        Long familyId = jwtUtil.validateAndGetFamilyId(token);
+        puzzlePictureService.archivePuzzle(puzzleId, familyId);
+        return ResponseEntity.ok(Map.of("message", "퍼즐이 아카이브에 저장되었습니다."));
+    }
 }
 

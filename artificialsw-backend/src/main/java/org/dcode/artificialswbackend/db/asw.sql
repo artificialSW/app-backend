@@ -125,12 +125,14 @@ CREATE TABLE `puzzle_pieces` (
 -- 퍼즐 아카이브 테이블
 CREATE TABLE `puzzle_archive` (
                                   `id` bigint NOT NULL AUTO_INCREMENT,
-                                  `puzzle_id` int NOT NULL,
+                                  `image_path` varchar(255) NOT NULL,
+                                  `category` varchar(255) NULL,
+                                  `contributors` json DEFAULT NULL,
+                                  `families_id` bigint NOT NULL,
                                   PRIMARY KEY (`id`),
-                                  KEY `fk_archivedPuzzle_puzzle` (`puzzle_id`),
-                                  CONSTRAINT `fk_archivedPuzzle_puzzle` FOREIGN KEY (`puzzle_id`) REFERENCES `puzzle` (`puzzle_id`)
+                                  KEY `fk_puzzle_families` (`families_id`),
+                                  CONSTRAINT `puzzle_archive_ibfk_1` FOREIGN KEY (`families_id`) REFERENCES `families`(`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
 
 -- personal_questions 테이블
 CREATE TABLE `personal_questions` (
