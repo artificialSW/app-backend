@@ -3,9 +3,6 @@ package org.dcode.artificialswbackend.puzzle.entity;
 
 import jakarta.persistence.*;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Entity
 @Table(name = "puzzle")
 public class Puzzle {
@@ -34,7 +31,7 @@ public class Puzzle {
     private String contributors;
 
     @Column(name = "families_id", nullable = false)
-    private Long families_id;
+    private Long familiesId;
 
     private String message;
 
@@ -42,7 +39,8 @@ public class Puzzle {
     @JoinColumn(name = "category_id")
     private PuzzleCategory category;
 
-    private Integer be_puzzle = 0;
+
+    private Integer bePuzzle = 0;
 
 
     public Puzzle() {
@@ -121,12 +119,12 @@ public class Puzzle {
         this.contributors = contributors;
     }
 
-    public Long getFamilies_id() {
-        return families_id;
+    public Long getFamiliesId() {
+        return familiesId;
     }
 
-    public void setFamilies_id(Long familiesId) {
-        this.families_id = familiesId;
+    public void setFamiliesId(Long familiesId) {
+        this.familiesId = familiesId;
     }
 
     public String getMessage() {
@@ -145,12 +143,12 @@ public class Puzzle {
         this.category = category;
     }
 
-    public Integer getBe_puzzle() {
-        return be_puzzle;
+    public Integer getBePuzzle() {
+        return bePuzzle;
     }
 
-    public void setBe_puzzle(Integer be_puzzle) {
-        this.be_puzzle = be_puzzle;
+    public void setBePuzzle(Integer be_puzzle) {
+        this.bePuzzle = be_puzzle;
     }
 
 }
