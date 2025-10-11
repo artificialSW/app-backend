@@ -511,4 +511,32 @@ public class PuzzlePictureService {
         archive.setFamiliesId(familyId);
         puzzleArchiveRepository.save(archive);
     }
+
+    @Transactional
+    public List<PuzzleArchiveResponse> getArchivedPuzzles(Long familyId) {
+        List<PuzzleArchive> archives = puzzleArchiveRepository.findByFamiliesId(familyId);
+        List<PuzzleArchiveResponse> responses = new ArrayList<>();
+        ObjectMapper mapper = new ObjectMapper();
+        for (PuzzleArchive archive : archives) {
+            List<String> contributorsList = new ArrayList<>();
+            try {
+                if (archive.getContributors() != null) {
+                    contributorsList = mapper.readValue(
+                            archive.getContributors(),
+                            mapper.getTypeFactory().constructCollectionType(List.class, String.class)
+                    );
+                }
+            } catch (Exception e) {
+                // 파싱 실패시 빈 리스트
+            }
+
+            responses.add(new PuzzleArchiveResponse(
+                    archive.getId(), // id를 puzzleId로 사용
+                    archive.getImagePath(),
+                    archive.getCategory(),
+                    contributorsList
+            ));
+        }
+        return responses;
+    }
 }
