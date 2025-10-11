@@ -5,7 +5,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import org.dcode.artificialswbackend.archive.entity.IslandArchives;
+import org.dcode.artificialswbackend.archive.entity.Tree;
 import org.dcode.artificialswbackend.archive.repository.IslandArchivesRepository;
+import org.dcode.artificialswbackend.archive.repository.TreeRepository;
 import org.dcode.artificialswbackend.puzzle.dto.*;
 import org.dcode.artificialswbackend.puzzle.entity.*;
 import org.dcode.artificialswbackend.puzzle.repository.*;
@@ -29,12 +31,14 @@ public class PuzzlePictureService {
     private final SignUpRepository signUpRepository;
     private final IslandArchivesRepository islandArchivesRepository;
     private final PuzzleArchiveRepository puzzleArchiveRepository;
+    private final FruitsRepository fruitsRepository;
+    private final TreeRepository treeRepository;
     private final ObjectMapper objectMapper;
 
     @Value("${puzzle.image.url.base}")
     private String imageBaseUrl;
 
-    public PuzzlePictureService(PuzzleRepository puzzleRepository, PuzzleCategoryRepository puzzleCategoryRepository, PuzzlePiecesRepository puzzlePiecesRepository, FruitCatalogRepository fruitCatalogRepository, SignUpRepository signUpRepository, IslandArchivesRepository islandArchivesRepository, PuzzleArchiveRepository puzzleArchiveRepository, ObjectMapper objectMapper) {
+    public PuzzlePictureService(PuzzleRepository puzzleRepository, PuzzleCategoryRepository puzzleCategoryRepository, PuzzlePiecesRepository puzzlePiecesRepository, FruitCatalogRepository fruitCatalogRepository, SignUpRepository signUpRepository, IslandArchivesRepository islandArchivesRepository, PuzzleArchiveRepository puzzleArchiveRepository, FruitsRepository fruitsRepository, TreeRepository treeRepository, ObjectMapper objectMapper) {
         this.puzzleRepository = puzzleRepository;
         this.puzzleCategoryRepository = puzzleCategoryRepository;
         this.puzzlePiecesRepository = puzzlePiecesRepository;
@@ -42,6 +46,8 @@ public class PuzzlePictureService {
         this.signUpRepository = signUpRepository;
         this.islandArchivesRepository = islandArchivesRepository;
         this.puzzleArchiveRepository = puzzleArchiveRepository;
+        this.fruitsRepository = fruitsRepository;
+        this.treeRepository = treeRepository;
         this.objectMapper = objectMapper;
     }
     @Transactional
@@ -258,7 +264,7 @@ public class PuzzlePictureService {
         int archiveMonth = now.getMonthValue();
         int day = now.getDayOfMonth();
         int period = (day <= 15) ? 1 : 2;
-
+        int position = (period == 1) ? 3 : 4; // 1~15일: 3번, 16~말일: 4번 트리
 
         // 2. 퍼즐 조회 및 완료 처리
         Puzzle puzzle = getPuzzleById(puzzleId);
@@ -295,6 +301,21 @@ public class PuzzlePictureService {
             island.setPuzzleScore(currentScore + 1);
             islandArchivesRepository.save(island);
         }
+
+        // === [여기서 트리 찾고 열매 저장!] ===
+        Tree tree = treeRepository.findByArchiveIdAndFamilyIdAndPositionAndTreeCategory(
+                island.getId(), familyId, position, Tree.TreeCategory.fruit
+        ).orElseThrow(() -> new RuntimeException("조건에 맞는 트리가 없습니다"));
+
+        Fruits fruitEntity = new Fruits();
+        fruitEntity.setTreeId(tree.getId());
+        fruitEntity.setPuzzleId(puzzle.getPuzzleId());
+        fruitEntity.setMessage(fruitMessage);
+        fruitEntity.setFruitName(fruitName);
+        fruitEntity.setCategory(puzzle.getCategory().getCategory());
+        fruitEntity.setContributors(puzzle.getContributors()); // JSON 문자열 그대로
+        fruitsRepository.save(fruitEntity);
+        // === [여기까지] ===
 
         // 6. 응답 DTO 생성
         return new PuzzleCompleteResponse(
@@ -510,5 +531,43 @@ public class PuzzlePictureService {
         archive.setContributors(puzzle.getContributors());
         archive.setFamiliesId(familyId);
         puzzleArchiveRepository.save(archive);
+    }
+
+    @Transactional
+    public List<PuzzleArchiveResponse> getArchivedPuzzles(Long familyId) {
+        List<PuzzleArchive> archives = puzzleArchiveRepository.findByFamiliesId(familyId);
+        List<PuzzleArchiveResponse> responses = new ArrayList<>();
+        ObjectMapper mapper = new ObjectMapper();
+        for (PuzzleArchive archive : archives) {
+            List<String> contributorsList = new ArrayList<>();
+            try {
+                if (archive.getContributors() != null) {
+                    contributorsList = mapper.readValue(
+                            archive.getContributors(),
+                            mapper.getTypeFactory().constructCollectionType(List.class, String.class)
+                    );
+                }
+            } catch (Exception e) {
+                // 파싱 실패시 빈 리스트
+            }
+
+            responses.add(new PuzzleArchiveResponse(
+                    archive.getId(), // id를 puzzleId로 사용
+                    archive.getImagePath(),
+                    archive.getCategory(),
+                    contributorsList
+            ));
+        }
+        return responses;
+    }
+
+    @Transactional
+    public void deleteArchivedPuzzle(Long familyId, Long puzzleArchiveId) {
+        PuzzleArchive archive = puzzleArchiveRepository.findById(puzzleArchiveId)
+                .orElseThrow(() -> new IllegalArgumentException("아카이브 퍼즐을 찾을 수 없습니다."));
+        if (!archive.getFamiliesId().equals(familyId)) {
+            throw new IllegalArgumentException("가족 정보가 일치하지 않습니다.");
+        }
+        puzzleArchiveRepository.deleteById(puzzleArchiveId);
     }
 }

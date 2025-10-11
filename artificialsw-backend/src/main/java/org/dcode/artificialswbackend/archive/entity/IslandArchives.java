@@ -20,6 +20,9 @@ public class IslandArchives {
     @Column(name = "community_score")
     private Integer communityScore;
 
+    @Column(name = "capture_image_path", nullable = false, length = 255)
+    private String captureImagePath;
+
     private LocalDateTime createdAt;
 
     @PrePersist
@@ -87,5 +90,13 @@ public class IslandArchives {
     }
     public void setCommunityScore(Integer communityScore) {
         this.communityScore = communityScore;
+    }
+
+    public String getCaptureImagePath() {
+        return captureImagePath;
+    }
+
+    public void setCaptureImagePath(String captureImagePath) {
+        this.captureImagePath = captureImagePath;
     }
 }

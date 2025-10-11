@@ -68,6 +68,7 @@ CREATE TABLE `puzzle` (
 CREATE TABLE `island_archives` (
                                    `id` bigint NOT NULL AUTO_INCREMENT,
                                    `family_id` bigint NOT NULL,
+                                   `capture_image_path` varchar(255) NOT NULL,
                                    `month` int NOT NULL,
                                    `year` int NOT NULL,
                                    `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
@@ -247,6 +248,10 @@ CREATE TABLE `fruits` (
                           `tree_id` bigint NOT NULL,
                           `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
                           `puzzle_id` int DEFAULT NULL,
+                          `message` varchar(255) DEFAULT NULL,
+                          `fruit_name` varchar(100) DEFAULT NULL,
+                          `category` varchar(50) NOT NULL,
+                          `contributors` json DEFAULT NULL,
                           PRIMARY KEY (`id`),
                           KEY `tree_id` (`tree_id`),
                           KEY `fk_fruits_puzzle` (`puzzle_id`),
