@@ -54,7 +54,7 @@ public class ArchiveService {
             tree.setArchiveId(island.getId());
             tree.setFamilyId(familyId);
             tree.setPosition(position);
-            tree.setTreeCategory(position <= 2 ? Tree.TreeCategory.FLOWER : Tree.TreeCategory.FRUIT);
+            tree.setTreeCategory(position <= 2 ? Tree.TreeCategory.flower : Tree.TreeCategory.fruit);
             treeRepository.save(tree);
         }
     }

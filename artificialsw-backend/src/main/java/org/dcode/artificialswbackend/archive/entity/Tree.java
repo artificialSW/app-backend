@@ -18,7 +18,7 @@ public class Tree {
     private TreeCategory treeCategory;
 
     public enum TreeCategory {
-        FRUIT, FLOWER
+        fruit, flower
     }
 
     private Integer position;
