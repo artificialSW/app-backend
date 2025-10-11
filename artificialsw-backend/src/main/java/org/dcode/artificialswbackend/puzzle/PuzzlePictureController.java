@@ -74,5 +74,21 @@ public class PuzzlePictureController {
             return ResponseEntity.status(423).body(Map.of("message", e.getMessage()));
         }
     }
+
+    @PostMapping("/{puzzleId}/complete")
+    public ResponseEntity<PuzzleCompleteResponse> completePuzzle(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable("puzzleId") Integer puzzleId,
+            @RequestBody Map<String, Object> body
+    ) {
+        String token = authHeader.replace("Bearer ", "");
+        Long familyId = jwtUtil.validateAndGetFamilyId(token);
+        Long solverId = Long.valueOf(String.valueOf(body.get("solverId")));
+        int month = Integer.parseInt(String.valueOf(body.get("month")));
+        PuzzleCompleteResponse response = puzzlePictureService.completePuzzle(
+                puzzleId, solverId, familyId, month
+        );
+        return ResponseEntity.ok(response);
+    }
 }
 
