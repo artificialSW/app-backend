@@ -90,5 +90,16 @@ public class PuzzlePictureController {
         );
         return ResponseEntity.ok(response);
     }
+
+
+    @GetMapping("/in-progress")
+    public ResponseEntity<List<PuzzleInProgressResponse>> getInProgressPuzzles(
+            @RequestHeader("Authorization") String authHeader
+    ) {
+        String token = authHeader.replace("Bearer ", "");
+        Long familyId = jwtUtil.validateAndGetFamilyId(token);
+        List<PuzzleInProgressResponse> responseList = puzzlePictureService.getInProgressPuzzles(familyId);
+        return ResponseEntity.ok(responseList);
+    }
 }
 

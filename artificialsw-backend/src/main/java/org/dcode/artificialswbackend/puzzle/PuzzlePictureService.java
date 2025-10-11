@@ -73,7 +73,7 @@ public class PuzzlePictureService {
             // 3. puzzle 테이블 저장, 카테고리 FK로 연결
             Puzzle puzzle = new Puzzle();
             puzzle.setImagePath(imageUrl);
-            puzzle.setFamilies_id(familyId);
+            puzzle.setFamiliesId(familyId);
             puzzle.setMessage(data.getComment());
             puzzle.setCategory(categoryEntity); // 카테고리 엔티티 연결
             puzzleRepository.save(puzzle);
@@ -91,7 +91,7 @@ public class PuzzlePictureService {
         // 2. 퍼즐 정보 갱신
         puzzle.setSize(size);
         puzzle.setContributors("[\"" + userId + "\"]");
-        puzzle.setBe_puzzle(1); // 반드시 여기서 bePuzzle 값 1로 변경!
+        puzzle.setBePuzzle(1); // 반드시 여기서 bePuzzle 값 1로 변경!
 
         puzzleRepository.save(puzzle);
 
@@ -363,5 +363,50 @@ public class PuzzlePictureService {
         } catch (Exception e) {
             return new ArrayList<>();
         }
+    }
+
+    @Transactional
+    public List<PuzzleInProgressResponse> getInProgressPuzzles(Long familyId) {
+        // be_puzzle = 1, completed = false 인 puzzle 만 조회
+        List<Puzzle> puzzles = puzzleRepository.findByFamiliesIdAndCompletedAndBePuzzle(familyId, false, 1);
+        List<PuzzleInProgressResponse> responses = new ArrayList<>();
+        for (Puzzle puzzle : puzzles) {
+            // contributors JSON -> List<String> 변환
+            List<String> contributorsList = new ArrayList<>();
+            try {
+                if (puzzle.getContributors() != null) {
+                    contributorsList = objectMapper.readValue(
+                            puzzle.getContributors(),
+                            objectMapper.getTypeFactory().constructCollectionType(List.class, String.class)
+                    );
+                }
+            } catch (Exception e) {
+                // parsing 실패 시 빈 리스트
+            }
+
+            // completed_pieces_id JSON -> List<Integer> -> 길이
+            int completedPiecesCount = 0;
+            try {
+                if (puzzle.getCompleted_pieces_id() != null) {
+                    List<Integer> completedPieces = objectMapper.readValue(
+                            puzzle.getCompleted_pieces_id(),
+                            objectMapper.getTypeFactory().constructCollectionType(List.class, Integer.class)
+                    );
+                    completedPiecesCount = completedPieces.size();
+                }
+            } catch (Exception e) {
+                completedPiecesCount = 0;
+            }
+
+            responses.add(new PuzzleInProgressResponse(
+                    puzzle.getPuzzleId(),
+                    puzzle.getCapture_image_path(),
+                    contributorsList,
+                    puzzle.getCategory().getCategory(),
+                    completedPiecesCount,
+                    puzzle.getSize() != null ? puzzle.getSize() : 0
+            ));
+        }
+        return responses;
     }
 }
