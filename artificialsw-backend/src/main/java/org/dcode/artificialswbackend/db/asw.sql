@@ -85,6 +85,7 @@ CREATE TABLE `tree` (
                         `family_id` bigint NOT NULL,
                         `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
                         `tree_category` enum('flower','fruit') NOT NULL,
+                        `position` int NOT NULL,
                         PRIMARY KEY (`id`),
                         KEY `archive_id` (`archive_id`),
                         KEY `fk_tree_family` (`family_id`),
