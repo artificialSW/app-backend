@@ -7,4 +7,6 @@ import java.util.Optional;
 
 public interface IslandArchivesRepository extends JpaRepository<IslandArchives, Long> {
     Optional<IslandArchives> findByFamilyIdAndYearAndMonthAndPeriod(Long familyId, Integer year, Integer month, Integer period);
+    Optional<IslandArchives> findByIdAndFamilyId(Long id, Long familyId);
+
 }
