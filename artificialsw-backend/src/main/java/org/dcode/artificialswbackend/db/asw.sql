@@ -211,6 +211,7 @@ CREATE TABLE `question_list` (
 CREATE TABLE `flower_catalog` (
                                   `id` bigint NOT NULL AUTO_INCREMENT,
                                   `unlocked` tinyint(1) DEFAULT '0',
+                                  `fruit_name` VARCHAR(50) NOT NULL,
                                   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -284,3 +285,27 @@ END;
 //
 
 DELIMITER ;
+
+
+
+
+
+
+-- fruit_catalog 초기값
+INSERT INTO fruit_catalog (unlocked, fruit_name) VALUES
+                                               (0, 'cherry'),
+                                               (0, 'strawberry'),
+                                               (0, 'peach'),
+                                               (0, 'raspberry'),
+                                               (0, 'mango'),
+                                               (0, 'pear'),
+                                               (0, 'lemon'),
+                                               (0, 'oriental_melon'),
+                                               (0, 'persimmon'),
+                                               (0, 'fig'),
+                                               (0, 'grape'),
+                                               (0, 'mandarin'),
+                                               (0, 'yuja'),
+                                               (0, 'pomegranate'),
+                                               (0, 'apple'),
+                                               (0, 'jujube');
