@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.Base64;
+import java.util.Map;
 
 @Service
 public class ArchiveService {
@@ -75,5 +76,14 @@ public class ArchiveService {
         islandArchivesRepository.save(archive);
 
         return imageUrl;
+    }
+
+    public Map<String, Integer> getScores(Long archiveId, Long familyId) {
+        IslandArchives archive = islandArchivesRepository.findByIdAndFamilyId(archiveId, familyId)
+                .orElseThrow(() -> new RuntimeException("해당 아카이브를 찾을 수 없습니다."));
+        return Map.of(
+                "puzzle_score", archive.getPuzzleScore(),
+                "community_score", archive.getCommunityScore()
+        );
     }
 }

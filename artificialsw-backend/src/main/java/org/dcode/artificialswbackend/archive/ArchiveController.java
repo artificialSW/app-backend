@@ -35,4 +35,15 @@ public class ArchiveController {
                 "message", "저장 완료"
         ));
     }
+
+    @GetMapping("/{archive_id}/scores")
+    public ResponseEntity<Map<String, Integer>> getScores(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable("archive_id") Long archiveId
+    ) {
+        String token = authHeader.replace("Bearer ", "");
+        Long familyId = jwtUtil.validateAndGetFamilyId(token);
+        Map<String, Integer> scores = archiveService.getScores(archiveId, familyId);
+        return ResponseEntity.ok(scores);
+    }
 }
