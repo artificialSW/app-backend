@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface IslandArchivesRepository extends JpaRepository<IslandArchives, Long> {
-    Optional<IslandArchives> findByFamilyIdAndYearAndMonth(Long familyID, Integer year, Integer month);
+    Optional<IslandArchives> findByFamilyIdAndYearAndMonthAndPeriod(Long familyId, Integer year, Integer month, Integer period);
 }

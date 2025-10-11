@@ -20,6 +20,9 @@ public class Tree {
     public enum TreeCategory {
         FRUIT, FLOWER
     }
+
+    private Integer position;
+
     private LocalDateTime createdAt;
 
     public Long getId() {
@@ -60,5 +63,13 @@ public class Tree {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Integer getPosition() {
+        return position;
+    }
+
+    public void setPosition(Integer position) {
+        this.position = position;
     }
 }
