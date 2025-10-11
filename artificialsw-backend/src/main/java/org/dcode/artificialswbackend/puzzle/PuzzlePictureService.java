@@ -409,4 +409,90 @@ public class PuzzlePictureService {
         }
         return responses;
     }
+
+    @Transactional
+    public void deletePuzzle(Integer puzzleId) {
+        if (!puzzleRepository.existsById(puzzleId)) {
+            throw new IllegalArgumentException("존재하지 않는 퍼즐입니다: " + puzzleId);
+        }
+        puzzleRepository.deleteById(puzzleId);
+    }
+
+
+    @Transactional
+    public List<PuzzleCompletedResponse> getCompletedPuzzles(Long familyId) {
+        List<Puzzle> puzzles = puzzleRepository.findByFamiliesIdAndCompleted(familyId, true);
+        List<PuzzleCompletedResponse> responses = new ArrayList<>();
+        ObjectMapper mapper = new ObjectMapper();
+        for (Puzzle puzzle : puzzles) {
+            // contributors JSON -> List<String> 변환
+            List<String> contributorsList = new ArrayList<>();
+            try {
+                if (puzzle.getContributors() != null) {
+                    contributorsList = mapper.readValue(
+                            puzzle.getContributors(),
+                            mapper.getTypeFactory().constructCollectionType(List.class, String.class)
+                    );
+                }
+            } catch (Exception e) {
+                // parsing 실패 시 빈 리스트
+            }
+
+            // solverId를 String으로 변환 후 합치기, 중복 방지
+            if (puzzle.getSolverId() != null) {
+                String solverIdStr = puzzle.getSolverId().toString();
+                if (!contributorsList.contains(solverIdStr)) {
+                    contributorsList.add(solverIdStr);
+                }
+            }
+            // 만약 contributors 최종 값을 퍼즐에 저장하고 싶다면:
+            try {
+                puzzle.setContributors(mapper.writeValueAsString(contributorsList));
+                puzzleRepository.save(puzzle);
+            } catch(Exception e) {
+                // 예외 무시 또는 로깅
+            }
+
+            responses.add(new PuzzleCompletedResponse(
+                    puzzle.getPuzzleId(),
+                    puzzle.getImagePath(),
+                    puzzle.getCategory().getCategory(),
+                    contributorsList,
+                    puzzle.getMessage()
+            ));
+        }
+        return responses;
+    }
+
+
+    @Transactional
+    public Map<String, Object> retryPuzzle(Integer puzzleId, Long familyId) {
+        // 1. 퍼즐 찾기 (familyId와 puzzleId가 일치하는 완성된 퍼즐)
+        Puzzle puzzle = puzzleRepository.findById(puzzleId)
+                .orElseThrow(() -> new IllegalArgumentException("퍼즐을 찾을 수 없습니다."));
+        if (!puzzle.getFamiliesId().equals(familyId)) {
+            throw new IllegalArgumentException("가족 정보가 일치하지 않습니다.");
+        }
+        // completed=1(완성된 퍼즐)인지 확인
+        if (!puzzle.isCompleted()) {
+            throw new IllegalStateException("이미 완성된 퍼즐만 재도전할 수 있습니다.");
+        }
+
+        // 2. 기존 퍼즐 정보 기억
+        String imageUrl = puzzle.getImagePath();
+        int size = puzzle.getSize() != null ? puzzle.getSize() : 0;
+
+        // 3. completed를 0(false)으로, 필요한 경우 중간 저장 필드 등도 초기화
+        puzzle.setCompleted(false);
+        puzzle.setContributors(null);
+        puzzle.setCompleted_pieces_id(null);
+        puzzleRepository.save(puzzle);
+
+        // 4. 응답 생성
+        return Map.of(
+                "message", "새로운 퍼즐이 시작되었습니다.",
+                "imageUrl", imageUrl,
+                "size", size
+        );
+    }
 }
