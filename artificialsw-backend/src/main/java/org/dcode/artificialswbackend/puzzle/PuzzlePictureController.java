@@ -101,5 +101,38 @@ public class PuzzlePictureController {
         List<PuzzleInProgressResponse> responseList = puzzlePictureService.getInProgressPuzzles(familyId);
         return ResponseEntity.ok(responseList);
     }
+
+    @DeleteMapping("/{puzzleId}")
+    public ResponseEntity<Map<String, Object>> deletePuzzle(
+            @PathVariable("puzzleId") Integer puzzleId) {
+        puzzlePictureService.deletePuzzle(puzzleId);
+        Map<String, Object> resp = Map.of(
+                "puzzleId", puzzleId.toString(),
+                "message", "퍼즐이 삭제되었습니다."
+        );
+        return ResponseEntity.ok(resp);
+    }
+
+    @GetMapping("/completed")
+    public ResponseEntity<List<PuzzleCompletedResponse>> getCompletedPuzzles(
+            @RequestHeader("Authorization") String authHeader
+    ) {
+        String token = authHeader.replace("Bearer ", "");
+        Long familyId = jwtUtil.validateAndGetFamilyId(token);
+        List<PuzzleCompletedResponse> responseList = puzzlePictureService.getCompletedPuzzles(familyId);
+        return ResponseEntity.ok(responseList);
+    }
+
+
+    @PostMapping("/{puzzleId}/retry")
+    public ResponseEntity<Map<String, Object>> retryPuzzle(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable("puzzleId") Integer puzzleId
+    ) {
+        String token = authHeader.replace("Bearer ", "");
+        Long familyId = jwtUtil.validateAndGetFamilyId(token);
+        Map<String, Object> resp = puzzlePictureService.retryPuzzle(puzzleId, familyId);
+        return ResponseEntity.ok(resp);
+    }
 }
 
