@@ -3,6 +3,8 @@ package org.dcode.artificialswbackend.puzzle.entity;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "puzzle")
 public class Puzzle {
@@ -11,82 +13,52 @@ public class Puzzle {
     private Integer puzzleId;
 
     private String imagePath;
+
+    private String capture_image_path;
+
     private Integer size;
-    @Column(columnDefinition = "json")
-    private String completedPiecesID;
-    private Boolean completed;
-    private Boolean isPlayingPuzzle;
+
+    @Column(name = "completed_pieces_id", columnDefinition = "json")
+    private String completed_pieces_id;
+
+    @Column(nullable = false)
+    private boolean completed = false;
+
+    @Column(name = "is_playing_puzzle", nullable = false)
+    private boolean is_playing_puzzle;
+
     private Long solverId;
+
     @Column(columnDefinition = "json")
     private String contributors;
+
+    @Column(name = "families_id", nullable = false)
     private Long familiesId;
+
     private String message;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private PuzzleCategory category;
+
+
+    private Integer bePuzzle = 0;
+
+    @Column(name = "last_saved_time")
+    private LocalDateTime lastSavedTime;
+
+    @Column(name = "completed_time")
+    private LocalDateTime completedTime;
 
     public Puzzle() {
     }
 
-    public String getMessage() {
-        return message;
+    public Integer getPuzzleId() {
+        return puzzleId;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public Long getFamiliesId() {
-        return familiesId;
-    }
-
-    public void setFamiliesId(Long familiesId) {
-        this.familiesId = familiesId;
-    }
-
-    public String getContributors() {
-        return contributors;
-    }
-
-    public void setContributors(String contributors) {
-        this.contributors = contributors;
-    }
-
-    public Long getSolverId() {
-        return solverId;
-    }
-
-    public void setSolverId(Long solverId) {
-        this.solverId = solverId;
-    }
-
-    public Boolean getIsPlayingPuzzle() {
-        return isPlayingPuzzle;
-    }
-
-    public void setIsPlayingPuzzle(Boolean playingPuzzle) {
-        isPlayingPuzzle = playingPuzzle;
-    }
-
-    public Boolean getCompleted() {
-        return completed;
-    }
-
-    public void setCompleted(Boolean completed) {
-        this.completed = completed;
-    }
-
-    public String getCompletedPiecesID() {
-        return completedPiecesID;
-    }
-
-    public void setCompletedPiecesID(String completedPiecesID) {
-        this.completedPiecesID = completedPiecesID;
-    }
-
-    public Integer getSize() {
-        return size;
-    }
-
-    public void setSize(Integer size) {
-        this.size = size;
+    public void setPuzzleId(Integer puzzleId) {
+        this.puzzleId = puzzleId;
     }
 
     public String getImagePath() {
@@ -97,11 +69,109 @@ public class Puzzle {
         this.imagePath = imagePath;
     }
 
-    public Integer getPuzzleId() {
-        return puzzleId;
+    public String getCapture_image_path() {
+        return capture_image_path;
     }
 
-    public void setPuzzleId(Integer puzzleId) {
-        this.puzzleId = puzzleId;
+    public void setCapture_image_path(String capture_image_path) {
+        this.capture_image_path = capture_image_path;
+    }
+
+    public boolean getIs_playing_puzzle() {
+        return is_playing_puzzle;
+    }
+
+    public void setIs_playing_puzzle(boolean is_playing_puzzle) {
+        this.is_playing_puzzle = is_playing_puzzle;
+    }
+
+    public Integer getSize() {
+        return size;
+    }
+
+    public void setSize(Integer size) {
+        this.size = size;
+    }
+
+    public String getCompleted_pieces_id() {
+        return completed_pieces_id;
+    }
+
+    public void setCompleted_pieces_id(String completedPiecesID) {
+        this.completed_pieces_id = completedPiecesID;
+    }
+
+    public boolean isCompleted() {
+        return completed;
+    }
+
+    public void setCompleted(boolean completed) {
+        this.completed = completed;
+    }
+
+
+    public Long getSolverId() {
+        return solverId;
+    }
+
+    public void setSolverId(Long solverId) {
+        this.solverId = solverId;
+    }
+
+    public String getContributors() {
+        return contributors;
+    }
+
+    public void setContributors(String contributors) {
+        this.contributors = contributors;
+    }
+
+    public Long getFamiliesId() {
+        return familiesId;
+    }
+
+    public void setFamiliesId(Long familiesId) {
+        this.familiesId = familiesId;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public PuzzleCategory getCategory() {
+        return category;
+    }
+
+    public void setCategory(PuzzleCategory category) {
+        this.category = category;
+    }
+
+    public Integer getBePuzzle() {
+        return bePuzzle;
+    }
+
+    public void setBePuzzle(Integer be_puzzle) {
+        this.bePuzzle = be_puzzle;
+    }
+
+
+    public LocalDateTime getLastSavedTime() {
+        return lastSavedTime;
+    }
+
+    public void setLastSavedTime(LocalDateTime lastSavedTime) {
+        this.lastSavedTime = lastSavedTime;
+    }
+
+    public LocalDateTime getCompletedTime() {
+        return completedTime;
+    }
+
+    public void setCompletedTime(LocalDateTime completedTime) {
+        this.completedTime = completedTime;
     }
 }
