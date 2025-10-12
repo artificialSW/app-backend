@@ -3,6 +3,8 @@ package org.dcode.artificialswbackend.puzzle.entity;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "puzzle")
 public class Puzzle {
@@ -42,6 +44,11 @@ public class Puzzle {
 
     private Integer bePuzzle = 0;
 
+    @Column(name = "last_saved_time")
+    private LocalDateTime lastSavedTime;
+
+    @Column(name = "completed_time")
+    private LocalDateTime completedTime;
 
     public Puzzle() {
     }
@@ -151,4 +158,20 @@ public class Puzzle {
         this.bePuzzle = be_puzzle;
     }
 
+
+    public LocalDateTime getLastSavedTime() {
+        return lastSavedTime;
+    }
+
+    public void setLastSavedTime(LocalDateTime lastSavedTime) {
+        this.lastSavedTime = lastSavedTime;
+    }
+
+    public LocalDateTime getCompletedTime() {
+        return completedTime;
+    }
+
+    public void setCompletedTime(LocalDateTime completedTime) {
+        this.completedTime = completedTime;
+    }
 }
