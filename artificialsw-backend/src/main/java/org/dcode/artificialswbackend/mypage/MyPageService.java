@@ -3,6 +3,7 @@ package org.dcode.artificialswbackend.mypage;
 import org.dcode.artificialswbackend.mypage.dto.MyPageResponseDto;
 import org.dcode.artificialswbackend.mypage.dto.MyCommentResponseDto;
 import org.dcode.artificialswbackend.mypage.dto.MyLikedQuestionResponseDto;
+import org.dcode.artificialswbackend.mypage.dto.MyCompletedPuzzleResponseDto;
 import org.dcode.artificialswbackend.community.dto.MyQuestionResponseDto;
 import org.dcode.artificialswbackend.signup.entity.Families;
 import org.dcode.artificialswbackend.signup.entity.SignUp;
@@ -12,11 +13,13 @@ import org.dcode.artificialswbackend.community.entity.Comment;
 import org.dcode.artificialswbackend.community.entity.PersonalQuestions;
 import org.dcode.artificialswbackend.community.entity.PublicQuestions;
 import org.dcode.artificialswbackend.community.entity.Like;
+import org.dcode.artificialswbackend.puzzle.entity.Puzzle;
 import org.dcode.artificialswbackend.community.repository.CommentRepository;
 import org.dcode.artificialswbackend.community.repository.PersonalQuestionsRepository;
 import org.dcode.artificialswbackend.community.repository.PublicQuestionsRepository;
 import org.dcode.artificialswbackend.community.repository.LikeRepository;
 import org.dcode.artificialswbackend.community.repository.QuestionReferenceRepository;
+import org.dcode.artificialswbackend.puzzle.repository.PuzzleRepository;
 import org.dcode.artificialswbackend.community.entity.QuestionReference;
 import org.springframework.stereotype.Service;
 
@@ -34,11 +37,12 @@ public class MyPageService {
     private final PublicQuestionsRepository publicQuestionsRepository;
     private final QuestionReferenceRepository questionReferenceRepository;
     private final LikeRepository likeRepository;
+    private final PuzzleRepository puzzleRepository;
 
     public MyPageService(SignUpRepository signUpRepository, FamiliesRepository familiesRepository, 
                         CommentRepository commentRepository, PersonalQuestionsRepository personalQuestionsRepository,
                         PublicQuestionsRepository publicQuestionsRepository, QuestionReferenceRepository questionReferenceRepository,
-                        LikeRepository likeRepository) {
+                        LikeRepository likeRepository, PuzzleRepository puzzleRepository) {
         this.signUpRepository = signUpRepository;
         this.familiesRepository = familiesRepository;
         this.commentRepository = commentRepository;
@@ -46,6 +50,7 @@ public class MyPageService {
         this.publicQuestionsRepository = publicQuestionsRepository;
         this.questionReferenceRepository = questionReferenceRepository;
         this.likeRepository = likeRepository;
+        this.puzzleRepository = puzzleRepository;
     }
 
     public MyPageResponseDto getMyPageInfo(Long userId) {
@@ -92,6 +97,33 @@ public class MyPageService {
         }
         if (familyType != null) {
             user.setFamilyType(familyType);
+        }
+
+        // 변경사항 저장
+        signUpRepository.save(user);
+    }
+
+    public void updateMyPagePrivateInfo(Long userId, String phone, String password) {
+        // 사용자 정보 조회
+        Optional<SignUp> userOpt = signUpRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            throw new RuntimeException("사용자를 찾을 수 없습니다.");
+        }
+
+        SignUp user = userOpt.get();
+
+        // 전화번호 중복 체크 (새로운 전화번호가 제공된 경우)
+        if (phone != null && !phone.equals(user.getPhone())) {
+            Optional<SignUp> existingUser = signUpRepository.findByPhone(phone);
+            if (existingUser.isPresent()) {
+                throw new RuntimeException("이미 사용 중인 전화번호입니다.");
+            }
+            user.setPhone(phone);
+        }
+
+        // 비밀번호 업데이트 (평문으로 저장 - 현재 시스템에 맞춤)
+        if (password != null && !password.trim().isEmpty()) {
+            user.setPassword(password);
         }
 
         // 변경사항 저장
@@ -235,6 +267,19 @@ public class MyPageService {
                     
                     return new MyLikedQuestionResponseDto(questionRefId, questionContent, questionType);
                 })
+                .collect(Collectors.toList());
+    }
+
+    public List<MyCompletedPuzzleResponseDto> getMyCompletedPuzzles(Long userId, Long familyId) {
+        // 사용자가 contributor로 참여하면서 완성된 퍼즐들 조회
+        List<Puzzle> completedPuzzles = puzzleRepository.findCompletedPuzzlesByUserContribution(familyId, userId);
+        
+        return completedPuzzles.stream()
+                .map(puzzle -> new MyCompletedPuzzleResponseDto(
+                    puzzle.getPuzzleId(),
+                    puzzle.getImagePath(),
+                    puzzle.getCompletedTime()
+                ))
                 .collect(Collectors.toList());
     }
 }

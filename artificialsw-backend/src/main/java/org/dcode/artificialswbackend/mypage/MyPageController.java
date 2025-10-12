@@ -3,8 +3,10 @@ package org.dcode.artificialswbackend.mypage;
 import org.dcode.artificialswbackend.util.JwtUtil;
 import org.dcode.artificialswbackend.mypage.dto.MyPageResponseDto;
 import org.dcode.artificialswbackend.mypage.dto.MyPageEditRequestDto;
+import org.dcode.artificialswbackend.mypage.dto.MyPagePrivateEditRequestDto;
 import org.dcode.artificialswbackend.mypage.dto.MyCommentResponseDto;
 import org.dcode.artificialswbackend.mypage.dto.MyLikedQuestionResponseDto;
+import org.dcode.artificialswbackend.mypage.dto.MyCompletedPuzzleResponseDto;
 import org.dcode.artificialswbackend.community.dto.MyQuestionResponseDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -59,6 +61,28 @@ public class MyPageController {
             
             // 개인정보 업데이트
             myPageService.updateMyPageInfo(userId, request.getName(), request.getBirth(), request.getFamilyType());
+            
+            return ResponseEntity.ok("개인정보가 성공적으로 수정되었습니다.");
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("개인정보 수정에 실패했습니다: " + e.getMessage());
+        }
+    }
+
+    @PutMapping("/mypage/edit/private")
+    public ResponseEntity<String> updateMyPagePrivate(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody MyPagePrivateEditRequestDto request) {
+        try {
+            // JWT 토큰에서 Bearer 제거
+            String token = authHeader.replace("Bearer ", "");
+            
+            // 토큰에서 userId 추출
+            String userIdStr = jwtUtil.validateAndGetUserId(token);
+            Long userId = Long.parseLong(userIdStr);
+            
+            // 개인정보(전화번호, 비밀번호) 업데이트
+            myPageService.updateMyPagePrivateInfo(userId, request.getPhone(), request.getPassword());
             
             return ResponseEntity.ok("개인정보가 성공적으로 수정되었습니다.");
             
@@ -122,6 +146,27 @@ public class MyPageController {
             List<MyLikedQuestionResponseDto> likedQuestions = myPageService.getMyLikedQuestions(userId, familyId);
             
             return ResponseEntity.ok(likedQuestions);
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/mypage/puzzles")
+    public ResponseEntity<List<MyCompletedPuzzleResponseDto>> getMyCompletedPuzzles(@RequestHeader("Authorization") String authHeader) {
+        try {
+            // JWT 토큰에서 Bearer 제거
+            String token = authHeader.replace("Bearer ", "");
+            
+            // 토큰 검증 및 사용자 ID, 가족 ID 추출
+            String userIdStr = jwtUtil.validateAndGetUserId(token);
+            Long userId = Long.parseLong(userIdStr);
+            Long familyId = jwtUtil.validateAndGetFamilyId(token);
+            
+            // 완성된 퍼즐들 조회
+            List<MyCompletedPuzzleResponseDto> completedPuzzles = myPageService.getMyCompletedPuzzles(userId, familyId);
+            
+            return ResponseEntity.ok(completedPuzzles);
             
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
