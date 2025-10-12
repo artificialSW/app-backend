@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 
@@ -203,6 +204,7 @@ public class PuzzlePictureService {
         updatePuzzlePieces(puzzle, request.getPieces());
         updateCompletedPiecesId(puzzle, request.getCompletedPiecesId());
         updateContributor(puzzle, userId);
+        puzzle.setLastSavedTime(LocalDateTime.now());
         puzzleRepository.save(puzzle);
     }
 
