@@ -168,5 +168,16 @@ public class PuzzlePictureController {
                 "message", "퍼즐이 아카이브에서 삭제되었습니다."
         ));
     }
+
+    @GetMapping("/home")
+    public ResponseEntity<PuzzleHomeResponse> getPuzzleHome(
+            @RequestHeader("Authorization") String authHeader
+    ) {
+        String token = authHeader.replace("Bearer ", "");
+        Long familyId = jwtUtil.validateAndGetFamilyId(token);
+        Integer userId = Integer.valueOf(jwtUtil.validateAndGetUserId(token));
+        PuzzleHomeResponse response = puzzlePictureService.getPuzzleHome(familyId, userId);
+        return ResponseEntity.ok(response);
+    }
 }
 

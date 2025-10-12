@@ -13,4 +13,11 @@ public interface PuzzleRepository extends JpaRepository<Puzzle, Integer> {
     List<Puzzle> findByFamiliesIdAndCompletedAndBePuzzle(Long familiesId, boolean completed, Integer bePuzzle);
 
     List<Puzzle> findByFamiliesIdAndCompleted(Long familiesId, boolean completed);
+
+    List<Puzzle> findByFamiliesIdAndCompletedAndCategoryIdIn(Long familyId, boolean b, List<Long> categoryIds);
+
+    int countByFamiliesIdAndUploaderIdAndCategoryIdIn(Long familyId, Integer userId, List<Long> categoryIds);
+
+    int countByFamiliesIdAndCompletedAndBePuzzle(Long familyId, boolean b, int i);
 }
+
