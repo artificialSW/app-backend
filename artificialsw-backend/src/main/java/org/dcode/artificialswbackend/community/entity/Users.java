@@ -11,7 +11,7 @@ public class Users {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "family_id", nullable = false)
+    @Column(nullable = false)
     private Long familyId;
 
     @Column(nullable = false, length = 100)
@@ -35,17 +35,14 @@ public class Users {
     @Column(nullable = false, length = 50, unique = true)
     private String nickname;
 
-    @Column(name = "profile_photo", length = 255)
+    @Column(length = 255)
     private String profilePhoto;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "family_type")
     private FamilyType familyType;
 
-    @Column(name = "created_at")
     private Timestamp createdAt;
 
-    @Column(name = "updated_at")
     private Timestamp updatedAt;
 
     public enum Gender {

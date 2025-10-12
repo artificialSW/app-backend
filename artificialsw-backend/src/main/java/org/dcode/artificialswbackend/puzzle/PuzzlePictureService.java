@@ -1,0 +1,580 @@
+package org.dcode.artificialswbackend.puzzle;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
+import org.dcode.artificialswbackend.archive.entity.IslandArchives;
+import org.dcode.artificialswbackend.archive.entity.Tree;
+import org.dcode.artificialswbackend.archive.repository.IslandArchivesRepository;
+import org.dcode.artificialswbackend.archive.repository.TreeRepository;
+import org.dcode.artificialswbackend.puzzle.dto.*;
+import org.dcode.artificialswbackend.puzzle.entity.*;
+import org.dcode.artificialswbackend.puzzle.repository.*;
+import org.dcode.artificialswbackend.signup.repository.SignUpRepository;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.*;
+
+@Service
+public class PuzzlePictureService {
+    private final PuzzleRepository puzzleRepository;
+    private final PuzzleCategoryRepository puzzleCategoryRepository;
+    private final PuzzlePiecesRepository puzzlePiecesRepository;
+    private final FruitCatalogRepository fruitCatalogRepository;
+    private final SignUpRepository signUpRepository;
+    private final IslandArchivesRepository islandArchivesRepository;
+    private final PuzzleArchiveRepository puzzleArchiveRepository;
+    private final FruitsRepository fruitsRepository;
+    private final TreeRepository treeRepository;
+    private final ObjectMapper objectMapper;
+
+    @Value("${puzzle.image.url.base}")
+    private String imageBaseUrl;
+
+    public PuzzlePictureService(PuzzleRepository puzzleRepository, PuzzleCategoryRepository puzzleCategoryRepository, PuzzlePiecesRepository puzzlePiecesRepository, FruitCatalogRepository fruitCatalogRepository, SignUpRepository signUpRepository, IslandArchivesRepository islandArchivesRepository, PuzzleArchiveRepository puzzleArchiveRepository, FruitsRepository fruitsRepository, TreeRepository treeRepository, ObjectMapper objectMapper) {
+        this.puzzleRepository = puzzleRepository;
+        this.puzzleCategoryRepository = puzzleCategoryRepository;
+        this.puzzlePiecesRepository = puzzlePiecesRepository;
+        this.fruitCatalogRepository = fruitCatalogRepository;
+        this.signUpRepository = signUpRepository;
+        this.islandArchivesRepository = islandArchivesRepository;
+        this.puzzleArchiveRepository = puzzleArchiveRepository;
+        this.fruitsRepository = fruitsRepository;
+        this.treeRepository = treeRepository;
+        this.objectMapper = objectMapper;
+    }
+    @Transactional
+    public List<String> savePictures(List<PictureData> pictureDataList, Long userId, Long familyId) {
+        List<String> imageUrls = new ArrayList<>();
+        for (PictureData data : pictureDataList) {
+
+            // 1. 이미지 저장
+            String uploadDir = "/home/ubuntu/app/images/";
+            String fileName = System.currentTimeMillis() + ".png";
+            byte[] decodedBytes = Base64.getDecoder().decode(data.getImageBase64());
+            try {
+                Files.write(Paths.get(uploadDir + fileName), decodedBytes);
+            } catch (IOException e) {
+                throw new RuntimeException("이미지 저장 실패");
+            }
+            String imageUrl = imageBaseUrl  + fileName;
+
+            // 2. 카테고리 엔티티 조회 (DB에 반드시 존재한다고 가정)
+            PuzzleCategory categoryEntity = puzzleCategoryRepository.findByCategory(data.getCategory());
+            if (categoryEntity == null) {
+                throw new RuntimeException("카테고리가 DB에 존재하지 않습니다: " + data.getCategory());
+            }
+
+            // 3. puzzle 테이블 저장, 카테고리 FK로 연결
+            Puzzle puzzle = new Puzzle();
+            puzzle.setImagePath(imageUrl);
+            puzzle.setFamiliesId(familyId);
+            puzzle.setMessage(data.getComment());
+            puzzle.setCategory(categoryEntity); // 카테고리 엔티티 연결
+            puzzleRepository.save(puzzle);
+
+            imageUrls.add(imageUrl);
+        }
+        return imageUrls;
+    }
+    @Transactional
+    public PuzzleCreateResponse createPuzzle(int size, String userId, Long familyId) {
+        // 1. 랜덤 퍼즐 선택
+        Puzzle puzzle = puzzleRepository.findRandomBePuzzleZeroByFamilyId(familyId);
+        if (puzzle == null) throw new RuntimeException("랜덤 퍼즐이 없습니다.");
+
+        // 2. 퍼즐 정보 갱신
+        puzzle.setSize(size);
+        puzzle.setContributors("[\"" + userId + "\"]");
+        puzzle.setBePuzzle(1); // 반드시 여기서 bePuzzle 값 1로 변경!
+
+        puzzleRepository.save(puzzle);
+
+        return new PuzzleCreateResponse(
+                puzzle.getPuzzleId(),
+                puzzle.getImagePath(),
+                puzzle.getCategory().getCategory(),
+                "퍼즐이 생성되었습니다."
+        );
+    }
+
+
+    public String saveCaptureImage(String base64Image) {
+        String uploadDir = "/home/ubuntu/app/images/capture/";
+        String fileName = System.currentTimeMillis() + ".png";
+
+        byte[] decodedBytes = Base64.getDecoder().decode(base64Image);
+        try {
+            Files.write(Paths.get(uploadDir + fileName), decodedBytes);
+        } catch (IOException e) {
+            throw new RuntimeException("캡쳐 이미지 저장 실패", e);
+        }
+
+        return imageBaseUrl + "capture/" + fileName;
+    }
+
+    public Puzzle getPuzzleById(Integer puzzleId) {
+        Optional<Puzzle> optionalPuzzle = puzzleRepository.findById(puzzleId);
+        if (optionalPuzzle.isEmpty()) {
+            throw new RuntimeException("Puzzle not found with id: " + puzzleId);
+        }
+        return optionalPuzzle.get();
+    }
+
+    public void updatePuzzleStatus(Puzzle puzzle, String savedCaptureImagePath, boolean completed, boolean isPlayingPuzzle) {
+        puzzle.setCapture_image_path(savedCaptureImagePath);
+        puzzle.setCompleted(completed);
+        puzzle.setIs_playing_puzzle(isPlayingPuzzle);
+    }
+
+
+    @Transactional
+    public void updatePuzzlePieces(Puzzle puzzle, Map<String, SavePuzzleProgressRequest.Coordinate> piecesMap) {
+        try {
+            // piecesMap을 "pieces" 키로 감싸 JSON 문자열로 변환
+            Map<String, Object> positionMap = new HashMap<>();
+            positionMap.put("pieces", piecesMap);
+            String positionJson = objectMapper.writeValueAsString(positionMap);
+
+            // 퍼즐에 해당하는 PuzzlePieces 엔티티 조회 또는 생성
+            PuzzlePieces puzzlePieces = puzzlePiecesRepository.findByPuzzleId(puzzle.getPuzzleId())
+                    .orElseGet(() -> {
+                        PuzzlePieces newPiece = new PuzzlePieces();
+                        newPiece.setPuzzleId(puzzle.getPuzzleId());
+                        return newPiece;
+                    });
+
+            // position 필드에 JSON 문자열 저장
+            puzzlePieces.setPosition(positionJson);
+            puzzlePiecesRepository.save(puzzlePieces);
+
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("퍼즐 조각 위치 JSON 변환 실패", e);
+        }
+    }
+
+    public void updateCompletedPiecesId(Puzzle puzzle, List<Integer> completedPiecesId) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            String json = mapper.writeValueAsString(completedPiecesId);
+            puzzle.setCompleted_pieces_id(json);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("completedPiecesId JSON 변환 실패", e);
+        }
+    }
+
+    // contributor 반영
+    public void updateContributor(Puzzle puzzle, Long userId) {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            // 이미 contributors가 있으면 merge, 없으면 새로 추가(최소 한 명 저장)
+            String contributorsJson = puzzle.getContributors();
+            List<Long> contributorsList;
+            if (contributorsJson != null && !contributorsJson.isEmpty()) {
+                contributorsList = mapper.readValue(contributorsJson, mapper.getTypeFactory().constructCollectionType(List.class, Long.class));
+                if (!contributorsList.contains(userId)) {
+                    contributorsList.add(userId);
+                }
+            } else {
+                contributorsList = List.of(userId);
+            }
+            puzzle.setContributors(mapper.writeValueAsString(contributorsList));
+        } catch (Exception e) {
+            throw new RuntimeException("Contributors JSON 처리 실패", e);
+        }
+    }
+
+    @Transactional
+    public void savePuzzleProgress(Long userId, Integer puzzleId, Long familyId, SavePuzzleProgressRequest request) {
+        Puzzle puzzle = getPuzzleById(puzzleId);
+        // familyId 검증 추가
+        if (!puzzle.getFamiliesId().equals(familyId)) {
+            throw new RuntimeException("퍼즐이 해당 가족에 속하지 않습니다.");
+        }
+        String savedCaptureImagePath = saveCaptureImage(request.getCaptureImagePath());
+        updatePuzzleStatus(puzzle, savedCaptureImagePath, request.isCompleted(), request.isPlayingPuzzle());
+        updatePuzzlePieces(puzzle, request.getPieces());
+        updateCompletedPiecesId(puzzle, request.getCompletedPiecesId());
+        updateContributor(puzzle, userId);
+        puzzle.setLastSavedTime(LocalDateTime.now());
+        puzzleRepository.save(puzzle);
+    }
+
+
+    @Transactional
+    public PuzzleProgressResponse getPuzzleProgress(Integer puzzleId) {
+        Puzzle puzzle = puzzleRepository.findById(puzzleId)
+                .orElseThrow(() -> new RuntimeException("Puzzle not found with id: " + puzzleId));
+
+        if (puzzle.getIs_playing_puzzle()) {
+            throw new IllegalStateException("다른 사람이 퍼즐을 풀고 있습니다");
+        }
+
+        // 진행 상태로 변경
+        puzzle.setIs_playing_puzzle(true);
+        puzzleRepository.save(puzzle);
+
+        Optional<PuzzlePieces> puzzlePiecesOpt = puzzlePiecesRepository.findByPuzzleId(puzzleId);
+
+        Map<String, PuzzleProgressResponse.PiecePosition> pieces = new HashMap<>();
+
+        if (puzzlePiecesOpt.isPresent()) {
+            PuzzlePieces puzzlePieces = puzzlePiecesOpt.get();
+            String positionJson = puzzlePieces.getPosition();
+
+            try {
+                JsonNode rootNode = objectMapper.readTree(positionJson);
+                JsonNode piecesNode = rootNode.get("pieces");
+                if (piecesNode != null) {
+                    Iterator<String> fieldNames = piecesNode.fieldNames();
+                    while (fieldNames.hasNext()) {
+                        String key = fieldNames.next();
+                        JsonNode posNode = piecesNode.get(key);
+                        double x = posNode.get("x").asDouble();
+                        double y = posNode.get("y").asDouble();
+                        pieces.put(key, new PuzzleProgressResponse.PiecePosition(x, y));
+                    }
+                }
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException("Error parsing pieces JSON", e);
+            }
+        }
+
+        return new PuzzleProgressResponse(
+                puzzle.getImagePath(),
+                puzzle.getSize(),
+                pieces
+        );
+    }
+
+
+
+    @Transactional
+    public PuzzleCompleteResponse completePuzzle(
+            Integer puzzleId,
+            Long solverId,
+            Long familyId,
+            int month // 프론트에서 전달받음
+    ) {
+        // 1. 현재 날짜로 year, day, period 계산
+        LocalDate now = LocalDate.now(ZoneId.of("Asia/Seoul"));
+        int archiveYear = now.getYear();
+        int archiveMonth = now.getMonthValue();
+        int day = now.getDayOfMonth();
+        int period = (day <= 15) ? 1 : 2; // 전반기 후반기 나눔
+        int position = (day <= 7 || (15 < day && day <=22) ) ? 3 : 4;
+
+        // 2. 퍼즐 조회 및 완료 처리
+        Puzzle puzzle = getPuzzleById(puzzleId);
+        puzzle.setCompleted(true);
+        puzzle.setSolverId(solverId);
+        puzzle.setCompletedTime(LocalDateTime.now());
+        puzzleRepository.save(puzzle);
+
+        // 3. 계절별 랜덤 과일 선정 (month는 프론트에서 전달받음)
+        FruitCatalog fruit = selectSeasonalRandomFruit(month);
+        String fruitName = fruit.getFruitName();
+        String fruitMessage = getFruitMessage(fruit.getId(), fruitName);
+
+        // 4. contributors 닉네임 리스트 생성 (solverId 닉네임 중복 없이 추가)
+        List<Long> contributorIds = parseContributors(puzzle.getContributors());
+        List<String> contributorNicknames = new ArrayList<>();
+        for (Long id : contributorIds) {
+            signUpRepository.findByIdAndFamilyId(id, familyId)
+                    .ifPresent(user -> contributorNicknames.add(user.getNickname()));
+        }
+        // **solverId 닉네임을 중복 없이 추가**
+        signUpRepository.findByIdAndFamilyId(solverId, familyId)
+                .ifPresent(user -> {
+                    if (!contributorNicknames.contains(user.getNickname())) {
+                        contributorNicknames.add(user.getNickname());
+                    }
+                });
+
+        // 5. 퍼즐 점수 증가 (최대 7점)
+        IslandArchives island = islandArchivesRepository
+                .findByFamilyIdAndYearAndMonthAndPeriod(familyId, archiveYear, archiveMonth, period)
+                .orElseThrow(() -> new RuntimeException("아카이브 레코드가 없습니다"));
+        int currentScore = island.getPuzzleScore() != null ? island.getPuzzleScore() : 0;
+        if (currentScore < 7) {
+            island.setPuzzleScore(currentScore + 1);
+            islandArchivesRepository.save(island);
+        }
+
+        // === [여기서 트리 찾고 열매 저장!] ===
+        Tree tree = treeRepository.findByArchiveIdAndFamilyIdAndPositionAndTreeCategory(
+                island.getId(), familyId, position, Tree.TreeCategory.fruit
+        ).orElseThrow(() -> new RuntimeException("조건에 맞는 트리가 없습니다"));
+
+        Fruits fruitEntity = new Fruits();
+        fruitEntity.setTreeId(tree.getId());
+        fruitEntity.setPuzzleId(puzzle.getPuzzleId());
+        fruitEntity.setMessage(fruitMessage);
+        fruitEntity.setFruitName(fruitName);
+        fruitEntity.setCategory(puzzle.getCategory().getCategory());
+        fruitEntity.setContributors(puzzle.getContributors()); // JSON 문자열 그대로
+        fruitsRepository.save(fruitEntity);
+        // === [여기까지] ===
+
+        // 6. 응답 DTO 생성
+        return new PuzzleCompleteResponse(
+                puzzle.getPuzzleId().longValue(),
+                puzzle.getMessage(),
+                fruitName,
+                fruitMessage,
+                contributorNicknames
+        );
+    }
+
+    // 계절별 과일 ID 매핑
+    private static final Map<String, List<Integer>> SEASON_FRUIT_IDS = Map.of(
+            "spring", List.of(1,2,3,4),
+            "summer", List.of(5,6,7),
+            "fall", List.of(8,9,10,11,12),
+            "winter", List.of(13,14,15,16)
+    );
+
+    private FruitCatalog selectSeasonalRandomFruit(int month) {
+        String season;
+        if (month >= 3 && month <= 5) season = "spring";
+        else if (month >= 6 && month <= 9) season = "summer";
+        else if (month >= 10 && month <= 11) season = "fall";
+        else season = "winter";
+
+        List<Integer> ids = SEASON_FRUIT_IDS.get(season);
+        int fruitId = ids.get(new Random().nextInt(ids.size()));
+        return fruitCatalogRepository.findById(fruitId)
+                .orElseThrow(() -> new RuntimeException("해당 id의 과일 없음"));
+    }
+
+    private String getFruitMessage(Integer fruitId, String fruitName) {
+        return switch (fruitId) {
+            case 1 -> "사랑스러운 봄의 체리 획득!";
+            case 2 -> "사랑스러운 봄의 딸기 획득!";
+            case 3 -> "사랑스러운 봄의 참외 획득!";
+            case 4 -> "사랑스러운 봄의 산딸기 획득!";
+            case 5 -> "향긋한 여름의 망고 획득!";
+            case 6 -> "향긋한 여름의 복숭아 획득!";
+            case 7 -> "향긋한 여름의 레몬 획득!";
+            case 8 -> "포근한 가을의 감 획득!";
+            case 9 -> "포근한 가을의 무화과 획득!";
+            case 10 -> "포근한 가을의 포도 획득!";
+            case 11 -> "포근한 가을의 배 획득!";
+            case 12 -> "포근한 가을의 대추 획득!";
+            case 13 -> "탐스러운 겨울 유자 획득!";
+            case 14 -> "탐스러운 겨울 석류 획득!";
+            case 15 -> "탐스러운 겨울 사과 획득!";
+            case 16 -> "탐스러운 겨울 귤 획득!";
+            default -> fruitName + " 획득!";
+        };
+    }
+
+    private List<Long> parseContributors(String contributorsJson) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.readValue(
+                    contributorsJson,
+                    mapper.getTypeFactory().constructCollectionType(List.class, Long.class)
+            );
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
+
+    @Transactional
+    public List<PuzzleInProgressResponse> getInProgressPuzzles(Long familyId) {
+        // be_puzzle = 1, completed = false 인 puzzle 만 조회
+        List<Puzzle> puzzles = puzzleRepository.findByFamiliesIdAndCompletedAndBePuzzle(familyId, false, 1);
+        List<PuzzleInProgressResponse> responses = new ArrayList<>();
+        for (Puzzle puzzle : puzzles) {
+            // contributors JSON -> List<String> 변환
+            List<String> contributorsList = new ArrayList<>();
+            try {
+                if (puzzle.getContributors() != null) {
+                    contributorsList = objectMapper.readValue(
+                            puzzle.getContributors(),
+                            objectMapper.getTypeFactory().constructCollectionType(List.class, String.class)
+                    );
+                }
+            } catch (Exception e) {
+                // parsing 실패 시 빈 리스트
+            }
+
+            // completed_pieces_id JSON -> List<Integer> -> 길이
+            int completedPiecesCount = 0;
+            try {
+                if (puzzle.getCompleted_pieces_id() != null) {
+                    List<Integer> completedPieces = objectMapper.readValue(
+                            puzzle.getCompleted_pieces_id(),
+                            objectMapper.getTypeFactory().constructCollectionType(List.class, Integer.class)
+                    );
+                    completedPiecesCount = completedPieces.size();
+                }
+            } catch (Exception e) {
+                completedPiecesCount = 0;
+            }
+
+            responses.add(new PuzzleInProgressResponse(
+                    puzzle.getPuzzleId(),
+                    puzzle.getCapture_image_path(),
+                    contributorsList,
+                    puzzle.getCategory().getCategory(),
+                    completedPiecesCount,
+                    puzzle.getSize() != null ? puzzle.getSize() : 0
+            ));
+        }
+        return responses;
+    }
+
+    @Transactional
+    public void deletePuzzle(Integer puzzleId) {
+        if (!puzzleRepository.existsById(puzzleId)) {
+            throw new IllegalArgumentException("존재하지 않는 퍼즐입니다: " + puzzleId);
+        }
+        puzzleRepository.deleteById(puzzleId);
+    }
+
+
+    @Transactional
+    public List<PuzzleCompletedResponse> getCompletedPuzzles(Long familyId) {
+        List<Puzzle> puzzles = puzzleRepository.findByFamiliesIdAndCompleted(familyId, true);
+        List<PuzzleCompletedResponse> responses = new ArrayList<>();
+        ObjectMapper mapper = new ObjectMapper();
+        for (Puzzle puzzle : puzzles) {
+            // contributors JSON -> List<String> 변환
+            List<String> contributorsList = new ArrayList<>();
+            try {
+                if (puzzle.getContributors() != null) {
+                    contributorsList = mapper.readValue(
+                            puzzle.getContributors(),
+                            mapper.getTypeFactory().constructCollectionType(List.class, String.class)
+                    );
+                }
+            } catch (Exception e) {
+                // parsing 실패 시 빈 리스트
+            }
+
+            // solverId를 String으로 변환 후 합치기, 중복 방지
+            if (puzzle.getSolverId() != null) {
+                String solverIdStr = puzzle.getSolverId().toString();
+                if (!contributorsList.contains(solverIdStr)) {
+                    contributorsList.add(solverIdStr);
+                }
+            }
+            // 만약 contributors 최종 값을 퍼즐에 저장하고 싶다면:
+            try {
+                puzzle.setContributors(mapper.writeValueAsString(contributorsList));
+                puzzleRepository.save(puzzle);
+            } catch(Exception e) {
+                // 예외 무시 또는 로깅
+            }
+
+            responses.add(new PuzzleCompletedResponse(
+                    puzzle.getPuzzleId(),
+                    puzzle.getImagePath(),
+                    puzzle.getCategory().getCategory(),
+                    contributorsList,
+                    puzzle.getMessage()
+            ));
+        }
+        return responses;
+    }
+
+
+    @Transactional
+    public Map<String, Object> retryPuzzle(Integer puzzleId, Long familyId) {
+        // 1. 퍼즐 찾기 (familyId와 puzzleId가 일치하는 완성된 퍼즐)
+        Puzzle puzzle = puzzleRepository.findById(puzzleId)
+                .orElseThrow(() -> new IllegalArgumentException("퍼즐을 찾을 수 없습니다."));
+        if (!puzzle.getFamiliesId().equals(familyId)) {
+            throw new IllegalArgumentException("가족 정보가 일치하지 않습니다.");
+        }
+        // completed=1(완성된 퍼즐)인지 확인
+        if (!puzzle.isCompleted()) {
+            throw new IllegalStateException("이미 완성된 퍼즐만 재도전할 수 있습니다.");
+        }
+
+        // 2. 기존 퍼즐 정보 기억
+        String imageUrl = puzzle.getImagePath();
+        int size = puzzle.getSize() != null ? puzzle.getSize() : 0;
+
+        // 3. completed를 0(false)으로, 필요한 경우 중간 저장 필드 등도 초기화
+        puzzle.setCompleted(false);
+        puzzle.setContributors(null);
+        puzzle.setCompleted_pieces_id(null);
+        puzzleRepository.save(puzzle);
+
+        // 4. 응답 생성
+        return Map.of(
+                "message", "새로운 퍼즐이 시작되었습니다.",
+                "imageUrl", imageUrl,
+                "size", size
+        );
+    }
+
+    @Transactional
+    public void archivePuzzle(Integer puzzleId, Long familyId) {
+        Puzzle puzzle = puzzleRepository.findById(puzzleId)
+                .orElseThrow(() -> new IllegalArgumentException("퍼즐을 찾을 수 없습니다."));
+        if (!puzzle.getFamiliesId().equals(familyId)) {
+            throw new IllegalArgumentException("가족 정보가 일치하지 않습니다.");
+        }
+        // 반드시 완성된 퍼즐인지 확인
+        if (!puzzle.isCompleted()) {
+            throw new IllegalStateException("완성된 퍼즐만 아카이브할 수 있습니다.");
+        }
+
+        PuzzleArchive archive = new PuzzleArchive();
+        archive.setImagePath(puzzle.getImagePath());
+        archive.setCategory(puzzle.getCategory().getCategory());
+        archive.setContributors(puzzle.getContributors());
+        archive.setFamiliesId(familyId);
+        puzzleArchiveRepository.save(archive);
+    }
+
+    @Transactional
+    public List<PuzzleArchiveResponse> getArchivedPuzzles(Long familyId) {
+        List<PuzzleArchive> archives = puzzleArchiveRepository.findByFamiliesId(familyId);
+        List<PuzzleArchiveResponse> responses = new ArrayList<>();
+        ObjectMapper mapper = new ObjectMapper();
+        for (PuzzleArchive archive : archives) {
+            List<String> contributorsList = new ArrayList<>();
+            try {
+                if (archive.getContributors() != null) {
+                    contributorsList = mapper.readValue(
+                            archive.getContributors(),
+                            mapper.getTypeFactory().constructCollectionType(List.class, String.class)
+                    );
+                }
+            } catch (Exception e) {
+                // 파싱 실패시 빈 리스트
+            }
+
+            responses.add(new PuzzleArchiveResponse(
+                    archive.getId(), // id를 puzzleId로 사용
+                    archive.getImagePath(),
+                    archive.getCategory(),
+                    contributorsList
+            ));
+        }
+        return responses;
+    }
+
+    @Transactional
+    public void deleteArchivedPuzzle(Long familyId, Long puzzleArchiveId) {
+        PuzzleArchive archive = puzzleArchiveRepository.findById(puzzleArchiveId)
+                .orElseThrow(() -> new IllegalArgumentException("아카이브 퍼즐을 찾을 수 없습니다."));
+        if (!archive.getFamiliesId().equals(familyId)) {
+            throw new IllegalArgumentException("가족 정보가 일치하지 않습니다.");
+        }
+        puzzleArchiveRepository.deleteById(puzzleArchiveId);
+    }
+}

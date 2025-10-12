@@ -84,13 +84,7 @@ public class PersonalQuestions {
         this.solved = solved;
     }
 
-    public Integer getLikes() {
-        return likes;
-    }
 
-    public void setLikes(Integer likes) {
-        this.likes = likes;
-    }
 
     public Timestamp getCreated_at() {
         return created_at;
@@ -106,5 +100,13 @@ public class PersonalQuestions {
 
     public void setUpdated_at(Timestamp updated_at) {
         this.updated_at = updated_at;
+    }
+
+    public Integer getLikes() {
+        return likes;
+    }
+
+    public void setLikes(Integer likes) {
+        this.likes = likes;
     }
 }

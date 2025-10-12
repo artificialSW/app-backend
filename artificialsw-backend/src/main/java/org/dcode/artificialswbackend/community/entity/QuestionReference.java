@@ -20,12 +20,12 @@ public class QuestionReference {
     private Long familyId;
 
     public enum QuestionType {
-        personal, 
-        PUBLIC;
+        Personal, 
+        Public;
         
         @Override
         public String toString() {
-            return this.name().toLowerCase();
+            return this.name();
         }
     }
 

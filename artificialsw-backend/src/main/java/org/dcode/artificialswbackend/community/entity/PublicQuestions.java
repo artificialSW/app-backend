@@ -15,9 +15,8 @@ public class PublicQuestions {
 
     @Column(columnDefinition = "TEXT")
     private String content;
-    
-    private Integer likes = 0;
     private Integer counts = 0; // 질문 번호
+    private Integer likes = 0;
     private Timestamp created_at;
     private Timestamp updated_at;
 
@@ -47,13 +46,7 @@ public class PublicQuestions {
         this.content = content;
     }
 
-    public Integer getLikes() {
-        return likes;
-    }
 
-    public void setLikes(Integer likes) {
-        this.likes = likes;
-    }
 
     public Integer getCounts() {
         return counts;
@@ -77,5 +70,13 @@ public class PublicQuestions {
 
     public void setUpdated_at(Timestamp updated_at) {
         this.updated_at = updated_at;
+    }
+
+    public Integer getLikes() {
+        return likes;
+    }
+
+    public void setLikes(Integer likes) {
+        this.likes = likes;
     }
 }

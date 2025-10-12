@@ -37,6 +37,8 @@ public class QuestionDetailResponseDto {
         private String sender;
         private Integer likes;
         private String CreateAt;
+        private String flower;
+        private Boolean isNewFlowerUnlocked;
 
         public QuestionInfo() {}
 
@@ -46,6 +48,25 @@ public class QuestionDetailResponseDto {
             this.sender = sender;
             this.likes = likes;
             this.CreateAt = CreateAt;
+        }
+        
+        public QuestionInfo(Long Q_id, String content, String sender, Integer likes, String CreateAt, String flower) {
+            this.Q_id = Q_id;
+            this.content = content;
+            this.sender = sender;
+            this.likes = likes;
+            this.CreateAt = CreateAt;
+            this.flower = flower;
+        }
+        
+        public QuestionInfo(Long Q_id, String content, String sender, Integer likes, String CreateAt, String flower, Boolean isNewFlowerUnlocked) {
+            this.Q_id = Q_id;
+            this.content = content;
+            this.sender = sender;
+            this.likes = likes;
+            this.CreateAt = CreateAt;
+            this.flower = flower;
+            this.isNewFlowerUnlocked = isNewFlowerUnlocked;
         }
 
         // Getters and Setters
@@ -87,6 +108,22 @@ public class QuestionDetailResponseDto {
 
         public void setCreateAt(String CreateAt) {
             this.CreateAt = CreateAt;
+        }
+        
+        public String getFlower() {
+            return flower;
+        }
+        
+        public void setFlower(String flower) {
+            this.flower = flower;
+        }
+        
+        public Boolean getIsNewFlowerUnlocked() {
+            return isNewFlowerUnlocked;
+        }
+        
+        public void setIsNewFlowerUnlocked(Boolean isNewFlowerUnlocked) {
+            this.isNewFlowerUnlocked = isNewFlowerUnlocked;
         }
     }
 

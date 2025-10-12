@@ -5,7 +5,13 @@ import org.dcode.artificialswbackend.community.dto.PersonalQuestionDto;
 import org.dcode.artificialswbackend.community.dto.QuestionCreateRequestDto;
 import org.dcode.artificialswbackend.community.dto.QuestionDetailResponseDto;
 import org.dcode.artificialswbackend.community.dto.PublicQuestionResponseDto;
-import org.dcode.artificialswbackend.community.util.JwtUtil;
+import org.dcode.artificialswbackend.community.dto.CommentResponseDto;
+import org.dcode.artificialswbackend.community.dto.FamilyMembersResponseDto;
+import org.dcode.artificialswbackend.community.dto.QuestionWithCommentsResponseDto;
+import org.dcode.artificialswbackend.community.dto.PublicQuestionWithCommentsResponseDto;
+import org.dcode.artificialswbackend.community.dto.MyQuestionsResponseDto;
+import org.dcode.artificialswbackend.community.dto.LikeResponseDto;
+import org.dcode.artificialswbackend.util.JwtUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,35 +21,38 @@ import java.util.Map;
 
 @RestController
 public class CommunityController {
-
     private final CommunityService communityService;
+    private final JwtUtil jwtUtil;
 
-    public CommunityController(CommunityService communityService) {
+    public CommunityController(CommunityService communityService,  JwtUtil jwtUtil) {
         this.communityService = communityService;
+        this.jwtUtil = jwtUtil;
     }
 
-    @GetMapping("/api/community/home")
-    public Map<String,Object> getHomeCommunity(@RequestHeader("Authorization") String authHeader) {
+    @GetMapping("/api/community/home/personal")
+    public Map<String,Object> getPersonalCommunity(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
-        String userId = JwtUtil.validateAndGetUserId(token);
+        String userId = jwtUtil.validateAndGetUserId(token);
         Long receiverId = Long.valueOf(userId);
-        Long familyId = 1L; // TODO: JWT에서 familyId 추출하도록 수정 필요
-        return communityService.getQuestionsWithUnsolvedCount(receiverId, familyId);
+        Long familyId = jwtUtil.validateAndGetFamilyId(token);
+        return communityService.getPersonalQuestions(receiverId, familyId);
     }
 
 
     @GetMapping("/api/community/home/public")
-    public Map<String,Object> getPublicCommunity() {
-        Long familyId = 1L; // TODO: JWT에서 familyId 추출하도록 수정 필요
+    public Map<String,Object> getPublicCommunity(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
+        Long familyId = jwtUtil.validateAndGetFamilyId(token);
         return communityService.getPublicQuestions(familyId);
     }
 
     @GetMapping("/api/community/question/my")
-    public List<PersonalQuestionDto> getMyQuestions(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<MyQuestionsResponseDto> getMyQuestions(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
-        String userId = JwtUtil.validateAndGetUserId(token);
-        Long familyId = 1L; // TODO: JWT에서 familyId 추출하도록 수정 필요
-        return communityService.getMyQuestions(userId, familyId);
+        String userId = jwtUtil.validateAndGetUserId(token);
+        Long familyId = jwtUtil.validateAndGetFamilyId(token);
+        MyQuestionsResponseDto response = communityService.getMyQuestions(userId, familyId);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/api/community/reply")
@@ -52,24 +61,44 @@ public class CommunityController {
             @RequestBody CommentRequestDto request) {
 
         String token = authHeader.replace("Bearer ", "");
-        String userIdStr = JwtUtil.validateAndGetUserId(token);
+        String userIdStr = jwtUtil.validateAndGetUserId(token);
         Long userId = Long.valueOf(userIdStr);
-        Long familyId = 1L; // TODO: JWT에서 familyId 추출하도록 수정 필요
+        Long familyId = jwtUtil.validateAndGetFamilyId(token);
 
-        Long replyId = communityService.saveComment(userId, request, familyId);
+        Long commentId = communityService.saveComment(userId, request, familyId);
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
-        response.put("replyId", replyId);
+        response.put("replyId", commentId);
 
         return ResponseEntity.ok(response);
     }
 
 
     @PostMapping("/api/community/like")
-    public ResponseEntity<?> like(@RequestBody LikeRequestDto likeRequestDto) {
-        communityService.addLike(likeRequestDto.getType(), likeRequestDto.getId());
-        return ResponseEntity.ok(Map.of("success", true));
+    public ResponseEntity<LikeResponseDto> like(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody LikeRequestDto likeRequestDto) {
+        
+        String token = authHeader.replace("Bearer ", "");
+        Long userId = Long.valueOf(jwtUtil.validateAndGetUserId(token));
+        Long familyId = jwtUtil.validateAndGetFamilyId(token);
+        
+        try {
+            LikeResponseDto response = communityService.toggleLike(
+                likeRequestDto.getType(), 
+                likeRequestDto.getId(), 
+                userId, 
+                familyId
+            );
+            return ResponseEntity.ok(response);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403)
+                .body(new LikeResponseDto(false, 0, false));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                .body(new LikeResponseDto(false, 0, false));
+        }
     }
 
     @PostMapping("/api/community/question/create")
@@ -78,33 +107,34 @@ public class CommunityController {
             @RequestBody QuestionCreateRequestDto request) {
 
         String token = authHeader.replace("Bearer ", "");
-        String userIdStr = JwtUtil.validateAndGetUserId(token);
+        String userIdStr = jwtUtil.validateAndGetUserId(token);
         Long senderId = Long.valueOf(userIdStr);
-        Long familyId = 1L; // TODO: JWT에서 familyId 추출하도록 수정
+        Long familyId = jwtUtil.validateAndGetFamilyId(token);
 
-        Long questionId = communityService.createQuestion(senderId, request, familyId);
+        Long questionRefId = communityService.createQuestion(senderId, request, familyId);
 
         Map<String, Object> response = new HashMap<>();
-        response.put("questionId", questionId);
+        response.put("question_ref_id", questionRefId);
 
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/api/community/question/detail/{id}")
-    public ResponseEntity<QuestionDetailResponseDto> getQuestionDetail(
+    public ResponseEntity<QuestionWithCommentsResponseDto> getQuestionDetail(
             @RequestHeader("Authorization") String authHeader,
             @PathVariable Long id) {
 
         String token = authHeader.replace("Bearer ", "");
-        JwtUtil.validateAndGetUserId(token); // 토큰 검증
+        jwtUtil.validateAndGetUserId(token); // 토큰 검증
 
-        QuestionDetailResponseDto response = communityService.getQuestionDetail(id);
+        QuestionWithCommentsResponseDto response = communityService.getQuestionDetail(id);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/api/community/question/Pupdate")
-    public ResponseEntity<Map<String, String>> updatePublicQuestions() {
-        Long familyId = 1L; // TODO: JWT에서 familyId 추출하도록 수정
+    public ResponseEntity<Map<String, String>> updatePublicQuestions(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
+        Long familyId = jwtUtil.validateAndGetFamilyId(token);
         communityService.updatePublicQuestion(familyId);
         
         Map<String, String> response = new HashMap<>();
@@ -113,27 +143,36 @@ public class CommunityController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/api/community/question/public")
-    public ResponseEntity<PublicQuestionResponseDto> getLatestPublicQuestion() {
-        Long familyId = 1L; // TODO: JWT에서 familyId 추출하도록 수정
-        PublicQuestionResponseDto response = communityService.getLatestPublicQuestion(familyId);
+    @GetMapping("/api/community/home/thisweek")
+    public ResponseEntity<Map<String, Object>> getThisWeekQuestion(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
+        String userId = jwtUtil.validateAndGetUserId(token);
+        Long receiverId = Long.valueOf(userId);
+        Long familyId = jwtUtil.validateAndGetFamilyId(token);
         
-        if (response != null) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+        Map<String, Object> response = communityService.getThisWeekQuestionWithComments(receiverId, familyId);
+        
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/api/community/question/detail/public/{id}")
-    public ResponseEntity<QuestionDetailResponseDto> getPublicQuestionDetail(
+    public ResponseEntity<PublicQuestionWithCommentsResponseDto> getPublicQuestionDetail(
             @RequestHeader("Authorization") String authHeader,
             @PathVariable Long id) {
 
         String token = authHeader.replace("Bearer ", "");
-        JwtUtil.validateAndGetUserId(token); // 토큰 검증
+        jwtUtil.validateAndGetUserId(token); // 토큰 검증
 
-        QuestionDetailResponseDto response = communityService.getPublicQuestionDetail(id);
+        PublicQuestionWithCommentsResponseDto response = communityService.getPublicQuestionDetail(id);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/api/community/question/family")
+    public ResponseEntity<FamilyMembersResponseDto> getFamilyMembers(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
+        Long familyId = jwtUtil.validateAndGetFamilyId(token);
+        
+        FamilyMembersResponseDto response = communityService.getFamilyMembers(familyId);
         return ResponseEntity.ok(response);
     }
 
