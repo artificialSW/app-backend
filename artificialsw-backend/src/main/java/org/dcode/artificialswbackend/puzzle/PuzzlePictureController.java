@@ -53,8 +53,9 @@ public class PuzzlePictureController {
     ) {
         String token = authHeader.replace("Bearer ", "");
         Long userId = Long.valueOf(jwtUtil.validateAndGetUserId(token));
+        Long familyId = jwtUtil.validateAndGetFamilyId(token);
 
-        puzzlePictureService.savePuzzleProgress(userId,puzzleId,request);
+        puzzlePictureService.savePuzzleProgress(userId,puzzleId,familyId,request);
         return ResponseEntity.ok(Map.of("message", "저장 성공"));
     }
 
