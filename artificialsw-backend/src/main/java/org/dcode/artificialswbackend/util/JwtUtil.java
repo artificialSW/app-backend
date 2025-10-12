@@ -3,12 +3,29 @@ package org.dcode.artificialswbackend.util;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import java.security.Key;
+import java.util.Base64;
 import java.util.Date;
+
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 public class JwtUtil {
-    private static final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256); // 실제 서비스에서는 환경변수 등으로 관리
+
+    @Value("${jwt.secret}")
+    private String secret;
+
+    private Key key;
+
+    @PostConstruct
+    public void init() {
+        // Base64로 인코딩된 시크릿키를 디코딩하여 Key 객체 생성
+        byte[] keyBytes = Base64.getDecoder().decode(secret);
+        this.key = Keys.hmacShaKeyFor(keyBytes);
+
+    }
+
 
     public String generateToken(Long userId, Long familyId) {
         return Jwts.builder()
@@ -19,7 +36,7 @@ public class JwtUtil {
                 .compact();
     }
 
-    public static String validateAndGetUserId(String token) {
+    public String validateAndGetUserId(String token) {
         try {
             Jws<Claims> claims = Jwts.parserBuilder()
                     .setSigningKey(key)
@@ -31,7 +48,7 @@ public class JwtUtil {
         }
     }
 
-    public static Long validateAndGetFamilyId(String token) {
+    public Long validateAndGetFamilyId(String token) {
         try {
             Jws<Claims> claims = Jwts.parserBuilder()
                     .setSigningKey(key)

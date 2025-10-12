@@ -16,17 +16,18 @@ import java.util.Map;
 
 @RestController
 public class CommunityController {
-
     private final CommunityService communityService;
+    private final JwtUtil jwtUtil;
 
-    public CommunityController(CommunityService communityService) {
+    public CommunityController(CommunityService communityService,  JwtUtil jwtUtil) {
         this.communityService = communityService;
+        this.jwtUtil = jwtUtil;
     }
 
     @GetMapping("/api/community/home/personal")
     public Map<String,Object> getPersonalCommunity(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
-        String userId = JwtUtil.validateAndGetUserId(token);
+        String userId = jwtUtil.validateAndGetUserId(token);
         Long receiverId = Long.valueOf(userId);
         Long familyId = 1L; // TODO: JWT에서 familyId 추출하도록 수정 필요
         return communityService.getPersonalQuestions(receiverId, familyId);
@@ -53,7 +54,7 @@ public class CommunityController {
             @RequestBody CommentRequestDto request) {
 
         String token = authHeader.replace("Bearer ", "");
-        String userIdStr = JwtUtil.validateAndGetUserId(token);
+        String userIdStr = jwtUtil.validateAndGetUserId(token);
         Long userId = Long.valueOf(userIdStr);
         Long familyId = 1L; // TODO: JWT에서 familyId 추출하도록 수정 필요
 

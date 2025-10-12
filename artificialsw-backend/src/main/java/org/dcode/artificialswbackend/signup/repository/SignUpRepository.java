@@ -7,4 +7,6 @@ import java.util.Optional;
 
 public interface SignUpRepository extends JpaRepository<SignUp, Long> {
     Optional<SignUp> findByPhone(String phone);
+
+    Optional<SignUp> findByIdAndFamilyId(Long id, Long familyId);
 }
