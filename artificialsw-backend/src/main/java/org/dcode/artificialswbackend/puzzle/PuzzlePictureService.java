@@ -20,8 +20,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class PuzzlePictureService {
@@ -576,5 +578,111 @@ public class PuzzlePictureService {
             throw new IllegalArgumentException("가족 정보가 일치하지 않습니다.");
         }
         puzzleArchiveRepository.deleteById(puzzleArchiveId);
+    }
+
+    // 홈 화면 기능
+
+    public List<String> getActiveCategorySet() {
+        LocalDate today = LocalDate.now();
+        int day = today.getDayOfMonth();
+        int lastDay = YearMonth.now().atEndOfMonth().getDayOfMonth();
+
+        int setIndex;
+        if (day <= 5) {
+            setIndex = 0;
+        } else if (day <= 13) {
+            setIndex = 1;
+        } else if (day <= 20) {
+            setIndex = 2;
+        } else if (day < lastDay) {
+            setIndex = 3;
+        } else { // 마지막 날
+            setIndex = 4;
+        }
+
+        int startId = setIndex * 3 + 1; // 1-based id
+        int endId = Math.min(startId + 2, 100); // 최대 100개까지만
+
+        // 카테고리 엔티티에서 id 범위에 해당하는 category만 추출
+        List<PuzzleCategory> categories = puzzleCategoryRepository.findByIdBetween((long) startId, (long) endId);
+        return categories.stream()
+                .map(PuzzleCategory::getCategory)
+                .collect(Collectors.toList());
+    }
+
+    public List<InProgressPuzzleDto> findInProgressForHome(Long familyId) {
+        List<Puzzle> puzzles = puzzleRepository.findByFamiliesIdAndCompletedAndBePuzzle(familyId, false, 1);
+        List<InProgressPuzzleDto> result = new ArrayList<>();
+        ObjectMapper mapper = new ObjectMapper();
+        for (Puzzle puzzle : puzzles) {
+            List<Integer> completedPiecesId = new ArrayList<>();
+            try {
+                if (puzzle.getCompleted_pieces_id() != null) {
+                    completedPiecesId = mapper.readValue(
+                            puzzle.getCompleted_pieces_id(),
+                            mapper.getTypeFactory().constructCollectionType(List.class, Integer.class)
+                    );
+                }
+            } catch (Exception e) {
+                // 파싱 실패 시 빈 리스트
+            }
+            result.add(new InProgressPuzzleDto(
+                    puzzle.getPuzzleId(),
+                    puzzle.getImagePath(),
+                    completedPiecesId,
+                    puzzle.getSize(),
+                    puzzle.getLastSavedTime()
+            ));
+        }
+        return result;
+    }
+
+    public List<CompletedPuzzleDto> findCompletedThisCycle(Long familyId) {
+        // 1. 현재 활성화된 카테고리 세트 구하기
+        List<String> activeCategoryNames = getActiveCategorySet();
+        List<PuzzleCategory> categories = puzzleCategoryRepository.findByCategoryIn(activeCategoryNames);
+        List<Long> categoryIds = categories.stream()
+                .map(PuzzleCategory::getId)
+                .collect(Collectors.toList());
+
+        // 2. 완료 퍼즐 조회 (카테고리 세트 & familyId & completed = true)
+        List<Puzzle> puzzles = puzzleRepository.findByFamiliesIdAndCompletedAndCategoryIdIn(familyId, true, categoryIds);
+
+        // 3. DTO 변환
+        List<CompletedPuzzleDto> result = new ArrayList<>();
+        for (Puzzle puzzle : puzzles) {
+            result.add(new CompletedPuzzleDto(
+                    puzzle.getPuzzleId(),
+                    puzzle.getImagePath(),
+                    puzzle.getCategory().getCategory(),
+                    puzzle.getSize(),
+                    puzzle.getCompletedTime()
+            ));
+        }
+        return result;
+    }
+
+    public boolean isFull(Long familyId, Integer userId) {
+        List<String> activeCategoryNames = getActiveCategorySet();
+        List<PuzzleCategory> categories = puzzleCategoryRepository.findByCategoryIn(activeCategoryNames);
+        List<Long> categoryIds = categories.stream()
+                .map(PuzzleCategory::getId)
+                .collect(Collectors.toList());
+        int count = puzzleRepository.countByFamiliesIdAndUploaderIdAndCategoryIdIn(familyId, userId, categoryIds);
+        return count >= 3;
+    }
+
+    public boolean isEmpty(Long familyId) {
+        int count = puzzleRepository.countByFamiliesIdAndCompletedAndBePuzzle(familyId, false, 1);
+        return count == 0;
+    }
+
+    public PuzzleHomeResponse getPuzzleHome(Long familyId, Integer userId) {
+        List<String> category = getActiveCategorySet();
+        List<InProgressPuzzleDto> inProgress = findInProgressForHome(familyId);
+        List<CompletedPuzzleDto> completedThisWeek = findCompletedThisCycle(familyId);
+        boolean isFull = isFull(familyId, userId);
+        boolean isEmpty = isEmpty(familyId);
+        return new PuzzleHomeResponse(category, inProgress, completedThisWeek, isFull, isEmpty);
     }
 }
