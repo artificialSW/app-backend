@@ -30,7 +30,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/signup", "/api/login", "/api/family").permitAll()
+                        .requestMatchers("/api/signup", "/api/login", "/api/family", "/api/mypage", "/api/mypage/edit", "/api/mypage/comments", "/api/mypage/questions").permitAll()
                         .anyRequest().authenticated()
                 ); // JWT 인증 필터 등록 등 추가 설정 가능
 

@@ -40,4 +40,8 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
     List<Long> findUserLikedTargets(@Param("userId") Long userId, 
                                    @Param("targetType") Like.TargetType targetType, 
                                    @Param("targetIds") List<Long> targetIds);
+    
+    // 사용자가 좋아요한 모든 질문들 조회 (personal_question, public_question)
+    @Query("SELECT l FROM Like l WHERE l.userId = :userId AND l.familyId = :familyId AND l.targetType IN ('question', 'public_question') ORDER BY l.createdAt DESC")
+    List<Like> findLikedQuestionsByUserIdAndFamilyId(@Param("userId") Long userId, @Param("familyId") Long familyId);
 }

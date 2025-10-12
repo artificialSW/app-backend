@@ -3,6 +3,7 @@ package org.dcode.artificialswbackend.puzzle.repository;
 import org.dcode.artificialswbackend.puzzle.entity.Puzzle;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -19,5 +20,9 @@ public interface PuzzleRepository extends JpaRepository<Puzzle, Integer> {
     int countByFamiliesIdAndUploaderIdAndCategoryIdIn(Long familyId, Integer userId, List<Long> categoryIds);
 
     int countByFamiliesIdAndCompletedAndBePuzzle(Long familyId, boolean b, int i);
+    
+    // 사용자가 contributor로 참여하면서 완성된 퍼즐들 조회
+    @Query(value = "SELECT * FROM puzzle WHERE families_id = :familyId AND completed = 1 AND (JSON_CONTAINS(contributors, CAST(:userId AS JSON)) = 1 OR solver_id = :userId) ORDER BY completed_time DESC", nativeQuery = true)
+    List<Puzzle> findCompletedPuzzlesByUserContribution(@Param("familyId") Long familyId, @Param("userId") Long userId);
 }
 

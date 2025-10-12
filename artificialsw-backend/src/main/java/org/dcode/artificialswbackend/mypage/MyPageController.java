@@ -1,0 +1,175 @@
+package org.dcode.artificialswbackend.mypage;
+
+import org.dcode.artificialswbackend.util.JwtUtil;
+import org.dcode.artificialswbackend.mypage.dto.MyPageResponseDto;
+import org.dcode.artificialswbackend.mypage.dto.MyPageEditRequestDto;
+import org.dcode.artificialswbackend.mypage.dto.MyPagePrivateEditRequestDto;
+import org.dcode.artificialswbackend.mypage.dto.MyCommentResponseDto;
+import org.dcode.artificialswbackend.mypage.dto.MyLikedQuestionResponseDto;
+import org.dcode.artificialswbackend.mypage.dto.MyCompletedPuzzleResponseDto;
+import org.dcode.artificialswbackend.community.dto.MyQuestionResponseDto;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api")
+public class MyPageController {
+
+    private final MyPageService myPageService;
+    private final JwtUtil jwtUtil;
+
+    public MyPageController(MyPageService myPageService, JwtUtil jwtUtil) {
+        this.myPageService = myPageService;
+        this.jwtUtil = jwtUtil;
+    }
+
+    @GetMapping("/mypage")
+    public ResponseEntity<MyPageResponseDto> getMyPage(@RequestHeader("Authorization") String authHeader) {
+        try {
+            // JWT 토큰에서 Bearer 제거
+            String token = authHeader.replace("Bearer ", "");
+            
+            // 토큰에서 userId 추출
+            String userIdStr = jwtUtil.validateAndGetUserId(token);
+            Long userId = Long.valueOf(userIdStr);
+            
+            // 마이페이지 정보 조회
+            MyPageResponseDto myPageInfo = myPageService.getMyPageInfo(userId);
+            
+            return ResponseEntity.ok(myPageInfo);
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PutMapping("/mypage/edit")
+    public ResponseEntity<String> updateMyPage(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody MyPageEditRequestDto request) {
+        try {
+            // JWT 토큰에서 Bearer 제거
+            String token = authHeader.replace("Bearer ", "");
+            
+            // 토큰에서 userId 추출
+            String userIdStr = jwtUtil.validateAndGetUserId(token);
+            Long userId = Long.parseLong(userIdStr);
+            
+            // 개인정보 업데이트
+            myPageService.updateMyPageInfo(userId, request.getName(), request.getBirth(), request.getFamilyType());
+            
+            return ResponseEntity.ok("개인정보가 성공적으로 수정되었습니다.");
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("개인정보 수정에 실패했습니다: " + e.getMessage());
+        }
+    }
+
+    @PutMapping("/mypage/edit/private")
+    public ResponseEntity<String> updateMyPagePrivate(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody MyPagePrivateEditRequestDto request) {
+        try {
+            // JWT 토큰에서 Bearer 제거
+            String token = authHeader.replace("Bearer ", "");
+            
+            // 토큰에서 userId 추출
+            String userIdStr = jwtUtil.validateAndGetUserId(token);
+            Long userId = Long.parseLong(userIdStr);
+            
+            // 개인정보(전화번호, 비밀번호) 업데이트
+            myPageService.updateMyPagePrivateInfo(userId, request.getPhone(), request.getPassword());
+            
+            return ResponseEntity.ok("개인정보가 성공적으로 수정되었습니다.");
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("개인정보 수정에 실패했습니다: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/mypage/comments")
+    public ResponseEntity<List<MyCommentResponseDto>> getMyComments(@RequestHeader("Authorization") String authHeader) {
+        try {
+            // JWT 토큰에서 Bearer 제거
+            String token = authHeader.replace("Bearer ", "");
+            
+            // 토큰에서 userId 추출
+            String userIdStr = jwtUtil.validateAndGetUserId(token);
+            Long userId = Long.parseLong(userIdStr);
+            
+            // 내 댓글 조회
+            List<MyCommentResponseDto> myComments = myPageService.getMyComments(userId);
+            
+            return ResponseEntity.ok(myComments);
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/mypage/questions")
+    public ResponseEntity<List<MyQuestionResponseDto>> getMyQuestions(@RequestHeader("Authorization") String authHeader) {
+        try {
+            // JWT 토큰에서 Bearer 제거
+            String token = authHeader.replace("Bearer ", "");
+            
+            // 토큰 검증 및 사용자 ID 추출
+            String userIdStr = jwtUtil.validateAndGetUserId(token);
+            Long userId = Long.parseLong(userIdStr);
+            
+            // 내 질문 조회
+            List<MyQuestionResponseDto> myQuestions = myPageService.getMyQuestions(userId);
+            
+            return ResponseEntity.ok(myQuestions);
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/mypage/likes")
+    public ResponseEntity<List<MyLikedQuestionResponseDto>> getMyLikedQuestions(@RequestHeader("Authorization") String authHeader) {
+        try {
+            // JWT 토큰에서 Bearer 제거
+            String token = authHeader.replace("Bearer ", "");
+            
+            // 토큰 검증 및 사용자 ID, 가족 ID 추출
+            String userIdStr = jwtUtil.validateAndGetUserId(token);
+            Long userId = Long.parseLong(userIdStr);
+            Long familyId = jwtUtil.validateAndGetFamilyId(token);
+            
+            // 좋아요한 질문들 조회
+            List<MyLikedQuestionResponseDto> likedQuestions = myPageService.getMyLikedQuestions(userId, familyId);
+            
+            return ResponseEntity.ok(likedQuestions);
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/mypage/puzzles")
+    public ResponseEntity<List<MyCompletedPuzzleResponseDto>> getMyCompletedPuzzles(@RequestHeader("Authorization") String authHeader) {
+        try {
+            // JWT 토큰에서 Bearer 제거
+            String token = authHeader.replace("Bearer ", "");
+            
+            // 토큰 검증 및 사용자 ID, 가족 ID 추출
+            String userIdStr = jwtUtil.validateAndGetUserId(token);
+            Long userId = Long.parseLong(userIdStr);
+            Long familyId = jwtUtil.validateAndGetFamilyId(token);
+            
+            // 완성된 퍼즐들 조회
+            List<MyCompletedPuzzleResponseDto> completedPuzzles = myPageService.getMyCompletedPuzzles(userId, familyId);
+            
+            return ResponseEntity.ok(completedPuzzles);
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+}
