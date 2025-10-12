@@ -5,6 +5,7 @@ import org.dcode.artificialswbackend.community.dto.PersonalQuestionDto;
 import org.dcode.artificialswbackend.community.dto.QuestionCreateRequestDto;
 import org.dcode.artificialswbackend.community.dto.QuestionDetailResponseDto;
 import org.dcode.artificialswbackend.community.dto.PublicQuestionResponseDto;
+import org.dcode.artificialswbackend.community.dto.CommentResponseDto;
 import org.dcode.artificialswbackend.community.util.JwtUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,13 +23,13 @@ public class CommunityController {
         this.communityService = communityService;
     }
 
-    @GetMapping("/api/community/home")
-    public Map<String,Object> getHomeCommunity(@RequestHeader("Authorization") String authHeader) {
+    @GetMapping("/api/community/home/personal")
+    public Map<String,Object> getPersonalCommunity(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
         String userId = JwtUtil.validateAndGetUserId(token);
         Long receiverId = Long.valueOf(userId);
         Long familyId = 1L; // TODO: JWT에서 familyId 추출하도록 수정 필요
-        return communityService.getQuestionsWithUnsolvedCount(receiverId, familyId);
+        return communityService.getPersonalQuestions(receiverId, familyId);
     }
 
 
@@ -56,11 +57,17 @@ public class CommunityController {
         Long userId = Long.valueOf(userIdStr);
         Long familyId = 1L; // TODO: JWT에서 familyId 추출하도록 수정 필요
 
-        Long replyId = communityService.saveComment(userId, request, familyId);
+        CommentResponseDto commentResponse = communityService.saveComment(userId, request, familyId);
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
-        response.put("replyId", replyId);
+        response.put("replyId", commentResponse.getReplyId());
+        
+        // 꽃 정보가 있으면 응답에 추가
+        if (commentResponse.getFlower() != null) {
+            response.put("flower", commentResponse.getFlower());
+            response.put("isNewFlowerUnlocked", commentResponse.getIsNewFlowerUnlocked());
+        }
 
         return ResponseEntity.ok(response);
     }
