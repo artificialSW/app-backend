@@ -174,7 +174,7 @@ CREATE TABLE `public_questions` (
 CREATE TABLE `question_reference` (
                                       `id` bigint NOT NULL AUTO_INCREMENT,
                                       `question_id` bigint NOT NULL,
-                                      `question_type` enum('personal','public') NOT NULL,
+                                      `question_type` enum('Personal','Public') NOT NULL,
                                       `family_id` bigint NOT NULL,
                                       PRIMARY KEY (`id`),
                                       UNIQUE KEY `uq_question` (`question_id`,`question_type`),
@@ -324,3 +324,21 @@ INSERT INTO fruit_catalog (unlocked, fruit_name) VALUES
                                                (0, 'pomegranate'),
                                                (0, 'apple'),
                                                (0, 'jujube');
+
+-- likes 테이블 (좋아요 관리)
+CREATE TABLE `likes` (
+    `id` bigint NOT NULL AUTO_INCREMENT,
+    `user_id` bigint NOT NULL,
+    `target_type` enum('question','public_question','comment') NOT NULL,
+    `target_id` bigint NOT NULL,
+    `family_id` bigint NOT NULL,
+    `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `unique_like` (`user_id`, `target_type`, `target_id`),
+    KEY `idx_target` (`target_type`, `target_id`),
+    KEY `idx_user_family` (`user_id`, `family_id`),
+    KEY `fk_likes_user` (`user_id`),
+    KEY `fk_likes_family` (`family_id`),
+    CONSTRAINT `fk_likes_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_likes_family` FOREIGN KEY (`family_id`) REFERENCES `families` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

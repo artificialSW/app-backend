@@ -5,12 +5,12 @@ import org.dcode.artificialswbackend.community.dto.AiPredictionResponseDto;
 import org.dcode.artificialswbackend.community.dto.FlowerResultDto;
 import org.dcode.artificialswbackend.community.entity.Flowers;
 import org.dcode.artificialswbackend.community.entity.FlowerCatalog;
-import org.dcode.artificialswbackend.community.entity.IslandArchive;
-import org.dcode.artificialswbackend.community.entity.Tree;
+import org.dcode.artificialswbackend.archive.entity.IslandArchives;
+import org.dcode.artificialswbackend.archive.entity.Tree;
 import org.dcode.artificialswbackend.community.repository.FlowersRepository;
 import org.dcode.artificialswbackend.community.repository.FlowerCatalogRepository;
-import org.dcode.artificialswbackend.community.repository.IslandArchiveRepository;
-import org.dcode.artificialswbackend.community.repository.TreeRepository;
+import org.dcode.artificialswbackend.archive.repository.IslandArchivesRepository;
+import org.dcode.artificialswbackend.archive.repository.TreeRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -23,17 +23,17 @@ public class FlowerService {
     
     private final FlowersRepository flowersRepository;
     private final TreeRepository treeRepository;
-    private final IslandArchiveRepository islandArchiveRepository;
+    private final IslandArchivesRepository islandArchivesRepository;
     private final FlowerCatalogRepository flowerCatalogRepository;
     private final ObjectMapper objectMapper;
     
     public FlowerService(FlowersRepository flowersRepository, 
                         TreeRepository treeRepository,
-                        IslandArchiveRepository islandArchiveRepository,
+                        IslandArchivesRepository islandArchivesRepository,
                         FlowerCatalogRepository flowerCatalogRepository) {
         this.flowersRepository = flowersRepository;
         this.treeRepository = treeRepository;
-        this.islandArchiveRepository = islandArchiveRepository;
+        this.islandArchivesRepository = islandArchivesRepository;
         this.flowerCatalogRepository = flowerCatalogRepository;
         this.objectMapper = new ObjectMapper();
     }
@@ -43,48 +43,60 @@ public class FlowerService {
             // 1. AI 응답 파싱
             AiPredictionResponseDto aiResult = objectMapper.readValue(aiResponse, AiPredictionResponseDto.class);
             
-            // 2. 현재 한국 날짜 기준으로 아카이브 찾기
+            // 2. 현재 한국 날짜 기준으로 period와 position 결정
             LocalDate koreaDate = LocalDate.now(ZoneId.of("Asia/Seoul"));
             int year = koreaDate.getYear();
             int month = koreaDate.getMonthValue();
+            int day = koreaDate.getDayOfMonth();
             
-            // 3. 해당 가족의 이번 달 아카이브 찾기 (없으면 생성)
-            Optional<IslandArchive> archiveOpt = islandArchiveRepository.findByFamilyIdAndYearAndMonth(familyId, year, month);
-            IslandArchive archive;
+            // 3. 날짜에 따른 period와 position 결정
+            int period;
+            int position;
+            
+            if (day <= 15) {
+                // 1-15일: period=1
+                period = 1;
+                if (day <= 7) {
+                    position = 1; // 첫 7일은 position=1
+                } else {
+                    position = 2; // 8-15일은 position=2
+                }
+            } else {
+                // 16-말일: period=2
+                period = 2;
+                int dayInPeriod = day - 15; // 16일부터를 1일로 계산
+                if (dayInPeriod <= 7) {
+                    position = 1; // 첫 7일(16-22일)은 position=1
+                } else {
+                    position = 2; // 나머지 날은 position=2
+                }
+            }
+            
+            // 4. 해당 가족의 period에 맞는 아카이브 찾기 (이미 생성되어 있다고 가정)
+            Optional<IslandArchives> archiveOpt = islandArchivesRepository.findByFamilyIdAndYearAndMonthAndPeriod(familyId, year, month, period);
             
             if (archiveOpt.isEmpty()) {
-                // 아카이브가 없으면 생성
-                archive = new IslandArchive(familyId, month, year, 1);
-                archive = islandArchiveRepository.save(archive);
-                
-                // 새 아카이브에 대한 4개의 트리 생성 (2개는 flower, 2개는 fruit)
-                createTreesForArchive(archive.getId(), familyId);
-            } else {
-                archive = archiveOpt.get();
+                throw new RuntimeException("Archive not found for familyId: " + familyId + ", year: " + year + ", month: " + month + ", period: " + period);
             }
             
-            // 4. 날짜에 따른 트리 선택 (1-15일: 첫 번째 flower tree, 16-말일: 두 번째 flower tree)
-            List<Tree> flowerTrees = treeRepository.findFlowerTreesByArchiveIdOrderById(archive.getId());
+            IslandArchives archive = archiveOpt.get();
             
-            if (flowerTrees.isEmpty()) {
-                // flower tree가 없으면 생성
-                createTreesForArchive(archive.getId(), familyId);
-                flowerTrees = treeRepository.findFlowerTreesByArchiveIdOrderById(archive.getId());
+            // 5. position에 맞는 flower tree 찾기 (이미 생성되어 있다고 가정)
+            Optional<Tree> treeOpt = treeRepository.findByArchiveIdAndFamilyIdAndPositionAndTreeCategory(
+                archive.getId(), familyId, position, Tree.TreeCategory.flower);
+            
+            if (treeOpt.isEmpty()) {
+                throw new RuntimeException("Tree not found for archiveId: " + archive.getId() + ", position: " + position);
             }
             
-            Tree selectedTree;
-            if (koreaDate.getDayOfMonth() <= 15) {
-                selectedTree = flowerTrees.get(0); // 첫 번째 flower tree
-            } else {
-                selectedTree = flowerTrees.size() > 1 ? flowerTrees.get(1) : flowerTrees.get(0); // 두 번째 flower tree
-            }
+            Tree selectedTree = treeOpt.get();
             
-            // 5. 꽃 정보 저장
+            // 6. 꽃 정보 저장
             Flowers.FlowerType flowerType = Flowers.FlowerType.fromKoreanName(aiResult.getFlower());
             Flowers flower = new Flowers(selectedTree.getId(), questionRefId, flowerType);
             flowersRepository.save(flower);
             
-            // 6. 도감 unlock 처리
+            // 7. 도감 unlock 처리
             boolean isNewlyUnlocked = checkAndUnlockFlower(familyId, flowerType);
             
             return new FlowerResultDto(aiResult.getFlower(), isNewlyUnlocked);
@@ -93,21 +105,6 @@ public class FlowerService {
             System.err.println("Error processing AI response: " + e.getMessage());
             return null;
         }
-    }
-    
-    private void createTreesForArchive(Long archiveId, Long familyId) {
-        // 2개의 flower tree 생성
-        Tree flowerTree1 = new Tree(archiveId, familyId, Tree.TreeCategory.FLOWER);
-        Tree flowerTree2 = new Tree(archiveId, familyId, Tree.TreeCategory.FLOWER);
-        
-        // 2개의 fruit tree 생성
-        Tree fruitTree1 = new Tree(archiveId, familyId, Tree.TreeCategory.FRUIT);
-        Tree fruitTree2 = new Tree(archiveId, familyId, Tree.TreeCategory.FRUIT);
-        
-        treeRepository.save(flowerTree1);
-        treeRepository.save(flowerTree2);
-        treeRepository.save(fruitTree1);
-        treeRepository.save(fruitTree2);
     }
     
     private boolean checkAndUnlockFlower(Long familyId, Flowers.FlowerType flowerType) {

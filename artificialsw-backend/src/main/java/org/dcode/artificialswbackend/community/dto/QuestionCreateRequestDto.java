@@ -1,32 +1,32 @@
 package org.dcode.artificialswbackend.community.dto;
 
 public class QuestionCreateRequestDto {
-    private Long receiver;
-    private Boolean isPublic;
+    private Long receiverId;
+    private Integer visibility;
     private String content;
 
     public QuestionCreateRequestDto() {}
 
-    public QuestionCreateRequestDto(Long receiver, Boolean isPublic, String content) {
-        this.receiver = receiver;
-        this.isPublic = isPublic;
+    public QuestionCreateRequestDto(Long receiverId, Integer visibility, String content) {
+        this.receiverId = receiverId;
+        this.visibility = visibility;
         this.content = content;
     }
 
-    public Long getReceiver() {
-        return receiver;
+    public Long getReceiverId() {
+        return receiverId;
     }
 
-    public void setReceiver(Long receiver) {
-        this.receiver = receiver;
+    public void setReceiverId(Long receiverId) {
+        this.receiverId = receiverId;
     }
 
-    public Boolean getIsPublic() {
-        return isPublic;
+    public Integer getVisibility() {
+        return visibility;
     }
 
-    public void setIsPublic(Boolean isPublic) {
-        this.isPublic = isPublic;
+    public void setVisibility(Integer visibility) {
+        this.visibility = visibility;
     }
 
     public String getContent() {

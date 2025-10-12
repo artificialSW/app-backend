@@ -26,7 +26,8 @@ public class Comment {
     
     @Column(name = "reply_to")
     private Long replyTo;
-    
+
+    @Column(name = "likes", nullable = false, columnDefinition = "INT DEFAULT 0")
     private Integer likes = 0;
 
     @CreationTimestamp

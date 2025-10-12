@@ -28,7 +28,7 @@ public class PersonalQuestionDto {
         this.created = created;
     }
 
-    // 엔티티를 DTO로 변환해주는 정적 메서드
+    // 엔티티를 DTO로 변환해주는 정적 메서드 (likes를 0으로 설정)
     public static PersonalQuestionDto fromEntity(PersonalQuestions entity) {
         return new PersonalQuestionDto(
                 entity.getId(),
@@ -38,7 +38,22 @@ public class PersonalQuestionDto {
                 entity.getReceiver(),
                 entity.getVisibility(),
                 entity.getSolved(),
-                entity.getLikes(),
+                0, // likes는 이제 별도 테이블에서 관리되므로 기본값 0
+                entity.getCreated_at()
+        );
+    }
+
+    // 엔티티와 likes 수를 받아서 DTO로 변환하는 정적 메서드
+    public static PersonalQuestionDto fromEntity(PersonalQuestions entity, int likes) {
+        return new PersonalQuestionDto(
+                entity.getId(),
+                entity.getFamilyId(),
+                entity.getContent(),
+                entity.getSender(),
+                entity.getReceiver(),
+                entity.getVisibility(),
+                entity.getSolved(),
+                likes,
                 entity.getCreated_at()
         );
     }
