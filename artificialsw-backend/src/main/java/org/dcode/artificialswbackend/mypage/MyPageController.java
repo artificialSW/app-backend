@@ -4,6 +4,7 @@ import org.dcode.artificialswbackend.util.JwtUtil;
 import org.dcode.artificialswbackend.mypage.dto.MyPageResponseDto;
 import org.dcode.artificialswbackend.mypage.dto.MyPageEditRequestDto;
 import org.dcode.artificialswbackend.mypage.dto.MyCommentResponseDto;
+import org.dcode.artificialswbackend.mypage.dto.MyLikedQuestionResponseDto;
 import org.dcode.artificialswbackend.community.dto.MyQuestionResponseDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -100,6 +101,27 @@ public class MyPageController {
             List<MyQuestionResponseDto> myQuestions = myPageService.getMyQuestions(userId);
             
             return ResponseEntity.ok(myQuestions);
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/mypage/likes")
+    public ResponseEntity<List<MyLikedQuestionResponseDto>> getMyLikedQuestions(@RequestHeader("Authorization") String authHeader) {
+        try {
+            // JWT 토큰에서 Bearer 제거
+            String token = authHeader.replace("Bearer ", "");
+            
+            // 토큰 검증 및 사용자 ID, 가족 ID 추출
+            String userIdStr = jwtUtil.validateAndGetUserId(token);
+            Long userId = Long.parseLong(userIdStr);
+            Long familyId = jwtUtil.validateAndGetFamilyId(token);
+            
+            // 좋아요한 질문들 조회
+            List<MyLikedQuestionResponseDto> likedQuestions = myPageService.getMyLikedQuestions(userId, familyId);
+            
+            return ResponseEntity.ok(likedQuestions);
             
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
