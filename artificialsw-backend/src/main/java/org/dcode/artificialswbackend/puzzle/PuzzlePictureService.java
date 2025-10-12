@@ -263,8 +263,8 @@ public class PuzzlePictureService {
         int archiveYear = now.getYear();
         int archiveMonth = now.getMonthValue();
         int day = now.getDayOfMonth();
-        int period = (day <= 15) ? 1 : 2;
-        int position = (period == 1) ? 3 : 4; // 1~15일: 3번, 16~말일: 4번 트리
+        int period = (day <= 15) ? 1 : 2; // 전반기 후반기 나눔
+        int position = (day <= 7 || (15 < day && day <=22) ) ? 3 : 4;
 
         // 2. 퍼즐 조회 및 완료 처리
         Puzzle puzzle = getPuzzleById(puzzleId);
