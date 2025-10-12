@@ -7,15 +7,22 @@ import java.sql.Timestamp;
 public class PersonalQuestions {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    //questions 테이블
     private Long id;
 
+    @Column(name = "family_id", nullable = false)
+    private Long familyId;
+
+    @Column(columnDefinition = "TEXT")
     private String content;
+    
     private Long sender;
     private Long receiver;
-    private Boolean isPublic;
-    private Boolean solved;
-    private Integer likes;
+    
+    @Column(name = "visibility")
+    private Boolean visibility = true;
+    
+    private Boolean solved = false;
+    private Integer likes = 0;
     private Timestamp created_at;
     private Timestamp updated_at;
 
@@ -53,12 +60,20 @@ public class PersonalQuestions {
         this.sender = sender;
     }
 
-    public Boolean getIsPublic() {
-        return isPublic;
+    public Long getFamilyId() {
+        return familyId;
     }
 
-    public void setIsPublic(Boolean aPublic) {
-        isPublic = aPublic;
+    public void setFamilyId(Long familyId) {
+        this.familyId = familyId;
+    }
+
+    public Boolean getVisibility() {
+        return visibility;
+    }
+
+    public void setVisibility(Boolean visibility) {
+        this.visibility = visibility;
     }
 
     public Boolean getSolved() {
@@ -69,13 +84,7 @@ public class PersonalQuestions {
         this.solved = solved;
     }
 
-    public Integer getLikes() {
-        return likes;
-    }
 
-    public void setLikes(Integer likes) {
-        this.likes = likes;
-    }
 
     public Timestamp getCreated_at() {
         return created_at;
@@ -91,5 +100,13 @@ public class PersonalQuestions {
 
     public void setUpdated_at(Timestamp updated_at) {
         this.updated_at = updated_at;
+    }
+
+    public Integer getLikes() {
+        return likes;
+    }
+
+    public void setLikes(Integer likes) {
+        this.likes = likes;
     }
 }

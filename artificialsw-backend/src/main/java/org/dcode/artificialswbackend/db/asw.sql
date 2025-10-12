@@ -174,7 +174,7 @@ CREATE TABLE `public_questions` (
 CREATE TABLE `question_reference` (
                                       `id` bigint NOT NULL AUTO_INCREMENT,
                                       `question_id` bigint NOT NULL,
-                                      `question_type` enum('personal','public') NOT NULL,
+                                      `question_type` enum('Personal','Public') NOT NULL,
                                       `family_id` bigint NOT NULL,
                                       PRIMARY KEY (`id`),
                                       UNIQUE KEY `uq_question` (`question_id`,`question_type`),
@@ -212,12 +212,17 @@ CREATE TABLE `question_list` (
                                  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- flower_catalog 테이블 (family_id 불필요)
+-- flower_catalog 테이블 (각 가족별 꽃 도감 관리)
 CREATE TABLE `flower_catalog` (
                                   `id` bigint NOT NULL AUTO_INCREMENT,
+                                  `family_id` bigint NOT NULL,
+                                  `flower_type` enum('camellia','rose','acacia','hydrangea','plum_blossom','tulip','pear_blossom','violet','cherry_blossom','cosmos','magnolia','sunflower') NOT NULL,
                                   `unlocked` tinyint(1) DEFAULT '0',
-                                  `fruit_name` VARCHAR(50) NOT NULL,
-                                  PRIMARY KEY (`id`)
+                                  `unlocked_at` timestamp NULL DEFAULT NULL,
+                                  PRIMARY KEY (`id`),
+                                  UNIQUE KEY `uq_family_flower` (`family_id`, `flower_type`),
+                                  KEY `fk_flower_catalog_family` (`family_id`),
+                                  CONSTRAINT `fk_flower_catalog_family` FOREIGN KEY (`family_id`) REFERENCES `families` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- fruit_catalog 테이블 (family_id 불필요)
@@ -234,6 +239,7 @@ CREATE TABLE `flowers` (
                            `id` bigint NOT NULL AUTO_INCREMENT,
                            `tree_id` bigint NOT NULL,
                            `question_ref_id` bigint DEFAULT NULL,
+                           `flower` enum('camellia','rose','acacia','hydrangea','plum_blossom','tulip','pear_blossom','violet','cherry_blossom','cosmos','magnolia','sunflower') NOT NULL,
                            `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
                            PRIMARY KEY (`id`),
                            KEY `tree_id` (`tree_id`),
@@ -320,3 +326,21 @@ INSERT INTO fruit_catalog (unlocked, fruit_name) VALUES
                                                (0, 'pomegranate'),
                                                (0, 'apple'),
                                                (0, 'jujube');
+
+-- likes 테이블 (좋아요 관리)
+CREATE TABLE `likes` (
+    `id` bigint NOT NULL AUTO_INCREMENT,
+    `user_id` bigint NOT NULL,
+    `target_type` enum('question','public_question','comment') NOT NULL,
+    `target_id` bigint NOT NULL,
+    `family_id` bigint NOT NULL,
+    `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `unique_like` (`user_id`, `target_type`, `target_id`),
+    KEY `idx_target` (`target_type`, `target_id`),
+    KEY `idx_user_family` (`user_id`, `family_id`),
+    KEY `fk_likes_user` (`user_id`),
+    KEY `fk_likes_family` (`family_id`),
+    CONSTRAINT `fk_likes_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_likes_family` FOREIGN KEY (`family_id`) REFERENCES `families` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
