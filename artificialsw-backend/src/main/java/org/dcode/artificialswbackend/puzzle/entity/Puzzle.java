@@ -47,6 +47,8 @@ public class Puzzle {
     @Column(name = "last_saved_time")
     private LocalDateTime lastSavedTime;
 
+    @Column(name = "completed_time")
+    private LocalDateTime completedTime;
 
     public Puzzle() {
     }
@@ -163,5 +165,13 @@ public class Puzzle {
 
     public void setLastSavedTime(LocalDateTime lastSavedTime) {
         this.lastSavedTime = lastSavedTime;
+    }
+
+    public LocalDateTime getCompletedTime() {
+        return completedTime;
+    }
+
+    public void setCompletedTime(LocalDateTime completedTime) {
+        this.completedTime = completedTime;
     }
 }

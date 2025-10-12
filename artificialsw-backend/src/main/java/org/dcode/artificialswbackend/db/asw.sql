@@ -253,6 +253,7 @@ CREATE TABLE `fruits` (
                           `category` varchar(50) NOT NULL,
                           `contributors` json DEFAULT NULL,
                           `last_saved_time` datetime DEFAULT NULL,
+                          `completed_pieces_id` json DEFAULT NULL,
                           PRIMARY KEY (`id`),
                           KEY `tree_id` (`tree_id`),
                           KEY `fk_fruits_puzzle` (`puzzle_id`),
