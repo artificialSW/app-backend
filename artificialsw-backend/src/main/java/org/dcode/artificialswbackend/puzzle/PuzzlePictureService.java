@@ -192,13 +192,17 @@ public class PuzzlePictureService {
     }
 
     @Transactional
-    public void savePuzzleProgress(Long userId,Integer puzzleId, SavePuzzleProgressRequest request) {
+    public void savePuzzleProgress(Long userId, Integer puzzleId, Long familyId, SavePuzzleProgressRequest request) {
         Puzzle puzzle = getPuzzleById(puzzleId);
+        // familyId 검증 추가
+        if (!puzzle.getFamiliesId().equals(familyId)) {
+            throw new RuntimeException("퍼즐이 해당 가족에 속하지 않습니다.");
+        }
         String savedCaptureImagePath = saveCaptureImage(request.getCaptureImagePath());
         updatePuzzleStatus(puzzle, savedCaptureImagePath, request.isCompleted(), request.isPlayingPuzzle());
         updatePuzzlePieces(puzzle, request.getPieces());
         updateCompletedPiecesId(puzzle, request.getCompletedPiecesId());
-        updateContributor(puzzle, userId); // **기여자 추가**
+        updateContributor(puzzle, userId);
         puzzleRepository.save(puzzle);
     }
 
