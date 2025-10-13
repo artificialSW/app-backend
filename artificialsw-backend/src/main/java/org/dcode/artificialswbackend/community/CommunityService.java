@@ -13,6 +13,7 @@ import org.dcode.artificialswbackend.community.dto.QuestionWithCommentsResponseD
 import org.dcode.artificialswbackend.community.dto.PublicQuestionWithCommentsResponseDto;
 import org.dcode.artificialswbackend.community.dto.MyQuestionsResponseDto;
 import org.dcode.artificialswbackend.community.dto.LikeResponseDto;
+import org.dcode.artificialswbackend.community.dto.PublicQuestionsResponseDto;
 
 import org.dcode.artificialswbackend.community.entity.PersonalQuestions;
 import org.dcode.artificialswbackend.community.entity.PublicQuestions;
@@ -93,7 +94,7 @@ public class CommunityService {
 
         return result;
     }
-    public Map<String, Object> getPublicQuestions(Long familyId) {
+    public PublicQuestionsResponseDto getPublicQuestions(Long familyId) {
         // 1. 가장 최신 공개 질문 찾기 (생성 날짜 기준 최신순)
         Optional<PublicQuestions> latestPublicQuestionOpt = publicQuestionsRepository.findTopByFamilyIdOrderByCreatedAtDesc(familyId);
         Long latestQuestionId = latestPublicQuestionOpt.map(PublicQuestions::getId).orElse(null);
@@ -101,7 +102,7 @@ public class CommunityService {
         // 2. question_reference에서 public question type인 것들만 가져오기
         List<QuestionReference> publicQuestionRefs = questionReferenceRepository.findByFamilyIdAndQuestionType(familyId, QuestionReference.QuestionType.Public);
         
-        List<Map<String, Object>> questions = new ArrayList<>();
+        List<PublicQuestionsResponseDto.PublicQuestionDto> questions = new ArrayList<>();
         
         for (QuestionReference qRef : publicQuestionRefs) {
             // public_questions에서 실제 질문 정보 가져오기
@@ -121,20 +122,19 @@ public class CommunityService {
                 // 새로운 likes 테이블에서 좋아요 수 조회
                 long likesCount = likeRepository.countByTargetTypeAndTargetId(Like.TargetType.public_question, pq.getId());
                 
-                Map<String, Object> questionData = new HashMap<>();
-                questionData.put("question_ref_id", qRef.getId().toString());
-                questionData.put("content", pq.getContent());
-                questionData.put("likes", likesCount);
-                questionData.put("comments", commentCount);
+                PublicQuestionsResponseDto.PublicQuestionDto questionDto = new PublicQuestionsResponseDto.PublicQuestionDto(
+                    qRef.getId(),
+                    pq.getContent(),
+                    (int) likesCount,
+                    commentCount,
+                    pq.getCreatedAt().toString()
+                );
                 
-                questions.add(questionData);
+                questions.add(questionDto);
             }
         }
         
-        Map<String, Object> response = new HashMap<>();
-        response.put("questions", questions);
-        
-        return response;
+        return new PublicQuestionsResponseDto(questions);
     }
 
 
@@ -157,9 +157,9 @@ public class CommunityService {
                 QuestionReference qRef = questionRefOpt.get();
                 
                 MyQuestionsResponseDto.MyQuestionDto dto = new MyQuestionsResponseDto.MyQuestionDto(
-                        qRef.getId().toString(),  // question_ref_id
+                        qRef.getId(),  // question_ref_id
                         pq.getContent(),
-                        pq.getSender().toString(),
+                        pq.getSender(),
                         pq.getVisibility()
                 );
                 
@@ -325,9 +325,9 @@ public class CommunityService {
             long likesCount = likeRepository.countByTargetTypeAndTargetId(Like.TargetType.question, pq.getId());
             
             questionInfo = new QuestionWithCommentsResponseDto.QuestionInfo(
-                questionRefId.toString(),
+                questionRefId,
                 pq.getContent(),
-                pq.getSender().toString(),
+                pq.getSender(),
                 (int) likesCount,
                 pq.getCreated_at() != null ? pq.getCreated_at().toString() : "2025-08-12"
             );
@@ -342,9 +342,9 @@ public class CommunityService {
             long likesCount = likeRepository.countByTargetTypeAndTargetId(Like.TargetType.public_question, pq.getId());
             
             questionInfo = new QuestionWithCommentsResponseDto.QuestionInfo(
-                questionRefId.toString(),
+                questionRefId,
                 pq.getContent(),
-                "system", // public question은 시스템에서 생성
+                0L, // public question은 시스템에서 생성 (0L로 변경)
                 (int) likesCount,
                 pq.getCreated_at() != null ? pq.getCreated_at().toString() : "2025-08-12"
             );
@@ -373,8 +373,8 @@ public class CommunityService {
                                 // 대댓글 좋아요 수 조회
                                 long replyLikes = likeRepository.countByTargetTypeAndTargetId(Like.TargetType.comment, reply.getId());
                                 return new QuestionWithCommentsResponseDto.CommentInfo(
-                                    reply.getId().toString(),
-                                    reply.getWriter().toString(),
+                                    reply.getId(),
+                                    reply.getWriter(),
                                     reply.getContent(),
                                     (int) replyLikes,
                                     new ArrayList<>() // 대댓글의 대댓글은 없다고 가정
@@ -386,8 +386,8 @@ public class CommunityService {
                     long commentLikes = likeRepository.countByTargetTypeAndTargetId(Like.TargetType.comment, comment.getId());
                     
                     return new QuestionWithCommentsResponseDto.CommentInfo(
-                        comment.getId().toString(),
-                        comment.getWriter().toString(),
+                        comment.getId(),
+                        comment.getWriter(),
                         comment.getContent(),
                         (int) commentLikes,
                         replyInfos
@@ -461,7 +461,7 @@ public class CommunityService {
         
         PublicQuestionWithCommentsResponseDto.QuestionInfo questionInfo = 
             new PublicQuestionWithCommentsResponseDto.QuestionInfo(
-                questionRefId.toString(),
+                questionRefId,
                 pq.getContent(),
                 (int) likesCount,
                 pq.getCreated_at() != null ? pq.getCreated_at().toString() : "2025-08-12",
@@ -491,8 +491,8 @@ public class CommunityService {
                                 // 대댓글 좋아요 수 조회
                                 long replyLikes = likeRepository.countByTargetTypeAndTargetId(Like.TargetType.comment, reply.getId());
                                 return new PublicQuestionWithCommentsResponseDto.CommentInfo(
-                                    reply.getId().toString(),
-                                    reply.getWriter().toString(),
+                                    reply.getId(),
+                                    reply.getWriter(),
                                     reply.getContent(),
                                     (int) replyLikes,
                                     new ArrayList<>() // 대댓글의 대댓글은 없다고 가정
@@ -504,8 +504,8 @@ public class CommunityService {
                     long commentLikes = likeRepository.countByTargetTypeAndTargetId(Like.TargetType.comment, comment.getId());
                     
                     return new PublicQuestionWithCommentsResponseDto.CommentInfo(
-                        comment.getId().toString(),
-                        comment.getWriter().toString(),
+                        comment.getId(),
+                        comment.getWriter(),
                         comment.getContent(),
                         (int) commentLikes,
                         replyInfos
@@ -637,10 +637,10 @@ public class CommunityService {
                 long likesCount = likeRepository.countByTargetTypeAndTargetId(Like.TargetType.question, pq.getId());
                 
                 Map<String, Object> questionData = new HashMap<>();
-                questionData.put("question_ref_id", qRef.getId().toString());
+                questionData.put("question_ref_id", qRef.getId());
                 questionData.put("content", pq.getContent());
-                questionData.put("sender", pq.getSender().toString());
-                questionData.put("receiver", pq.getReceiver().toString());
+                questionData.put("sender", pq.getSender());
+                questionData.put("receiver", pq.getReceiver());
                 questionData.put("likes", likesCount);
                 questionData.put("comments", commentCount);
                 questionData.put("visibility", pq.getVisibility() ? 1 : 0);
@@ -715,7 +715,7 @@ public class CommunityService {
         // Users의 FamilyType을 영어 역할로 변환
         List<FamilyMembersResponseDto.FamilyMemberDto> memberDtos = familyMembers.stream()
                 .map(user -> new FamilyMembersResponseDto.FamilyMemberDto(
-                        user.getId().toString(),
+                        user.getId(),
                         convertFamilyTypeToEnglish(user.getFamilyType())
                 ))
                 .collect(Collectors.toList());
@@ -759,9 +759,9 @@ public class CommunityService {
             long personalQuestionLikes = likeRepository.countByTargetTypeAndTargetId(Like.TargetType.question, questionRef.getQuestionId());
             
             questionInfo = new QuestionWithCommentsResponseDto.QuestionInfo(
-                questionRefId.toString(),
+                questionRefId,
                 pq.getContent(),
-                pq.getSender().toString(),
+                pq.getSender(),
                 (int) personalQuestionLikes,
                 pq.getCreated_at() != null ? pq.getCreated_at().toString() : "2025-08-12"
             );
@@ -775,9 +775,9 @@ public class CommunityService {
             long publicQuestionLikes = likeRepository.countByTargetTypeAndTargetId(Like.TargetType.public_question, questionRef.getQuestionId());
             
             questionInfo = new QuestionWithCommentsResponseDto.QuestionInfo(
-                questionRefId.toString(),
+                questionRefId,
                 pq.getContent(),
-                "system", // public question은 시스템에서 생성
+                0L, // public question은 시스템에서 생성 (0L로 변경)
                 (int) publicQuestionLikes,
                 pq.getCreated_at() != null ? pq.getCreated_at().toString() : "2025-08-12"
             );

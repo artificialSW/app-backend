@@ -8,6 +8,7 @@ import org.dcode.artificialswbackend.community.dto.PublicQuestionResponseDto;
 import org.dcode.artificialswbackend.community.dto.CommentResponseDto;
 import org.dcode.artificialswbackend.community.dto.FamilyMembersResponseDto;
 import org.dcode.artificialswbackend.community.dto.QuestionWithCommentsResponseDto;
+import org.dcode.artificialswbackend.community.dto.PublicQuestionsResponseDto;
 import org.dcode.artificialswbackend.community.dto.PublicQuestionWithCommentsResponseDto;
 import org.dcode.artificialswbackend.community.dto.MyQuestionsResponseDto;
 import org.dcode.artificialswbackend.community.dto.LikeResponseDto;
@@ -40,10 +41,11 @@ public class CommunityController {
 
 
     @GetMapping("/api/community/home/public")
-    public Map<String,Object> getPublicCommunity(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<PublicQuestionsResponseDto> getPublicCommunity(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
         Long familyId = jwtUtil.validateAndGetFamilyId(token);
-        return communityService.getPublicQuestions(familyId);
+        PublicQuestionsResponseDto response = communityService.getPublicQuestions(familyId);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/api/community/question/my")

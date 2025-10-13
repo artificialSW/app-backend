@@ -10,25 +10,28 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class MyQuestionsResponseDto {
+public class PublicQuestionsResponseDto {
     
     @JsonProperty("questions")
-    private List<MyQuestionDto> questions;
+    private List<PublicQuestionDto> questions;
     
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class MyQuestionDto {
+    public static class PublicQuestionDto {
         @JsonProperty("question_ref_id")
         private Long questionRefId;
         
         @JsonProperty("content")
         private String content;
         
-        @JsonProperty("sender")
-        private Long sender;
+        @JsonProperty("likes")
+        private Integer likes;
         
-        @JsonProperty("visibility")
-        private Boolean visibility;
+        @JsonProperty("comments")
+        private Integer comments;
+        
+        @JsonProperty("created_at")
+        private String createdAt;
     }
 }
