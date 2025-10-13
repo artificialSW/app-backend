@@ -56,7 +56,7 @@ public class CommunityController {
     }
 
     @PostMapping("/api/community/reply")
-    public ResponseEntity<Map<String, Object>> createReply(
+    public ResponseEntity<CommentResponseDto> createReply(
             @RequestHeader("Authorization") String authHeader,
             @RequestBody CommentRequestDto request) {
 
@@ -65,13 +65,9 @@ public class CommunityController {
         Long userId = Long.valueOf(userIdStr);
         Long familyId = jwtUtil.validateAndGetFamilyId(token);
 
-        Long commentId = communityService.saveComment(userId, request, familyId);
+        CommentResponseDto commentResponse = communityService.saveComment(userId, request, familyId);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("replyId", commentId);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(commentResponse);
     }
 
 

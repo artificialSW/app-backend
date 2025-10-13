@@ -170,7 +170,7 @@ public class CommunityService {
         return new MyQuestionsResponseDto(questionDtos);
     }
 
-    public Long saveComment(Long userId, CommentRequestDto request, Long familyId) {
+    public CommentResponseDto saveComment(Long userId, CommentRequestDto request, Long familyId) {
         Comment comment = new Comment();
         comment.setQuestionRefId(request.getQuestionRefId());
         comment.setContent(request.getContent());
@@ -181,14 +181,21 @@ public class CommunityService {
         Comment saved = commentRepository.save(comment);
         
         // 댓글 저장 후 개인 질문 해결 체크 (receiver의 첫 댓글인 경우)
-        // 꽃 생성 로직은 백그라운드에서 처리하되 응답에는 포함하지 않음
-        checkAndProcessPersonalQuestionCompletion(request.getQuestionRefId(), userId, familyId);
+        FlowerResultDto personalFlowerResult = checkAndProcessPersonalQuestionCompletion(request.getQuestionRefId(), userId, familyId);
         
         // 댓글 저장 후 public question 완료 체크
-        checkAndProcessPublicQuestionCompletion(request.getQuestionRefId(), familyId);
+        FlowerResultDto publicFlowerResult = checkAndProcessPublicQuestionCompletion(request.getQuestionRefId(), familyId);
         
-        // 댓글 ID만 반환
-        return saved.getId();
+        // 꽃 생성 결과 확인 (Personal이나 Public 중 하나라도 꽃이 생성되었으면)
+        FlowerResultDto flowerResult = personalFlowerResult != null ? personalFlowerResult : publicFlowerResult;
+        
+        if (flowerResult != null) {
+            // 꽃이 생성된 경우
+            return new CommentResponseDto(saved.getId(), flowerResult.getFlower(), flowerResult.isNewlyUnlocked());
+        } else {
+            // 꽃이 생성되지 않은 경우
+            return new CommentResponseDto(saved.getId());
+        }
     }
 
     @Transactional
@@ -564,11 +571,11 @@ public class CommunityService {
         return null;
     }
 
-    private void checkAndProcessPublicQuestionCompletion(Long questionRefId, Long familyId) {
+    private FlowerResultDto checkAndProcessPublicQuestionCompletion(Long questionRefId, Long familyId) {
         // 1. 해당 question이 public question인지 확인
         Optional<PublicQuestions> publicQuestionOpt = publicQuestionsRepository.findById(questionRefId);
         if (publicQuestionOpt.isEmpty()) {
-            return; // public question이 아니면 처리하지 않음
+            return null; // public question이 아니면 처리하지 않음
         }
         
         PublicQuestions publicQuestion = publicQuestionOpt.get();
@@ -586,9 +593,28 @@ public class CommunityService {
         
         // 4. 모든 가족 구성원이 댓글을 달았는지 확인
         if (uniqueCommenters >= totalFamilyMembers) {
-            // AI 호출 기능 제거됨
             System.out.println("🎉 All family members commented on public question " + questionRefId + "!");
+            
+            // 5. AI 호출하여 꽃 생성
+            String predictionResult = predictionService.sendPredictionRequest(publicQuestion.getContent());
+            if (predictionResult != null) {
+                System.out.println("� Public question completed! Prediction result: " + predictionResult);
+                
+                // FlowerService를 통해 AI 응답 처리 및 꽃 저장
+                FlowerResultDto flowerResult = flowerService.processAiResponseAndSaveFlower(
+                        predictionResult,
+                        questionRefId, 
+                        familyId
+                );
+                
+                System.out.println("🌸 Public Flower created: " + flowerResult.getFlower() + 
+                                 ", New unlock: " + flowerResult.isNewlyUnlocked());
+                
+                return flowerResult;
+            }
         }
+        
+        return null;
     }
 
     public Map<String, Object> getPersonalQuestions(Long receiverId, Long familyId) {
