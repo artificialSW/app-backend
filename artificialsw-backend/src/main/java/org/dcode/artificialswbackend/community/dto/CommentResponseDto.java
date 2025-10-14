@@ -2,45 +2,28 @@ package org.dcode.artificialswbackend.community.dto;
 
 public class CommentResponseDto {
     private Long replyId;
-    private String flower;
-    private Boolean isNewFlowerUnlocked;
-    
+    private String content;
+
     public CommentResponseDto() {}
-    
-    public CommentResponseDto(Long replyId) {
+
+    public CommentResponseDto(Long replyId, String content) {
         this.replyId = replyId;
-        this.flower = null;
-        this.isNewFlowerUnlocked = false;
+        this.content = content;
     }
-    
-    public CommentResponseDto(Long replyId, String flower, Boolean isNewFlowerUnlocked) {
-        this.replyId = replyId;
-        this.flower = flower;
-        this.isNewFlowerUnlocked = isNewFlowerUnlocked;
-    }
-    
-    // Getters and Setters
+
     public Long getReplyId() {
         return replyId;
     }
-    
+
     public void setReplyId(Long replyId) {
         this.replyId = replyId;
     }
-    
-    public String getFlower() {
-        return flower;
+
+    public String getContent() {
+        return content;
     }
-    
-    public void setFlower(String flower) {
-        this.flower = flower;
-    }
-    
-    public Boolean getIsNewFlowerUnlocked() {
-        return isNewFlowerUnlocked;
-    }
-    
-    public void setIsNewFlowerUnlocked(Boolean isNewFlowerUnlocked) {
-        this.isNewFlowerUnlocked = isNewFlowerUnlocked;
+
+    public void setContent(String content) {
+        this.content = content;
     }
 }

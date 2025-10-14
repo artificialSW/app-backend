@@ -19,7 +19,7 @@ public class FamilyMembersResponseDto {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class FamilyMemberDto {
-        private String id;
+        private Long id;
         private String role;
     }
 }

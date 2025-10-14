@@ -23,16 +23,22 @@ public class QuestionWithCommentsResponseDto {
     @AllArgsConstructor
     public static class QuestionInfo {
         @JsonProperty("question_ref_id")
-        private String questionRefId;
+        private Long questionRefId;
         
         @JsonProperty("content")
         private String content;
         
         @JsonProperty("sender")
-        private String sender;
+        private Long sender;
+        
+        @JsonProperty("sender_role")
+        private String senderRole;
         
         @JsonProperty("likes")
         private Integer likes;
+        
+        @JsonProperty("isLiked")
+        private Boolean isLiked;
         
         @JsonProperty("CreateAt")
         private String createAt;
@@ -43,16 +49,22 @@ public class QuestionWithCommentsResponseDto {
     @AllArgsConstructor
     public static class CommentInfo {
         @JsonProperty("commentId")
-        private String commentId;
+        private Long commentId;
         
         @JsonProperty("writer")
-        private String writer;
+        private Long writer;
+        
+        @JsonProperty("writer_role")
+        private String writerRole;
         
         @JsonProperty("content")
         private String content;
         
         @JsonProperty("likes")
         private Integer likes;
+        
+        @JsonProperty("isLiked")
+        private Boolean isLiked;
         
         @JsonProperty("reply")
         private List<CommentInfo> reply; // 대댓글 전체 정보 목록
