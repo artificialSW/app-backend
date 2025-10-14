@@ -269,6 +269,7 @@ public class CommunityService {
         }
     }
 
+    @Transactional
     public Long createQuestion(Long senderId, QuestionCreateRequestDto request, Long familyId) {
         // 1. PersonalQuestions 엔티티 생성 및 저장
         PersonalQuestions question = new PersonalQuestions();
