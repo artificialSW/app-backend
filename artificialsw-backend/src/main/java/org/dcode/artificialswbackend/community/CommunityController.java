@@ -8,6 +8,7 @@ import org.dcode.artificialswbackend.community.dto.PublicQuestionResponseDto;
 import org.dcode.artificialswbackend.community.dto.CommentResponseDto;
 import org.dcode.artificialswbackend.community.dto.FamilyMembersResponseDto;
 import org.dcode.artificialswbackend.community.dto.QuestionWithCommentsResponseDto;
+import org.dcode.artificialswbackend.community.dto.PublicQuestionsResponseDto;
 import org.dcode.artificialswbackend.community.dto.PublicQuestionWithCommentsResponseDto;
 import org.dcode.artificialswbackend.community.dto.MyQuestionsResponseDto;
 import org.dcode.artificialswbackend.community.dto.LikeResponseDto;
@@ -40,10 +41,11 @@ public class CommunityController {
 
 
     @GetMapping("/api/community/home/public")
-    public Map<String,Object> getPublicCommunity(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<PublicQuestionsResponseDto> getPublicCommunity(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
         Long familyId = jwtUtil.validateAndGetFamilyId(token);
-        return communityService.getPublicQuestions(familyId);
+        PublicQuestionsResponseDto response = communityService.getPublicQuestions(familyId);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/api/community/question/my")
@@ -56,7 +58,7 @@ public class CommunityController {
     }
 
     @PostMapping("/api/community/reply")
-    public ResponseEntity<Map<String, Object>> createReply(
+    public ResponseEntity<CommentResponseDto> createReply(
             @RequestHeader("Authorization") String authHeader,
             @RequestBody CommentRequestDto request) {
 
@@ -65,13 +67,9 @@ public class CommunityController {
         Long userId = Long.valueOf(userIdStr);
         Long familyId = jwtUtil.validateAndGetFamilyId(token);
 
-        Long commentId = communityService.saveComment(userId, request, familyId);
+        CommentResponseDto commentResponse = communityService.saveComment(userId, request, familyId);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("replyId", commentId);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(commentResponse);
     }
 
 

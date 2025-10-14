@@ -50,6 +50,9 @@ public class Puzzle {
     @Column(name = "completed_time")
     private LocalDateTime completedTime;
 
+    @Column(name = "uploader_id")
+    private Integer uploaderId;
+
     public Puzzle() {
     }
 
@@ -173,5 +176,13 @@ public class Puzzle {
 
     public void setCompletedTime(LocalDateTime completedTime) {
         this.completedTime = completedTime;
+    }
+
+    public Integer getUploaderId() {
+        return uploaderId;
+    }
+
+    public void setUploaderId(Integer uploaderId) {
+        this.uploaderId = uploaderId;
     }
 }

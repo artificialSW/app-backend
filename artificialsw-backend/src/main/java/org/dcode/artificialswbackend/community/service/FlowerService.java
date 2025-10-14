@@ -12,6 +12,7 @@ import org.dcode.artificialswbackend.community.repository.FlowerCatalogRepositor
 import org.dcode.artificialswbackend.archive.repository.IslandArchivesRepository;
 import org.dcode.artificialswbackend.archive.repository.TreeRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -96,7 +97,10 @@ public class FlowerService {
             Flowers flower = new Flowers(selectedTree.getId(), questionRefId, flowerType);
             flowersRepository.save(flower);
             
-            // 7. 도감 unlock 처리
+            // 7. Community Score 증가 (최대 10점까지)
+            incrementCommunityScore(archive.getId());
+            
+            // 8. 도감 unlock 처리
             boolean isNewlyUnlocked = checkAndUnlockFlower(familyId, flowerType);
             
             return new FlowerResultDto(aiResult.getFlower(), isNewlyUnlocked);
@@ -127,6 +131,18 @@ public class FlowerService {
             } else {
                 return false; // 이미 unlock된 상태
             }
+        }
+    }
+    
+    @Transactional
+    private void incrementCommunityScore(Long archiveId) {
+        try {
+            int updatedRows = islandArchivesRepository.incrementCommunityScore(archiveId);
+            if (updatedRows > 0) {
+                System.out.println("🏆 Community score increased for archive ID: " + archiveId);
+            }
+        } catch (Exception e) {
+            System.err.println("Error incrementing community score: " + e.getMessage());
         }
     }
 }

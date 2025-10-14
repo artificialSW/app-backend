@@ -23,13 +23,13 @@ public class QuestionWithCommentsResponseDto {
     @AllArgsConstructor
     public static class QuestionInfo {
         @JsonProperty("question_ref_id")
-        private String questionRefId;
+        private Long questionRefId;
         
         @JsonProperty("content")
         private String content;
         
         @JsonProperty("sender")
-        private String sender;
+        private Long sender;
         
         @JsonProperty("likes")
         private Integer likes;
@@ -43,10 +43,10 @@ public class QuestionWithCommentsResponseDto {
     @AllArgsConstructor
     public static class CommentInfo {
         @JsonProperty("commentId")
-        private String commentId;
+        private Long commentId;
         
         @JsonProperty("writer")
-        private String writer;
+        private Long writer;
         
         @JsonProperty("content")
         private String content;

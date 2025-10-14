@@ -17,5 +17,8 @@ public interface QuestionReferenceRepository extends JpaRepository<QuestionRefer
     @Query("SELECT qr FROM QuestionReference qr WHERE qr.questionId = :questionId AND qr.questionType = :questionType")
     Optional<QuestionReference> findByQuestionIdAndQuestionType(@Param("questionId") Long questionId, @Param("questionType") QuestionReference.QuestionType questionType);
     
+    @Query("SELECT qr FROM QuestionReference qr WHERE qr.questionId = :questionId AND qr.questionType = :questionType AND qr.familyId = :familyId")
+    Optional<QuestionReference> findByQuestionIdAndQuestionTypeAndFamilyId(@Param("questionId") Long questionId, @Param("questionType") QuestionReference.QuestionType questionType, @Param("familyId") Long familyId);
+    
     List<QuestionReference> findByFamilyIdAndQuestionType(Long familyId, QuestionReference.QuestionType questionType);
 }

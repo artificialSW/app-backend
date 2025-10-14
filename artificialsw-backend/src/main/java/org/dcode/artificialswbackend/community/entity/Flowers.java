@@ -65,6 +65,24 @@ public class Flowers {
                 default: return ROSE; // 기본값
             }
         }
+        
+        public String getKoreanName() {
+            switch (this) {
+                case CAMELLIA: return "동백꽃";
+                case ROSE: return "장미";
+                case ACACIA: return "아카시아꽃";
+                case HYDRANGEA: return "수국";
+                case PLUM_BLOSSOM: return "매화꽃";
+                case TULIP: return "튤립";
+                case PEAR_BLOSSOM: return "팥배꽃";
+                case VIOLET: return "재비꽃";
+                case CHERRY_BLOSSOM: return "벚꽃";
+                case COSMOS: return "코스모스";
+                case MAGNOLIA: return "목련";
+                case SUNFLOWER: return "해바라기";
+                default: return "장미"; // 기본값
+            }
+        }
     }
     
     // 기본 생성자
