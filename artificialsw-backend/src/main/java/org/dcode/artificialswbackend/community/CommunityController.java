@@ -8,6 +8,7 @@ import org.dcode.artificialswbackend.community.dto.PublicQuestionResponseDto;
 import org.dcode.artificialswbackend.community.dto.CommentResponseDto;
 import org.dcode.artificialswbackend.community.dto.FamilyMembersResponseDto;
 import org.dcode.artificialswbackend.community.dto.QuestionWithCommentsResponseDto;
+import org.dcode.artificialswbackend.community.dto.PublicQuestionsResponseDto;
 import org.dcode.artificialswbackend.community.dto.PublicQuestionWithCommentsResponseDto;
 import org.dcode.artificialswbackend.community.dto.MyQuestionsResponseDto;
 import org.dcode.artificialswbackend.community.dto.LikeResponseDto;
@@ -33,17 +34,19 @@ public class CommunityController {
     public Map<String,Object> getPersonalCommunity(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
         String userId = jwtUtil.validateAndGetUserId(token);
-        Long receiverId = Long.valueOf(userId);
+        Long userIdLong = Long.valueOf(userId);
         Long familyId = jwtUtil.validateAndGetFamilyId(token);
-        return communityService.getPersonalQuestions(receiverId, familyId);
+        return communityService.getPersonalQuestions(userIdLong, familyId);
     }
 
 
     @GetMapping("/api/community/home/public")
-    public Map<String,Object> getPublicCommunity(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<PublicQuestionsResponseDto> getPublicCommunity(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
+        String userId = jwtUtil.validateAndGetUserId(token);
         Long familyId = jwtUtil.validateAndGetFamilyId(token);
-        return communityService.getPublicQuestions(familyId);
+        PublicQuestionsResponseDto response = communityService.getPublicQuestions(Long.valueOf(userId), familyId);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/api/community/question/my")
@@ -56,7 +59,7 @@ public class CommunityController {
     }
 
     @PostMapping("/api/community/reply")
-    public ResponseEntity<Map<String, Object>> createReply(
+    public ResponseEntity<CommentResponseDto> createReply(
             @RequestHeader("Authorization") String authHeader,
             @RequestBody CommentRequestDto request) {
 
@@ -65,13 +68,9 @@ public class CommunityController {
         Long userId = Long.valueOf(userIdStr);
         Long familyId = jwtUtil.validateAndGetFamilyId(token);
 
-        Long commentId = communityService.saveComment(userId, request, familyId);
+        CommentResponseDto commentResponse = communityService.saveComment(userId, request, familyId);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("replyId", commentId);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(commentResponse);
     }
 
 
@@ -125,9 +124,9 @@ public class CommunityController {
             @PathVariable Long id) {
 
         String token = authHeader.replace("Bearer ", "");
-        jwtUtil.validateAndGetUserId(token); // 토큰 검증
+        String userId = jwtUtil.validateAndGetUserId(token);
 
-        QuestionWithCommentsResponseDto response = communityService.getQuestionDetail(id);
+        QuestionWithCommentsResponseDto response = communityService.getQuestionDetail(id, Long.valueOf(userId));
         return ResponseEntity.ok(response);
     }
 
@@ -161,9 +160,9 @@ public class CommunityController {
             @PathVariable Long id) {
 
         String token = authHeader.replace("Bearer ", "");
-        jwtUtil.validateAndGetUserId(token); // 토큰 검증
+        String userId = jwtUtil.validateAndGetUserId(token);
 
-        PublicQuestionWithCommentsResponseDto response = communityService.getPublicQuestionDetail(id);
+        PublicQuestionWithCommentsResponseDto response = communityService.getPublicQuestionDetail(id, Long.valueOf(userId));
         return ResponseEntity.ok(response);
     }
 

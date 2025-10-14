@@ -13,6 +13,7 @@ import org.dcode.artificialswbackend.community.dto.QuestionWithCommentsResponseD
 import org.dcode.artificialswbackend.community.dto.PublicQuestionWithCommentsResponseDto;
 import org.dcode.artificialswbackend.community.dto.MyQuestionsResponseDto;
 import org.dcode.artificialswbackend.community.dto.LikeResponseDto;
+import org.dcode.artificialswbackend.community.dto.PublicQuestionsResponseDto;
 
 import org.dcode.artificialswbackend.community.entity.PersonalQuestions;
 import org.dcode.artificialswbackend.community.entity.PublicQuestions;
@@ -22,7 +23,7 @@ import org.dcode.artificialswbackend.community.entity.QuestionList;
 import org.dcode.artificialswbackend.community.entity.Users;
 import org.dcode.artificialswbackend.community.entity.QuestionReference;
 
-import org.dcode.artificialswbackend.community.repository.CommentRepository;
+// ...existing code...
 import org.dcode.artificialswbackend.community.repository.PersonalQuestionsRepository;
 import org.dcode.artificialswbackend.community.repository.PublicQuestionsRepository;
 import org.dcode.artificialswbackend.community.repository.CommentRepository;
@@ -93,7 +94,7 @@ public class CommunityService {
 
         return result;
     }
-    public Map<String, Object> getPublicQuestions(Long familyId) {
+    public PublicQuestionsResponseDto getPublicQuestions(Long userId, Long familyId) {
         // 1. 가장 최신 공개 질문 찾기 (생성 날짜 기준 최신순)
         Optional<PublicQuestions> latestPublicQuestionOpt = publicQuestionsRepository.findTopByFamilyIdOrderByCreatedAtDesc(familyId);
         Long latestQuestionId = latestPublicQuestionOpt.map(PublicQuestions::getId).orElse(null);
@@ -101,7 +102,7 @@ public class CommunityService {
         // 2. question_reference에서 public question type인 것들만 가져오기
         List<QuestionReference> publicQuestionRefs = questionReferenceRepository.findByFamilyIdAndQuestionType(familyId, QuestionReference.QuestionType.Public);
         
-        List<Map<String, Object>> questions = new ArrayList<>();
+        List<PublicQuestionsResponseDto.PublicQuestionDto> questions = new ArrayList<>();
         
         for (QuestionReference qRef : publicQuestionRefs) {
             // public_questions에서 실제 질문 정보 가져오기
@@ -121,20 +122,23 @@ public class CommunityService {
                 // 새로운 likes 테이블에서 좋아요 수 조회
                 long likesCount = likeRepository.countByTargetTypeAndTargetId(Like.TargetType.public_question, pq.getId());
                 
-                Map<String, Object> questionData = new HashMap<>();
-                questionData.put("question_ref_id", qRef.getId().toString());
-                questionData.put("content", pq.getContent());
-                questionData.put("likes", likesCount);
-                questionData.put("comments", commentCount);
+                // 사용자가 이 질문에 좋아요를 눌렀는지 확인
+                boolean isLiked = likeRepository.existsByUserIdAndTargetTypeAndTargetId(userId, Like.TargetType.public_question, pq.getId());
                 
-                questions.add(questionData);
+                PublicQuestionsResponseDto.PublicQuestionDto questionDto = new PublicQuestionsResponseDto.PublicQuestionDto(
+                    qRef.getId(),
+                    pq.getContent(),
+                    (int) likesCount,
+                    commentCount,
+                    pq.getCreated_at() != null ? pq.getCreated_at().toString() : "",
+                    isLiked
+                );
+                
+                questions.add(questionDto);
             }
         }
         
-        Map<String, Object> response = new HashMap<>();
-        response.put("questions", questions);
-        
-        return response;
+        return new PublicQuestionsResponseDto(questions);
     }
 
 
@@ -156,10 +160,14 @@ public class CommunityService {
             if (questionRefOpt.isPresent()) {
                 QuestionReference qRef = questionRefOpt.get();
                 
+                // sender의 role 정보 조회
+                String senderRole = getUserRole(pq.getSender());
+                
                 MyQuestionsResponseDto.MyQuestionDto dto = new MyQuestionsResponseDto.MyQuestionDto(
-                        qRef.getId().toString(),  // question_ref_id
+                        qRef.getId(),  // question_ref_id
                         pq.getContent(),
-                        pq.getSender().toString(),
+                        pq.getSender(),
+                        senderRole,
                         pq.getVisibility()
                 );
                 
@@ -170,7 +178,7 @@ public class CommunityService {
         return new MyQuestionsResponseDto(questionDtos);
     }
 
-    public Long saveComment(Long userId, CommentRequestDto request, Long familyId) {
+    public CommentResponseDto saveComment(Long userId, CommentRequestDto request, Long familyId) {
         Comment comment = new Comment();
         comment.setQuestionRefId(request.getQuestionRefId());
         comment.setContent(request.getContent());
@@ -179,16 +187,8 @@ public class CommunityService {
         comment.setFamilyId(familyId); // familyId 추가
 
         Comment saved = commentRepository.save(comment);
-        
-        // 댓글 저장 후 개인 질문 해결 체크 (receiver의 첫 댓글인 경우)
-        // 꽃 생성 로직은 백그라운드에서 처리하되 응답에는 포함하지 않음
-        checkAndProcessPersonalQuestionCompletion(request.getQuestionRefId(), userId, familyId);
-        
-        // 댓글 저장 후 public question 완료 체크
-        checkAndProcessPublicQuestionCompletion(request.getQuestionRefId(), familyId);
-        
-        // 댓글 ID만 반환
-        return saved.getId();
+        // 꽃 관련 로직 제거, 단순 댓글 정보만 반환
+        return new CommentResponseDto(saved.getId(), saved.getContent());
     }
 
     @Transactional
@@ -295,7 +295,7 @@ public class CommunityService {
         return savedRef.getId();
     }
 
-    public QuestionWithCommentsResponseDto getQuestionDetail(Long questionRefId) {
+    public QuestionWithCommentsResponseDto getQuestionDetail(Long questionRefId, Long userId) {
         // 1. QuestionReference에서 질문 정보 가져오기
         Optional<QuestionReference> questionRefOpt = questionReferenceRepository.findById(questionRefId);
         if (questionRefOpt.isEmpty()) {
@@ -303,25 +303,34 @@ public class CommunityService {
         }
         
         QuestionReference questionRef = questionRefOpt.get();
-        
         // 2. 질문 타입에 따라 실제 질문 데이터 가져오기
         QuestionWithCommentsResponseDto.QuestionInfo questionInfo;
-        
+        boolean questionIsLiked = false;
         if (questionRef.getQuestionType() == QuestionReference.QuestionType.Personal) {
             Optional<PersonalQuestions> personalQuestionOpt = personalQuestionsRepository.findById(questionRef.getQuestionId());
             if (personalQuestionOpt.isEmpty()) {
                 throw new RuntimeException("Personal question not found");
             }
             PersonalQuestions pq = personalQuestionOpt.get();
-            
             // 새로운 likes 테이블에서 좋아요 수 조회
             long likesCount = likeRepository.countByTargetTypeAndTargetId(Like.TargetType.question, pq.getId());
-            
+            // sender의 role 정보 조회
+            String senderRole = "Unknown";
+            if (pq.getSender() != null) {
+                Optional<Users> senderUser = usersRepository.findById(pq.getSender());
+                if (senderUser.isPresent() && senderUser.get().getFamilyType() != null) {
+                    senderRole = senderUser.get().getFamilyType().toString();
+                }
+            }
+            // isLiked 계산
+            questionIsLiked = likeRepository.existsByUserIdAndTargetTypeAndTargetId(userId, Like.TargetType.question, pq.getId());
             questionInfo = new QuestionWithCommentsResponseDto.QuestionInfo(
-                questionRefId.toString(),
+                questionRefId,
                 pq.getContent(),
-                pq.getSender().toString(),
+                pq.getSender(),
+                senderRole,
                 (int) likesCount,
+                questionIsLiked,
                 pq.getCreated_at() != null ? pq.getCreated_at().toString() : "2025-08-12"
             );
         } else {
@@ -330,32 +339,30 @@ public class CommunityService {
                 throw new RuntimeException("Public question not found");
             }
             PublicQuestions pq = publicQuestionOpt.get();
-            
             // 새로운 likes 테이블에서 좋아요 수 조회
             long likesCount = likeRepository.countByTargetTypeAndTargetId(Like.TargetType.public_question, pq.getId());
-            
+            // isLiked 계산
+            questionIsLiked = likeRepository.existsByUserIdAndTargetTypeAndTargetId(userId, Like.TargetType.public_question, pq.getId());
             questionInfo = new QuestionWithCommentsResponseDto.QuestionInfo(
-                questionRefId.toString(),
+                questionRefId,
                 pq.getContent(),
-                "system", // public question은 시스템에서 생성
+                0L, // public question은 시스템에서 생성 (0L로 변경)
+                "System", // public question은 시스템에서 생성
                 (int) likesCount,
+                questionIsLiked,
                 pq.getCreated_at() != null ? pq.getCreated_at().toString() : "2025-08-12"
             );
         }
-        
         // 3. 효율적으로 모든 댓글 조회 (한 번의 쿼리)
         List<Comment> allComments = commentRepository.findByQuestionRefId(questionRefId);
-        
         // 4. 메모리에서 대댓글 그룹핑 (N+1 쿼리 방지)
         Map<Long, List<Comment>> replyMap = allComments.stream()
                 .filter(comment -> comment.getReplyTo() != null)
                 .collect(Collectors.groupingBy(Comment::getReplyTo));
-        
         // 5. 최상위 댓글들만 필터링
         List<Comment> rootComments = allComments.stream()
                 .filter(comment -> comment.getReplyTo() == null)
                 .collect(Collectors.toList());
-        
         // 6. 응답 생성
         List<QuestionWithCommentsResponseDto.CommentInfo> commentInfos = rootComments.stream()
                 .map(comment -> {
@@ -365,29 +372,38 @@ public class CommunityService {
                             .map(reply -> {
                                 // 대댓글 좋아요 수 조회
                                 long replyLikes = likeRepository.countByTargetTypeAndTargetId(Like.TargetType.comment, reply.getId());
+                                // 대댓글 작성자의 role 조회
+                                String replyWriterRole = getUserRole(reply.getWriter());
+                                // 대댓글 isLiked
+                                boolean replyIsLiked = likeRepository.existsByUserIdAndTargetTypeAndTargetId(userId, Like.TargetType.comment, reply.getId());
                                 return new QuestionWithCommentsResponseDto.CommentInfo(
-                                    reply.getId().toString(),
-                                    reply.getWriter().toString(),
+                                    reply.getId(),
+                                    reply.getWriter(),
+                                    replyWriterRole,
                                     reply.getContent(),
                                     (int) replyLikes,
+                                    replyIsLiked,
                                     new ArrayList<>() // 대댓글의 대댓글은 없다고 가정
                                 );
                             })
                             .collect(Collectors.toList());
-                    
                     // 새로운 likes 테이블에서 댓글 좋아요 수 조회
                     long commentLikes = likeRepository.countByTargetTypeAndTargetId(Like.TargetType.comment, comment.getId());
-                    
+                    // 댓글 작성자의 role 조회
+                    String commentWriterRole = getUserRole(comment.getWriter());
+                    // 댓글 isLiked
+                    boolean commentIsLiked = likeRepository.existsByUserIdAndTargetTypeAndTargetId(userId, Like.TargetType.comment, comment.getId());
                     return new QuestionWithCommentsResponseDto.CommentInfo(
-                        comment.getId().toString(),
-                        comment.getWriter().toString(),
+                        comment.getId(),
+                        comment.getWriter(),
+                        commentWriterRole,
                         comment.getContent(),
                         (int) commentLikes,
+                        commentIsLiked,
                         replyInfos
                     );
                 })
                 .collect(Collectors.toList());
-        
         return new QuestionWithCommentsResponseDto(questionInfo, commentInfos);
     }
 
@@ -433,7 +449,7 @@ public class CommunityService {
         return null; // 질문이 없는 경우
     }
 
-    public PublicQuestionWithCommentsResponseDto getPublicQuestionDetail(Long questionRefId) {
+    public PublicQuestionWithCommentsResponseDto getPublicQuestionDetail(Long questionRefId, Long userId) {
         // 1. QuestionReference에서 질문 정보 가져오기
         Optional<QuestionReference> questionRefOpt = questionReferenceRepository.findById(questionRefId);
         if (questionRefOpt.isEmpty()) {
@@ -441,39 +457,34 @@ public class CommunityService {
         }
         
         QuestionReference questionRef = questionRefOpt.get();
-        
         // 2. Public Question 데이터 가져오기
         Optional<PublicQuestions> publicQuestionOpt = publicQuestionsRepository.findById(questionRef.getQuestionId());
         if (publicQuestionOpt.isEmpty()) {
             throw new RuntimeException("Public question not found");
         }
         PublicQuestions pq = publicQuestionOpt.get();
-        
         // 3. 질문 정보 생성 (새로운 likes 테이블에서 좋아요 수 조회)
         long likesCount = likeRepository.countByTargetTypeAndTargetId(Like.TargetType.public_question, pq.getId());
-        
+        boolean questionIsLiked = likeRepository.existsByUserIdAndTargetTypeAndTargetId(userId, Like.TargetType.public_question, pq.getId());
         PublicQuestionWithCommentsResponseDto.QuestionInfo questionInfo = 
             new PublicQuestionWithCommentsResponseDto.QuestionInfo(
-                questionRefId.toString(),
+                questionRefId,
                 pq.getContent(),
                 (int) likesCount,
+                questionIsLiked,
                 pq.getCreated_at() != null ? pq.getCreated_at().toString() : "2025-08-12",
                 pq.getCounts()
             );
-        
         // 4. 효율적으로 모든 댓글 조회 (한 번의 쿼리)
         List<Comment> allComments = commentRepository.findByQuestionRefId(questionRefId);
-        
         // 5. 메모리에서 대댓글 그룹핑 (N+1 쿼리 방지)
         Map<Long, List<Comment>> replyMap = allComments.stream()
                 .filter(comment -> comment.getReplyTo() != null)
                 .collect(Collectors.groupingBy(Comment::getReplyTo));
-        
         // 6. 최상위 댓글들만 필터링
         List<Comment> rootComments = allComments.stream()
                 .filter(comment -> comment.getReplyTo() == null)
                 .collect(Collectors.toList());
-        
         // 7. 응답 생성
         List<PublicQuestionWithCommentsResponseDto.CommentInfo> commentInfos = rootComments.stream()
                 .map(comment -> {
@@ -483,24 +494,34 @@ public class CommunityService {
                             .map(reply -> {
                                 // 대댓글 좋아요 수 조회
                                 long replyLikes = likeRepository.countByTargetTypeAndTargetId(Like.TargetType.comment, reply.getId());
+                                // 대댓글 작성자의 role 조회
+                                String replyWriterRole = getUserRole(reply.getWriter());
+                                // 대댓글 isLiked
+                                boolean replyIsLiked = likeRepository.existsByUserIdAndTargetTypeAndTargetId(userId, Like.TargetType.comment, reply.getId());
                                 return new PublicQuestionWithCommentsResponseDto.CommentInfo(
-                                    reply.getId().toString(),
-                                    reply.getWriter().toString(),
+                                    reply.getId(),
+                                    reply.getWriter(),
+                                    replyWriterRole,
                                     reply.getContent(),
                                     (int) replyLikes,
+                                    replyIsLiked,
                                     new ArrayList<>() // 대댓글의 대댓글은 없다고 가정
                                 );
                             })
                             .collect(Collectors.toList());
-                    
                     // 새로운 likes 테이블에서 댓글 좋아요 수 조회
                     long commentLikes = likeRepository.countByTargetTypeAndTargetId(Like.TargetType.comment, comment.getId());
-                    
+                    // 댓글 작성자의 role 조회
+                    String commentWriterRole = getUserRole(comment.getWriter());
+                    // 댓글 isLiked
+                    boolean commentIsLiked = likeRepository.existsByUserIdAndTargetTypeAndTargetId(userId, Like.TargetType.comment, comment.getId());
                     return new PublicQuestionWithCommentsResponseDto.CommentInfo(
-                        comment.getId().toString(),
-                        comment.getWriter().toString(),
+                        comment.getId(),
+                        comment.getWriter(),
+                        commentWriterRole,
                         comment.getContent(),
                         (int) commentLikes,
+                        commentIsLiked,
                         replyInfos
                     );
                 })
@@ -564,11 +585,11 @@ public class CommunityService {
         return null;
     }
 
-    private void checkAndProcessPublicQuestionCompletion(Long questionRefId, Long familyId) {
+    private FlowerResultDto checkAndProcessPublicQuestionCompletion(Long questionRefId, Long familyId) {
         // 1. 해당 question이 public question인지 확인
         Optional<PublicQuestions> publicQuestionOpt = publicQuestionsRepository.findById(questionRefId);
         if (publicQuestionOpt.isEmpty()) {
-            return; // public question이 아니면 처리하지 않음
+            return null; // public question이 아니면 처리하지 않음
         }
         
         PublicQuestions publicQuestion = publicQuestionOpt.get();
@@ -586,12 +607,31 @@ public class CommunityService {
         
         // 4. 모든 가족 구성원이 댓글을 달았는지 확인
         if (uniqueCommenters >= totalFamilyMembers) {
-            // AI 호출 기능 제거됨
             System.out.println("🎉 All family members commented on public question " + questionRefId + "!");
+            
+            // 5. AI 호출하여 꽃 생성
+            String predictionResult = predictionService.sendPredictionRequest(publicQuestion.getContent());
+            if (predictionResult != null) {
+                System.out.println("� Public question completed! Prediction result: " + predictionResult);
+                
+                // FlowerService를 통해 AI 응답 처리 및 꽃 저장
+                FlowerResultDto flowerResult = flowerService.processAiResponseAndSaveFlower(
+                        predictionResult,
+                        questionRefId, 
+                        familyId
+                );
+                
+                System.out.println("🌸 Public Flower created: " + flowerResult.getFlower() + 
+                                 ", New unlock: " + flowerResult.isNewlyUnlocked());
+                
+                return flowerResult;
+            }
         }
+        
+        return null;
     }
 
-    public Map<String, Object> getPersonalQuestions(Long receiverId, Long familyId) {
+    public Map<String, Object> getPersonalQuestions(Long userId, Long familyId) {
         // question_reference에서 personal question type인 것들만 가져오기
         List<QuestionReference> personalQuestionRefs = questionReferenceRepository.findByFamilyIdAndQuestionType(familyId, QuestionReference.QuestionType.Personal);
         
@@ -610,14 +650,18 @@ public class CommunityService {
                 // 새로운 likes 테이블에서 좋아요 수 조회
                 long likesCount = likeRepository.countByTargetTypeAndTargetId(Like.TargetType.question, pq.getId());
                 
+                // 사용자가 이 질문에 좋아요를 눌렀는지 확인
+                boolean isLiked = likeRepository.existsByUserIdAndTargetTypeAndTargetId(userId, Like.TargetType.question, pq.getId());
+                
                 Map<String, Object> questionData = new HashMap<>();
-                questionData.put("question_ref_id", qRef.getId().toString());
+                questionData.put("question_ref_id", qRef.getId());
                 questionData.put("content", pq.getContent());
-                questionData.put("sender", pq.getSender().toString());
-                questionData.put("receiver", pq.getReceiver().toString());
+                questionData.put("sender", pq.getSender());
+                questionData.put("receiver", pq.getReceiver());
                 questionData.put("likes", likesCount);
                 questionData.put("comments", commentCount);
                 questionData.put("visibility", pq.getVisibility() ? 1 : 0);
+                questionData.put("isLiked", isLiked);
                 
                 questions.add(questionData);
             }
@@ -664,6 +708,7 @@ public class CommunityService {
             .map(comment -> {
                 Map<String, Object> commentData = new HashMap<>();
                 commentData.put("writer", comment.getWriter().toString());
+                commentData.put("writer_role", getUserRole(comment.getWriter()));
                 commentData.put("contents", comment.getContent());
                 return commentData;
             })
@@ -689,19 +734,34 @@ public class CommunityService {
         // Users의 FamilyType을 영어 역할로 변환
         List<FamilyMembersResponseDto.FamilyMemberDto> memberDtos = familyMembers.stream()
                 .map(user -> new FamilyMembersResponseDto.FamilyMemberDto(
-                        user.getId().toString(),
+                        user.getId(),
                         convertFamilyTypeToEnglish(user.getFamilyType())
                 ))
                 .collect(Collectors.toList());
         
         return new FamilyMembersResponseDto(memberDtos);
     }
-    
+
+    /**
+     * 사용자 ID로 FamilyType(role) 조회하는 헬퍼 메소드
+     */
+    private String getUserRole(Long userId) {
+        if (userId == null) {
+            return "Unknown";
+        }
+        
+        Optional<Users> userOpt = usersRepository.findById(userId);
+        if (userOpt.isPresent() && userOpt.get().getFamilyType() != null) {
+            return userOpt.get().getFamilyType().toString();
+        }
+        
+        return "Unknown";
+    }
+
     private String convertFamilyTypeToEnglish(Users.FamilyType familyType) {
         if (familyType == null) {
             return "unknown";
         }
-        
         return switch (familyType) {
             case 아빠 -> "father";
             case 엄마 -> "mother";
@@ -710,90 +770,5 @@ public class CommunityService {
             case 자녀 -> "sibling";
         };
     }
-
-    public QuestionWithCommentsResponseDto getQuestionWithComments(Long questionRefId, Long familyId) {
-        // QuestionReference에서 질문 정보 가져오기
-        Optional<QuestionReference> questionRefOpt = questionReferenceRepository.findById(questionRefId);
-        if (questionRefOpt.isEmpty()) {
-            throw new RuntimeException("Question reference not found");
-        }
-        
-        QuestionReference questionRef = questionRefOpt.get();
-        
-        // 질문 타입에 따라 실제 질문 데이터 가져오기
-        QuestionWithCommentsResponseDto.QuestionInfo questionInfo;
-        
-        if (questionRef.getQuestionType() == QuestionReference.QuestionType.Personal) {
-            Optional<PersonalQuestions> personalQuestionOpt = personalQuestionsRepository.findById(questionRef.getQuestionId());
-            if (personalQuestionOpt.isEmpty()) {
-                throw new RuntimeException("Personal question not found");
-            }
-            PersonalQuestions pq = personalQuestionOpt.get();
-            
-            long personalQuestionLikes = likeRepository.countByTargetTypeAndTargetId(Like.TargetType.question, questionRef.getQuestionId());
-            
-            questionInfo = new QuestionWithCommentsResponseDto.QuestionInfo(
-                questionRefId.toString(),
-                pq.getContent(),
-                pq.getSender().toString(),
-                (int) personalQuestionLikes,
-                pq.getCreated_at() != null ? pq.getCreated_at().toString() : "2025-08-12"
-            );
-        } else {
-            Optional<PublicQuestions> publicQuestionOpt = publicQuestionsRepository.findById(questionRef.getQuestionId());
-            if (publicQuestionOpt.isEmpty()) {
-                throw new RuntimeException("Public question not found");
-            }
-            PublicQuestions pq = publicQuestionOpt.get();
-            
-            long publicQuestionLikes = likeRepository.countByTargetTypeAndTargetId(Like.TargetType.public_question, questionRef.getQuestionId());
-            
-            questionInfo = new QuestionWithCommentsResponseDto.QuestionInfo(
-                questionRefId.toString(),
-                pq.getContent(),
-                "system", // public question은 시스템에서 생성
-                (int) publicQuestionLikes,
-                pq.getCreated_at() != null ? pq.getCreated_at().toString() : "2025-08-12"
-            );
-        }
-        
-        // 댓글들 가져오기
-        List<Comment> comments = commentRepository.findByQuestionRefId(questionRefId);
-        
-        // 댓글 정보를 변환하면서 대댓글 전체 정보 생성
-        List<QuestionWithCommentsResponseDto.CommentInfo> commentInfos = comments.stream()
-            .map(comment -> {
-                // 해당 댓글에 대한 대댓글들 찾기
-                List<Comment> replies = commentRepository.findByReplyTo(comment.getId());
-                List<QuestionWithCommentsResponseDto.CommentInfo> replyInfos = replies.stream()
-                    .map(reply -> {
-                        // 대댓글 좋아요 수 조회
-                        long replyLikes = likeRepository.countByTargetTypeAndTargetId(Like.TargetType.comment, reply.getId());
-                        return new QuestionWithCommentsResponseDto.CommentInfo(
-                            reply.getId().toString(),
-                            reply.getWriter().toString(),
-                            reply.getContent(),
-                            (int) replyLikes,
-                            new ArrayList<>() // 대댓글의 대댓글은 없다고 가정
-                        );
-                    })
-                    .collect(Collectors.toList());
-                
-                // 새로운 likes 테이블에서 댓글 좋아요 수 조회
-                long commentLikes = likeRepository.countByTargetTypeAndTargetId(Like.TargetType.comment, comment.getId());
-                
-                return new QuestionWithCommentsResponseDto.CommentInfo(
-                    comment.getId().toString(),
-                    comment.getWriter().toString(),
-                    comment.getContent(),
-                    (int) commentLikes,
-                    replyInfos
-                );
-            })
-            .collect(Collectors.toList());
-        
-        return new QuestionWithCommentsResponseDto(questionInfo, commentInfos);
-    }
-
- }
+}
 
