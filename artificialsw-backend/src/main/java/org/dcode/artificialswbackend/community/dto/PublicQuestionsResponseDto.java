@@ -33,5 +33,8 @@ public class PublicQuestionsResponseDto {
         
         @JsonProperty("created_at")
         private String createdAt;
+        
+        @JsonProperty("isLiked")
+        private Boolean isLiked;
     }
 }

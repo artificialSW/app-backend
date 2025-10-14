@@ -28,6 +28,9 @@ public class MyQuestionsResponseDto {
         @JsonProperty("sender")
         private Long sender;
         
+        @JsonProperty("sender_role")
+        private String senderRole;
+        
         @JsonProperty("visibility")
         private Boolean visibility;
     }

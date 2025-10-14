@@ -31,8 +31,14 @@ public class QuestionWithCommentsResponseDto {
         @JsonProperty("sender")
         private Long sender;
         
+        @JsonProperty("sender_role")
+        private String senderRole;
+        
         @JsonProperty("likes")
         private Integer likes;
+        
+        @JsonProperty("isLiked")
+        private Boolean isLiked;
         
         @JsonProperty("CreateAt")
         private String createAt;
@@ -48,11 +54,17 @@ public class QuestionWithCommentsResponseDto {
         @JsonProperty("writer")
         private Long writer;
         
+        @JsonProperty("writer_role")
+        private String writerRole;
+        
         @JsonProperty("content")
         private String content;
         
         @JsonProperty("likes")
         private Integer likes;
+        
+        @JsonProperty("isLiked")
+        private Boolean isLiked;
         
         @JsonProperty("reply")
         private List<CommentInfo> reply; // 대댓글 전체 정보 목록

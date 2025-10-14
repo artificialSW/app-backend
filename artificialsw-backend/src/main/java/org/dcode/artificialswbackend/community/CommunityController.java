@@ -34,17 +34,18 @@ public class CommunityController {
     public Map<String,Object> getPersonalCommunity(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
         String userId = jwtUtil.validateAndGetUserId(token);
-        Long receiverId = Long.valueOf(userId);
+        Long userIdLong = Long.valueOf(userId);
         Long familyId = jwtUtil.validateAndGetFamilyId(token);
-        return communityService.getPersonalQuestions(receiverId, familyId);
+        return communityService.getPersonalQuestions(userIdLong, familyId);
     }
 
 
     @GetMapping("/api/community/home/public")
     public ResponseEntity<PublicQuestionsResponseDto> getPublicCommunity(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
+        String userId = jwtUtil.validateAndGetUserId(token);
         Long familyId = jwtUtil.validateAndGetFamilyId(token);
-        PublicQuestionsResponseDto response = communityService.getPublicQuestions(familyId);
+        PublicQuestionsResponseDto response = communityService.getPublicQuestions(Long.valueOf(userId), familyId);
         return ResponseEntity.ok(response);
     }
 
@@ -123,9 +124,9 @@ public class CommunityController {
             @PathVariable Long id) {
 
         String token = authHeader.replace("Bearer ", "");
-        jwtUtil.validateAndGetUserId(token); // 토큰 검증
+        String userId = jwtUtil.validateAndGetUserId(token);
 
-        QuestionWithCommentsResponseDto response = communityService.getQuestionDetail(id);
+        QuestionWithCommentsResponseDto response = communityService.getQuestionDetail(id, Long.valueOf(userId));
         return ResponseEntity.ok(response);
     }
 
@@ -159,9 +160,9 @@ public class CommunityController {
             @PathVariable Long id) {
 
         String token = authHeader.replace("Bearer ", "");
-        jwtUtil.validateAndGetUserId(token); // 토큰 검증
+        String userId = jwtUtil.validateAndGetUserId(token);
 
-        PublicQuestionWithCommentsResponseDto response = communityService.getPublicQuestionDetail(id);
+        PublicQuestionWithCommentsResponseDto response = communityService.getPublicQuestionDetail(id, Long.valueOf(userId));
         return ResponseEntity.ok(response);
     }
 
