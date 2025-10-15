@@ -33,7 +33,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll() // 에러 요청 허용 추가
                         .requestMatchers("/error").permitAll() // /error 경로 허용 추가
-                        .requestMatchers("/api/signup", "/api/login", "/api/family", "/api/mypage", "/api/mypage/edit", "/api/mypage/comments", "/api/mypage/questions", "/api/tree/**", "/api/book/**", "/api/community/**").permitAll()
+                        .requestMatchers("/api/signup", "/api/login", "/api/family", "/api/mypage", "/api/mypage/edit", "/api/mypage/comments", "/api/mypage/questions", "/api/tree/**", "/api/book/**", "/api/community/**", "/api/puzzle/**").permitAll()
                         .anyRequest().authenticated()
                 );
 
