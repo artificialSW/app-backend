@@ -177,7 +177,7 @@ CREATE TABLE `public_questions` (
 CREATE TABLE `question_reference` (
                                       `id` bigint NOT NULL AUTO_INCREMENT,
                                       `question_id` bigint NOT NULL,
-                                      `question_type` enum('Personal','Public') NOT NULL,
+                                      `question_type` enum('Public','Personal') NOT NULL,
                                       `family_id` bigint NOT NULL,
                                       PRIMARY KEY (`id`),
                                       UNIQUE KEY `uq_question` (`question_id`,`question_type`),
@@ -278,7 +278,7 @@ CREATE TRIGGER trg_after_insert_questions
     FOR EACH ROW
 BEGIN
     INSERT INTO question_reference (question_id, question_type, family_id)
-    VALUES (NEW.id, 'personal', NEW.family_id);
+    VALUES (NEW.id, 'Personal', NEW.family_id);
 END;
 //
 
@@ -287,7 +287,7 @@ CREATE TRIGGER trg_after_insert_public_questions
     FOR EACH ROW
 BEGIN
     INSERT INTO question_reference (question_id, question_type, family_id)
-    VALUES (NEW.id, 'public', NEW.family_id);
+    VALUES (NEW.id, 'Public', NEW.family_id);
 END;
 //
 
