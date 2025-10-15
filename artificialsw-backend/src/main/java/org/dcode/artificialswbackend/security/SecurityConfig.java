@@ -1,5 +1,6 @@
 package org.dcode.artificialswbackend.security;
 
+import jakarta.servlet.DispatcherType;
 import org.dcode.artificialswbackend.util.JwtUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,15 +31,16 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll() // 에러 요청 허용 추가
+                        .requestMatchers("/error").permitAll() // /error 경로 허용 추가
                         .requestMatchers("/api/signup", "/api/login", "/api/family", "/api/mypage", "/api/mypage/edit", "/api/mypage/comments", "/api/mypage/questions", "/api/tree/**", "/api/book/**", "/api/community/**").permitAll()
                         .anyRequest().authenticated()
-                ); // JWT 인증 필터 등록 등 추가 설정 가능
+                );
 
         http.addFilterBefore(new JwtAuthorizationFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
