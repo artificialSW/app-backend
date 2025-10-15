@@ -282,17 +282,12 @@ public class CommunityService {
         question.setUpdated_at(new java.sql.Timestamp(System.currentTimeMillis()));
 
         PersonalQuestions saved = personalQuestionsRepository.save(question);
-        
-        // 2. QuestionReference에 추가
-        QuestionReference questionRef = new QuestionReference(
-            saved.getId(), 
-            QuestionReference.QuestionType.Personal, 
-            familyId
-        );
-        QuestionReference savedRef = questionReferenceRepository.save(questionRef);
-        
-        // 3. question_ref_id 반환
-        return savedRef.getId();
+
+        // DB 트리거가 QuestionReference에 자동으로 추가하므로, 여기서 직접 추가하지 않음
+
+        // question_ref_id 반환 (트리거로 생성된 값을 조회해야 할 경우, 별도 로직 필요)
+        // 임시로 질문의 id 반환 (필요시 수정)
+        return saved.getId();
     }
 
     public QuestionWithCommentsResponseDto getQuestionDetail(Long questionRefId, Long userId) {
@@ -707,7 +702,7 @@ public class CommunityService {
         List<Map<String, Object>> commentList = comments.stream()
             .map(comment -> {
                 Map<String, Object> commentData = new HashMap<>();
-                commentData.put("writer", comment.getWriter().toString());
+                commentData.put("writer", comment.getWriter()); // Long 타입 그대로 반환
                 commentData.put("writer_role", getUserRole(comment.getWriter()));
                 commentData.put("contents", comment.getContent());
                 return commentData;
