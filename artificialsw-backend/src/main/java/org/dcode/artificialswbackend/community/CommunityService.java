@@ -187,7 +187,23 @@ public class CommunityService {
         comment.setFamilyId(familyId); // familyId 추가
 
         Comment saved = commentRepository.save(comment);
-        // 꽃 관련 로직 제거, 단순 댓글 정보만 반환
+
+        // --- 추가: 개인 질문 답변 시 solved 처리 ---
+        // 1. question_reference에서 해당 ref id의 question type이 Personal인지 확인
+        questionReferenceRepository.findById(request.getQuestionRefId()).ifPresent(qRef -> {
+            if (qRef.getQuestionType() == QuestionReference.QuestionType.Personal) {
+                // 2. 해당 personal question 엔티티 조회
+                personalQuestionsRepository.findById(qRef.getQuestionId()).ifPresent(personalQuestion -> {
+                    // 3. receiver가 나(userId)면 solved true로 변경
+                    if (personalQuestion.getReceiver() != null && personalQuestion.getReceiver().equals(userId)) {
+                        personalQuestion.setSolved(true);
+                        personalQuestionsRepository.save(personalQuestion);
+                    }
+                });
+            }
+        });
+        // --- 끝 ---
+
         return new CommentResponseDto(saved.getId(), saved.getContent());
     }
 
