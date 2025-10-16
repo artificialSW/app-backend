@@ -187,7 +187,23 @@ public class CommunityService {
         comment.setFamilyId(familyId); // familyId 추가
 
         Comment saved = commentRepository.save(comment);
-        // 꽃 관련 로직 제거, 단순 댓글 정보만 반환
+
+        // --- 추가: 개인 질문 답변 시 solved 처리 ---
+        // 1. question_reference에서 해당 ref id의 question type이 Personal인지 확인
+        questionReferenceRepository.findById(request.getQuestionRefId()).ifPresent(qRef -> {
+            if (qRef.getQuestionType() == QuestionReference.QuestionType.Personal) {
+                // 2. 해당 personal question 엔티티 조회
+                personalQuestionsRepository.findById(qRef.getQuestionId()).ifPresent(personalQuestion -> {
+                    // 3. receiver가 나(userId)면 solved true로 변경
+                    if (personalQuestion.getReceiver() != null && personalQuestion.getReceiver().equals(userId)) {
+                        personalQuestion.setSolved(true);
+                        personalQuestionsRepository.save(personalQuestion);
+                    }
+                });
+            }
+        });
+        // --- 끝 ---
+
         return new CommentResponseDto(saved.getId(), saved.getContent());
     }
 
@@ -501,6 +517,7 @@ public class CommunityService {
                                     reply.getContent(),
                                     (int) replyLikes,
                                     replyIsLiked,
+                                    reply.getReplyTo(),
                                     new ArrayList<>() // 대댓글의 대댓글은 없다고 가정
                                 );
                             })
@@ -518,6 +535,7 @@ public class CommunityService {
                         comment.getContent(),
                         (int) commentLikes,
                         commentIsLiked,
+                        comment.getReplyTo(),
                         replyInfos
                     );
                 })
@@ -636,30 +654,27 @@ public class CommunityService {
         for (QuestionReference qRef : personalQuestionRefs) {
             // personal_questions에서 실제 질문 정보 가져오기
             Optional<PersonalQuestions> personalQuestionOpt = personalQuestionsRepository.findById(qRef.getQuestionId());
-            
             if (personalQuestionOpt.isPresent()) {
                 PersonalQuestions pq = personalQuestionOpt.get();
-                
-                // 해당 질문의 댓글 수 계산
-                int commentCount = commentRepository.findByQuestionRefId(qRef.getId()).size();
-                
-                // 새로운 likes 테이블에서 좋아요 수 조회
-                long likesCount = likeRepository.countByTargetTypeAndTargetId(Like.TargetType.question, pq.getId());
-                
-                // 사용자가 이 질문에 좋아요를 눌렀는지 확인
-                boolean isLiked = likeRepository.existsByUserIdAndTargetTypeAndTargetId(userId, Like.TargetType.question, pq.getId());
-                
-                Map<String, Object> questionData = new HashMap<>();
-                questionData.put("question_ref_id", qRef.getId());
-                questionData.put("content", pq.getContent());
-                questionData.put("sender", pq.getSender());
-                questionData.put("receiver", pq.getReceiver());
-                questionData.put("likes", likesCount);
-                questionData.put("comments", commentCount);
-                questionData.put("visibility", pq.getVisibility() ? 1 : 0);
-                questionData.put("isLiked", isLiked);
-                
-                questions.add(questionData);
+                // solved가 true인 것만 응답
+                if (Boolean.TRUE.equals(pq.getSolved())) {
+                    // 해당 질문의 댓글 수 계산
+                    int commentCount = commentRepository.findByQuestionRefId(qRef.getId()).size();
+                    // 새로운 likes 테이블에서 좋아요 수 조회
+                    long likesCount = likeRepository.countByTargetTypeAndTargetId(Like.TargetType.question, pq.getId());
+                    // 사용자가 이 질문에 좋아요를 눌렀는지 확인
+                    boolean isLiked = likeRepository.existsByUserIdAndTargetTypeAndTargetId(userId, Like.TargetType.question, pq.getId());
+                    Map<String, Object> questionData = new HashMap<>();
+                    questionData.put("question_ref_id", qRef.getId());
+                    questionData.put("content", pq.getContent());
+                    questionData.put("sender", pq.getSender());
+                    questionData.put("receiver", pq.getReceiver());
+                    questionData.put("likes", likesCount);
+                    questionData.put("comments", commentCount);
+                    questionData.put("visibility", pq.getVisibility() ? 1 : 0);
+                    questionData.put("isLiked", isLiked);
+                    questions.add(questionData);
+                }
             }
         }
         
@@ -701,6 +716,7 @@ public class CommunityService {
         }
         
         List<Map<String, Object>> commentList = comments.stream()
+            .filter(comment -> comment.getReplyTo() == null)
             .map(comment -> {
                 Map<String, Object> commentData = new HashMap<>();
                 commentData.put("writer", comment.getWriter()); // Long 타입 그대로 반환
@@ -723,19 +739,18 @@ public class CommunityService {
         return response;
     }
 
-    public FamilyMembersResponseDto getFamilyMembers(Long familyId) {
-        // 해당 가족의 모든 구성원 조회
-        List<Users> familyMembers = usersRepository.findByFamilyId(familyId);
-        
-        // Users의 FamilyType을 영어 역할로 변환
-        List<FamilyMembersResponseDto.FamilyMemberDto> memberDtos = familyMembers.stream()
-                .map(user -> new FamilyMembersResponseDto.FamilyMemberDto(
-                        user.getId(),
-                        convertFamilyTypeToEnglish(user.getFamilyType())
-                ))
-                .collect(Collectors.toList());
-        
-        return new FamilyMembersResponseDto(memberDtos);
+    public FamilyMembersResponseDto getFamilyMembersExcludingUser(Long familyId, Long excludeUserId) {
+    // 해당 가족의 모든 구성원 조회
+    List<Users> familyMembers = usersRepository.findByFamilyId(familyId);
+    // 본인 제외
+    List<FamilyMembersResponseDto.FamilyMemberDto> memberDtos = familyMembers.stream()
+        .filter(user -> !user.getId().equals(excludeUserId))
+        .map(user -> new FamilyMembersResponseDto.FamilyMemberDto(
+            user.getId(),
+            convertFamilyTypeToEnglish(user.getFamilyType())
+        ))
+        .collect(Collectors.toList());
+    return new FamilyMembersResponseDto(memberDtos);
     }
 
     /**

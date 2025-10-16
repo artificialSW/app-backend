@@ -170,8 +170,9 @@ public class CommunityController {
     public ResponseEntity<FamilyMembersResponseDto> getFamilyMembers(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
         Long familyId = jwtUtil.validateAndGetFamilyId(token);
-        
-        FamilyMembersResponseDto response = communityService.getFamilyMembers(familyId);
+        String userIdStr = jwtUtil.validateAndGetUserId(token);
+        Long userId = Long.valueOf(userIdStr);
+        FamilyMembersResponseDto response = communityService.getFamilyMembersExcludingUser(familyId, userId);
         return ResponseEntity.ok(response);
     }
 
