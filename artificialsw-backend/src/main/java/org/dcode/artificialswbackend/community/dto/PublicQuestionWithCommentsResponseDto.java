@@ -62,8 +62,12 @@ public class PublicQuestionWithCommentsResponseDto {
         
         @JsonProperty("isLiked")
         private Boolean isLiked;
+
+        @JsonProperty("replyTo")
+        private Long replyTo;
         
         @JsonProperty("reply")
         private List<CommentInfo> reply; // 대댓글 전체 정보 목록
+        // ...existing code...
     }
 }
