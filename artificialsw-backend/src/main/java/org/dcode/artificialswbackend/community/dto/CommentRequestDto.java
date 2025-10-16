@@ -1,6 +1,9 @@
 package org.dcode.artificialswbackend.community.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class CommentRequestDto {
+    @JsonProperty("question_ref_id")
     private Long questionRefId;
     private String content;
     private Long replyTo;
