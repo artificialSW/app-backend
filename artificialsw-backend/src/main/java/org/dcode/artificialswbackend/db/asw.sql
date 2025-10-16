@@ -71,7 +71,7 @@ CREATE TABLE `puzzle` (
 CREATE TABLE `island_archives` (
                                    `id` bigint NOT NULL AUTO_INCREMENT,
                                    `family_id` bigint NOT NULL,
-                                   `capture_image_path` varchar(255) NOT NULL,
+                                   `capture_image_path` varchar(255) NULL,
                                    `month` int NOT NULL,
                                    `year` int NOT NULL,
                                    `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
