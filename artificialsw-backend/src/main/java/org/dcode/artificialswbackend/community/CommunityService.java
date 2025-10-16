@@ -737,9 +737,9 @@ public class CommunityService {
             })
             .collect(Collectors.toList());
         
-        // 4. receiver에게 온 개인 질문 중 답변하지 않은 개수 계산
-        List<PersonalQuestions> unsolvedPersonalQuestions = personalQuestionsRepository.findByReceiverAndSolvedFalse(receiverId);
-        int unsolvedCount = unsolvedPersonalQuestions.size();
+    // 4. receiver에게 온 개인 질문 중 답변하지 않은 개수 계산 (familyId 조건 추가)
+    List<PersonalQuestions> unsolvedPersonalQuestions = personalQuestionsRepository.findByFamilyIdAndReceiverAndSolvedFalse(familyId, receiverId);
+    int unsolvedCount = unsolvedPersonalQuestions.size();
         
         // 5. 응답 구성
         response.put("questions", publicQuestion.getContent());
