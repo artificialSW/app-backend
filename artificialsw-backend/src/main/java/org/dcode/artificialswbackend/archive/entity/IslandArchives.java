@@ -16,11 +16,11 @@ public class IslandArchives {
     private Integer period;
 
     @Column(name = "puzzle_score")
-    private Integer puzzleScore;
+    private Integer puzzleScore = 0;
     @Column(name = "community_score")
-    private Integer communityScore;
+    private Integer communityScore = 0;
 
-    @Column(name = "capture_image_path", nullable = false, length = 255)
+    @Column(name = "capture_image_path", nullable = true, length = 255)
     private String captureImagePath;
 
     private LocalDateTime createdAt;
