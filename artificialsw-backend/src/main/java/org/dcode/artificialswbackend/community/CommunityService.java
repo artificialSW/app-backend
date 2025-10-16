@@ -211,35 +211,46 @@ public class CommunityService {
     public LikeResponseDto toggleLike(String type, Long targetId, Long userId, Long familyId) {
         // 1. 유효한 타입인지 확인
         Like.TargetType targetType;
+        Long realTargetId = targetId;
+        if (type.equals("question") || type.equals("public_question")) {
+            // targetId는 question_ref_id임. 실제 questionId와 type을 찾아야 함
+            Optional<QuestionReference> qRefOpt = questionReferenceRepository.findById(targetId);
+            if (qRefOpt.isEmpty()) {
+                throw new IllegalArgumentException("Invalid question_ref_id: " + targetId);
+            }
+            QuestionReference qRef = qRefOpt.get();
+            if (type.equals("question") && qRef.getQuestionType() != QuestionReference.QuestionType.Personal) {
+                throw new IllegalArgumentException("question_ref_id does not point to a personal question");
+            }
+            if (type.equals("public_question") && qRef.getQuestionType() != QuestionReference.QuestionType.Public) {
+                throw new IllegalArgumentException("question_ref_id does not point to a public question");
+            }
+            realTargetId = qRef.getQuestionId();
+        }
         try {
             targetType = Like.TargetType.valueOf(type);
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Unknown like type: " + type);
         }
-        
         // 2. 가족 구성원 검증
-        validateFamilyMembership(userId, familyId, targetType, targetId);
-        
+        validateFamilyMembership(userId, familyId, targetType, realTargetId);
         // 3. 기존 좋아요 확인
-        Optional<Like> existingLike = likeRepository.findByUserIdAndTargetTypeAndTargetId(userId, targetType, targetId);
-        
+        Optional<Like> existingLike = likeRepository.findByUserIdAndTargetTypeAndTargetId(userId, targetType, realTargetId);
         boolean isLiked;
         if (existingLike.isPresent()) {
             // 좋아요 취소
             likeRepository.delete(existingLike.get());
-            decreaseLikes(targetType, targetId);
+            decreaseLikes(targetType, realTargetId);
             isLiked = false;
         } else {
             // 좋아요 추가
-            Like newLike = new Like(userId, targetType, targetId, familyId);
+            Like newLike = new Like(userId, targetType, realTargetId, familyId);
             likeRepository.save(newLike);
-            increaseLikes(targetType, targetId);
+            increaseLikes(targetType, realTargetId);
             isLiked = true;
         }
-        
         // 4. 현재 총 좋아요 수 조회
-        long totalLikes = likeRepository.countByTargetTypeAndTargetId(targetType, targetId);
-        
+        long totalLikes = likeRepository.countByTargetTypeAndTargetId(targetType, realTargetId);
         return new LikeResponseDto(isLiked, totalLikes);
     }
     
