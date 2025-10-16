@@ -84,7 +84,7 @@ public class PuzzlePictureController {
     ) {
         String token = authHeader.replace("Bearer ", "");
         Long familyId = jwtUtil.validateAndGetFamilyId(token);
-        Long solverId = Long.valueOf(String.valueOf(body.get("solverId")));
+        Long solverId = Long.valueOf(jwtUtil.validateAndGetUserId(token));
         int month = Integer.parseInt(String.valueOf(body.get("month")));
         PuzzleCompleteResponse response = puzzlePictureService.completePuzzle(
                 puzzleId, solverId, familyId, month
