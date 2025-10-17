@@ -628,7 +628,7 @@ public class PuzzlePictureService {
             }
             result.add(new InProgressPuzzleDto(
                     puzzle.getPuzzleId(),
-                    puzzle.getImagePath(),
+                    puzzle.getCapture_image_path(),
                     completedPiecesId,
                     puzzle.getSize(),
                     puzzle.getLastSavedTime()
