@@ -673,7 +673,7 @@ public class PuzzlePictureService {
     }
 
     public boolean isEmpty(Long familyId) {
-        int count = puzzleRepository.countByFamiliesIdAndCompletedAndBePuzzle(familyId, false, 1);
+        int count = puzzleRepository.countByFamiliesIdAndBePuzzle(familyId,0);
         return count == 0;
     }
 
