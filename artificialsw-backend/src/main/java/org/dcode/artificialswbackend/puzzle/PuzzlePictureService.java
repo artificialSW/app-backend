@@ -97,6 +97,8 @@ public class PuzzlePictureService {
         puzzle.setSize(size);
         puzzle.setContributors("[\"" + userId + "\"]");
         puzzle.setBePuzzle(1); // 반드시 여기서 bePuzzle 값 1로 변경!
+        // 진행 상태로 변경
+        puzzle.setIs_playing_puzzle(true);
 
         puzzleRepository.save(puzzle);
 
@@ -201,6 +203,7 @@ public class PuzzlePictureService {
         if (!puzzle.getFamiliesId().equals(familyId)) {
             throw new RuntimeException("퍼즐이 해당 가족에 속하지 않습니다.");
         }
+        puzzle.setIs_playing_puzzle(false); //미진행 상태로 변경
         String savedCaptureImagePath = saveCaptureImage(request.getCaptureImagePath());
         updatePuzzleStatus(puzzle, savedCaptureImagePath, request.isCompleted(), request.isPlayingPuzzle());
         updatePuzzlePieces(puzzle, request.getPieces());
@@ -276,6 +279,7 @@ public class PuzzlePictureService {
 
         // 2. 퍼즐 조회 및 완료 처리
         Puzzle puzzle = getPuzzleById(puzzleId);
+        puzzle.setIs_playing_puzzle(false); //미진행 상태로 변경
         puzzle.setCompleted(true);
         puzzle.setSolverId(solverId);
         puzzle.setCompletedTime(LocalDateTime.now());
