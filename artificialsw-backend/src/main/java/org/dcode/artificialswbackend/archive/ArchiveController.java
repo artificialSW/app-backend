@@ -1,9 +1,11 @@
 package org.dcode.artificialswbackend.archive;
 
+import org.dcode.artificialswbackend.archive.dto.ArchiveFruitResponse;
 import org.dcode.artificialswbackend.util.JwtUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -46,4 +48,21 @@ public class ArchiveController {
         Map<String, Integer> scores = archiveService.getScores(archiveId, familyId);
         return ResponseEntity.ok(scores);
     }
+
+    @GetMapping("/{year}/{month}/{period}/{position}/fruit")
+    public ResponseEntity<List<ArchiveFruitResponse>> getArchiveFruits(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable int year,
+            @PathVariable int month,
+            @PathVariable int period,
+            @PathVariable int position
+    ) {
+        String token = authHeader.replace("Bearer ", "");
+        Long familyId = jwtUtil.validateAndGetFamilyId(token);
+
+        List<ArchiveFruitResponse> fruits = archiveService.getArchiveFruits(familyId, year, month, period, position);
+
+        return ResponseEntity.ok(fruits);
+    }
+
 }
