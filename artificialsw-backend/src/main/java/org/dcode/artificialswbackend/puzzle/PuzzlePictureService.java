@@ -327,6 +327,7 @@ public class PuzzlePictureService {
         fruitEntity.setFruitName(fruitName);
         fruitEntity.setCategory(puzzle.getCategory().getCategory());
         fruitEntity.setContributors(puzzle.getContributors()); // JSON 문자열 그대로
+        fruitEntity.setCreatedAt(puzzle.getCompletedTime());
         fruitsRepository.save(fruitEntity);
         // === [여기까지] ===
 

@@ -3,6 +3,7 @@ package org.dcode.artificialswbackend.puzzle.entity;
 import jakarta.persistence.*;
 
 import java.security.Timestamp;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "fruits")
@@ -14,7 +15,7 @@ public class Fruits {
     private Long treeId;
 
     @Column(name = "created_at")
-    private Timestamp createdAt;
+    private LocalDateTime createdAt;
 
     private Integer puzzleId;
 
@@ -50,11 +51,11 @@ public class Fruits {
         this.treeId = treeId;
     }
 
-    public Timestamp getCreatedAt() {
+    public LocalDateTime  getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Timestamp createdAt) {
+    public void setCreatedAt(LocalDateTime  createdAt) {
         this.createdAt = createdAt;
     }
 
