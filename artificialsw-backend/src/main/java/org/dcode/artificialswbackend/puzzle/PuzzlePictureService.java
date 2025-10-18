@@ -524,19 +524,24 @@ public class PuzzlePictureService {
 
 
     @Transactional
-    public Map<String, Object> retryPuzzleFromArchive(Long puzzleArchiveId, Long familyId) {
-        // 1. 아카이브 퍼즐 찾기
-        PuzzleArchive archive = puzzleArchiveRepository.findById(puzzleArchiveId)
-                .orElseThrow(() -> new IllegalArgumentException("아카이브 퍼즐을 찾을 수 없습니다."));
-        if (!archive.getFamiliesId().equals(familyId)) {
+    public Map<String, Object> retryCompletedPuzzle(Integer puzzleId, Long familyId) {
+        // 1. 퍼즐 찾기 (puzzleId, familyId)
+        Puzzle puzzle = puzzleRepository.findById(puzzleId)
+                .orElseThrow(() -> new IllegalArgumentException("퍼즐을 찾을 수 없습니다."));
+        if (!puzzle.getFamiliesId().equals(familyId)) {
             throw new IllegalArgumentException("가족 정보가 일치하지 않습니다.");
         }
 
-        // 2. 정보 반환
+        // 2. 반드시 완성된 퍼즐인지 확인
+        if (!puzzle.isCompleted()) {
+            throw new IllegalStateException("완성된 퍼즐만 선택 가능합니다.");
+        }
+
+        // 3. 정보 반환
         return Map.of(
-                "message", archive.getMessage() != null ? archive.getMessage() : "",
-                "imageUrl", archive.getImagePath() != null ? archive.getImagePath() : "",
-                "size", archive.getSize() != null ? archive.getSize() : 0
+                "message", puzzle.getMessage() != null ? puzzle.getMessage() : "",
+                "imageUrl", puzzle.getImagePath() != null ? puzzle.getImagePath() : "",
+                "size", puzzle.getSize() != null ? puzzle.getSize() : 0
         );
     }
 
