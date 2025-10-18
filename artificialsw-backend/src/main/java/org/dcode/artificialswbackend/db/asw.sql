@@ -133,6 +133,7 @@ CREATE TABLE `puzzle_archive` (
                                   `category` varchar(255) NULL,
                                   `contributors` json DEFAULT NULL,
                                   `families_id` bigint NOT NULL,
+                                  `archived_at` DATETIME DEFAULT NULL,
                                   PRIMARY KEY (`id`),
                                   KEY `fk_puzzle_families` (`families_id`),
                                   CONSTRAINT `puzzle_archive_ibfk_1` FOREIGN KEY (`families_id`) REFERENCES `families`(`id`)

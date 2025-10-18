@@ -543,6 +543,7 @@ public class PuzzlePictureService {
         archive.setCategory(puzzle.getCategory().getCategory());
         archive.setContributors(puzzle.getContributors());
         archive.setFamiliesId(familyId);
+        archive.setArchivedAt(LocalDateTime.now());
         puzzleArchiveRepository.save(archive);
     }
 
