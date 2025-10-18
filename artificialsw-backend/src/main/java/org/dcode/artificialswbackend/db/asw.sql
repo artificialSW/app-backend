@@ -319,7 +319,7 @@ INSERT INTO fruit_catalog (unlocked, fruit_name) VALUES
                                                (0, 'raspberry'),
                                                (0, 'mango'),
                                                (0, 'pear'),
-                                               (0, 'lemon'),
+                                               (0, 'blueberry'),
                                                (0, 'oriental_melon'),
                                                (0, 'persimmon'),
                                                (0, 'fig'),
@@ -328,7 +328,7 @@ INSERT INTO fruit_catalog (unlocked, fruit_name) VALUES
                                                (0, 'yuja'),
                                                (0, 'pomegranate'),
                                                (0, 'apple'),
-                                               (0, 'jujube');
+                                               (0, 'plum');
 
 -- likes 테이블 (좋아요 관리)
 CREATE TABLE `likes` (
