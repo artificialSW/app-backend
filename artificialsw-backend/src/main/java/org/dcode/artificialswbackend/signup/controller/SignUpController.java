@@ -2,7 +2,10 @@ package org.dcode.artificialswbackend.signup.controller;
 
 
 import org.dcode.artificialswbackend.archive.ArchiveService;
+import org.dcode.artificialswbackend.archive.entity.IslandArchives;
+import org.dcode.artificialswbackend.archive.repository.IslandArchivesRepository;
 import org.dcode.artificialswbackend.signup.dto.LoginRequestDto;
+import org.dcode.artificialswbackend.signup.dto.LoginResponseDto;
 import org.dcode.artificialswbackend.signup.dto.SignUpRequestDto;
 import org.dcode.artificialswbackend.signup.service.SignUpService;
 import org.dcode.artificialswbackend.util.JwtUtil;
@@ -10,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.time.LocalDate;
 
 @RestController
 public class SignUpController {
@@ -32,14 +37,17 @@ public class SignUpController {
     }
 
     @PostMapping("/api/login")
-    public ResponseEntity<String> login(@RequestBody LoginRequestDto request) {
+    public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto request) {
         // 1. 로그인 인증 및 JWT 발급
         String jwt = signUpService.login(request.getId(), request.getPassword());
-        // 2. JWT에서 familyId 추출 (혹은 로그인 서비스에서 반환)
+        // 2. JWT에서 familyId 추출
         Long familyId = jwtUtil.validateAndGetFamilyId(jwt);
         // 3. 섬/나무 자동 생성
         archiveService.ensureIslandAndTrees(familyId);
-        // 4. JWT 반환
-        return ResponseEntity.ok(jwt);
+        // 4. 오늘 archiveId 조회
+        Long archiveId = archiveService.getTodayArchiveId(familyId);
+        // 5. 응답 DTO 반환
+        return ResponseEntity.ok(new LoginResponseDto(jwt, archiveId));
     }
+
 }
