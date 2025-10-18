@@ -572,7 +572,11 @@ public class PuzzlePictureService {
         archive.setContributors(puzzle.getContributors());
         archive.setFamiliesId(familyId);
         archive.setArchivedAt(LocalDateTime.now());
+        archive.setMessage(puzzle.getMessage());
+        archive.setSize(puzzle.getSize());
         puzzleArchiveRepository.save(archive);
+
+        puzzleRepository.delete(puzzle); // 퍼즐 삭제
     }
 
     @Transactional
