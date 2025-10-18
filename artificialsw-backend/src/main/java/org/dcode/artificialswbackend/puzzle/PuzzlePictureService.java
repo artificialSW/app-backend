@@ -524,33 +524,19 @@ public class PuzzlePictureService {
 
 
     @Transactional
-    public Map<String, Object> retryPuzzle(Integer puzzleId, Long familyId) {
-        // 1. 퍼즐 찾기 (familyId와 puzzleId가 일치하는 완성된 퍼즐)
-        Puzzle puzzle = puzzleRepository.findById(puzzleId)
-                .orElseThrow(() -> new IllegalArgumentException("퍼즐을 찾을 수 없습니다."));
-        if (!puzzle.getFamiliesId().equals(familyId)) {
+    public Map<String, Object> retryPuzzleFromArchive(Long puzzleArchiveId, Long familyId) {
+        // 1. 아카이브 퍼즐 찾기
+        PuzzleArchive archive = puzzleArchiveRepository.findById(puzzleArchiveId)
+                .orElseThrow(() -> new IllegalArgumentException("아카이브 퍼즐을 찾을 수 없습니다."));
+        if (!archive.getFamiliesId().equals(familyId)) {
             throw new IllegalArgumentException("가족 정보가 일치하지 않습니다.");
         }
-        // completed=1(완성된 퍼즐)인지 확인
-        if (!puzzle.isCompleted()) {
-            throw new IllegalStateException("이미 완성된 퍼즐만 재도전할 수 있습니다.");
-        }
 
-        // 2. 기존 퍼즐 정보 기억
-        String imageUrl = puzzle.getImagePath();
-        int size = puzzle.getSize() != null ? puzzle.getSize() : 0;
-
-        // 3. completed를 0(false)으로, 필요한 경우 중간 저장 필드 등도 초기화
-        puzzle.setCompleted(false);
-        puzzle.setContributors(null);
-        puzzle.setCompleted_pieces_id(null);
-        puzzleRepository.save(puzzle);
-
-        // 4. 응답 생성
+        // 2. 정보 반환
         return Map.of(
-                "message", "새로운 퍼즐이 시작되었습니다.",
-                "imageUrl", imageUrl,
-                "size", size
+                "message", archive.getMessage() != null ? archive.getMessage() : "",
+                "imageUrl", archive.getImagePath() != null ? archive.getImagePath() : "",
+                "size", archive.getSize() != null ? archive.getSize() : 0
         );
     }
 
@@ -572,7 +558,11 @@ public class PuzzlePictureService {
         archive.setContributors(puzzle.getContributors());
         archive.setFamiliesId(familyId);
         archive.setArchivedAt(LocalDateTime.now());
+        archive.setMessage(puzzle.getMessage());
+        archive.setSize(puzzle.getSize());
         puzzleArchiveRepository.save(archive);
+
+        puzzleRepository.delete(puzzle); // 퍼즐 삭제
     }
 
     @Transactional
