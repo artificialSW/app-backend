@@ -97,6 +97,8 @@ public class PuzzlePictureService {
         puzzle.setSize(size);
         puzzle.setContributors("[\"" + userId + "\"]");
         puzzle.setBePuzzle(1); // 반드시 여기서 bePuzzle 값 1로 변경!
+        // 진행 상태로 변경
+        puzzle.setIs_playing_puzzle(true);
 
         puzzleRepository.save(puzzle);
 
@@ -201,6 +203,7 @@ public class PuzzlePictureService {
         if (!puzzle.getFamiliesId().equals(familyId)) {
             throw new RuntimeException("퍼즐이 해당 가족에 속하지 않습니다.");
         }
+        puzzle.setIs_playing_puzzle(false); //미진행 상태로 변경
         String savedCaptureImagePath = saveCaptureImage(request.getCaptureImagePath());
         updatePuzzleStatus(puzzle, savedCaptureImagePath, request.isCompleted(), request.isPlayingPuzzle());
         updatePuzzlePieces(puzzle, request.getPieces());
@@ -276,6 +279,7 @@ public class PuzzlePictureService {
 
         // 2. 퍼즐 조회 및 완료 처리
         Puzzle puzzle = getPuzzleById(puzzleId);
+        puzzle.setIs_playing_puzzle(false); //미진행 상태로 변경
         puzzle.setCompleted(true);
         puzzle.setSolverId(solverId);
         puzzle.setCompletedTime(LocalDateTime.now());
@@ -365,12 +369,12 @@ public class PuzzlePictureService {
             case 4 -> "사랑스러운 봄의 산딸기 획득!";
             case 5 -> "향긋한 여름의 망고 획득!";
             case 6 -> "향긋한 여름의 복숭아 획득!";
-            case 7 -> "향긋한 여름의 레몬 획득!";
-            case 8 -> "포근한 가을의 감 획득!";
+            case 7 -> "향긋한 여름의 자두 획득!";
+            case 8 -> "향긋한 여름의 블루베리 획득!";
             case 9 -> "포근한 가을의 무화과 획득!";
             case 10 -> "포근한 가을의 포도 획득!";
             case 11 -> "포근한 가을의 배 획득!";
-            case 12 -> "포근한 가을의 대추 획득!";
+            case 12 -> "포근한 가을의 감 획득!";
             case 13 -> "탐스러운 겨울 유자 획득!";
             case 14 -> "탐스러운 겨울 석류 획득!";
             case 15 -> "탐스러운 겨울 사과 획득!";
@@ -539,12 +543,21 @@ public class PuzzlePictureService {
         archive.setCategory(puzzle.getCategory().getCategory());
         archive.setContributors(puzzle.getContributors());
         archive.setFamiliesId(familyId);
+        archive.setArchivedAt(LocalDateTime.now());
         puzzleArchiveRepository.save(archive);
     }
 
     @Transactional
-    public List<PuzzleArchiveResponse> getArchivedPuzzles(Long familyId) {
-        List<PuzzleArchive> archives = puzzleArchiveRepository.findByFamiliesId(familyId);
+    public List<PuzzleArchiveResponse> getArchivedPuzzles(Long familyId, Integer year) {
+        List<PuzzleArchive> archives;
+        if (year == null) {
+            archives = puzzleArchiveRepository.findByFamiliesId(familyId);
+        } else {
+            LocalDateTime start = LocalDateTime.of(year, 1, 1, 0, 0);
+            LocalDateTime end = start.plusYears(1);
+            archives = puzzleArchiveRepository.findByFamiliesIdAndArchivedAtBetween(familyId, start, end);
+        }
+
         List<PuzzleArchiveResponse> responses = new ArrayList<>();
         ObjectMapper mapper = new ObjectMapper();
         for (PuzzleArchive archive : archives) {
@@ -557,14 +570,14 @@ public class PuzzlePictureService {
                     );
                 }
             } catch (Exception e) {
-                // 파싱 실패시 빈 리스트
+                // 파싱 실패시 빈 리스트 유지
             }
-
             responses.add(new PuzzleArchiveResponse(
-                    archive.getId(), // id를 puzzleId로 사용
+                    archive.getId(),
                     archive.getImagePath(),
                     archive.getCategory(),
-                    contributorsList
+                    contributorsList,
+                    archive.getArchivedAt()
             ));
         }
         return responses;
