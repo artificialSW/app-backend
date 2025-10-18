@@ -133,6 +133,7 @@ CREATE TABLE `puzzle_archive` (
                                   `category` varchar(255) NULL,
                                   `contributors` json DEFAULT NULL,
                                   `families_id` bigint NOT NULL,
+                                  `archived_at` DATETIME DEFAULT NULL,
                                   PRIMARY KEY (`id`),
                                   KEY `fk_puzzle_families` (`families_id`),
                                   CONSTRAINT `puzzle_archive_ibfk_1` FOREIGN KEY (`families_id`) REFERENCES `families`(`id`)
@@ -319,7 +320,7 @@ INSERT INTO fruit_catalog (unlocked, fruit_name) VALUES
                                                (0, 'raspberry'),
                                                (0, 'mango'),
                                                (0, 'pear'),
-                                               (0, 'lemon'),
+                                               (0, 'blueberry'),
                                                (0, 'oriental_melon'),
                                                (0, 'persimmon'),
                                                (0, 'fig'),
@@ -328,7 +329,7 @@ INSERT INTO fruit_catalog (unlocked, fruit_name) VALUES
                                                (0, 'yuja'),
                                                (0, 'pomegranate'),
                                                (0, 'apple'),
-                                               (0, 'jujube');
+                                               (0, 'plum');
 
 -- likes 테이블 (좋아요 관리)
 CREATE TABLE `likes` (

@@ -2,6 +2,8 @@ package org.dcode.artificialswbackend.puzzle.entity;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "puzzle_archive")
 public class PuzzleArchive {
@@ -13,6 +15,8 @@ public class PuzzleArchive {
     @Column(columnDefinition = "json")
     private String contributors;
     private Long familiesId;
+    @Column(name = "archived_at", columnDefinition = "DATETIME")
+    private LocalDateTime archivedAt;
 
     public Long getId() {
         return id;
@@ -52,5 +56,13 @@ public class PuzzleArchive {
 
     public void setFamiliesId(Long familiesId) {
         this.familiesId = familiesId;
+    }
+
+    public LocalDateTime getArchivedAt() {
+        return archivedAt;
+    }
+
+    public void setArchivedAt(LocalDateTime archivedAt) {
+        this.archivedAt = archivedAt;
     }
 }
