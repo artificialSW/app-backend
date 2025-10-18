@@ -327,6 +327,7 @@ public class PuzzlePictureService {
         fruitEntity.setFruitName(fruitName);
         fruitEntity.setCategory(puzzle.getCategory().getCategory());
         fruitEntity.setContributors(puzzle.getContributors()); // JSON 문자열 그대로
+        fruitEntity.setCreatedAt(puzzle.getCompletedTime());
         fruitsRepository.save(fruitEntity);
         // === [여기까지] ===
 
@@ -397,15 +398,14 @@ public class PuzzlePictureService {
 
     @Transactional
     public List<PuzzleInProgressResponse> getInProgressPuzzles(Long familyId) {
-        // be_puzzle = 1, completed = false 인 puzzle 만 조회
         List<Puzzle> puzzles = puzzleRepository.findByFamiliesIdAndCompletedAndBePuzzle(familyId, false, 1);
         List<PuzzleInProgressResponse> responses = new ArrayList<>();
+
         for (Puzzle puzzle : puzzles) {
-            // contributors JSON -> List<String> 변환
-            List<String> contributorsList = new ArrayList<>();
+            List<String> userIdList = new ArrayList<>();
             try {
                 if (puzzle.getContributors() != null) {
-                    contributorsList = objectMapper.readValue(
+                    userIdList = objectMapper.readValue(
                             puzzle.getContributors(),
                             objectMapper.getTypeFactory().constructCollectionType(List.class, String.class)
                     );
@@ -414,7 +414,20 @@ public class PuzzlePictureService {
                 // parsing 실패 시 빈 리스트
             }
 
-            // completed_pieces_id JSON -> List<Integer> -> 길이
+            // userId -> familyType 변환
+            List<String> familyTypeList = new ArrayList<>();
+            for (String userIdStr : userIdList) {
+                try {
+                    Long userId = Long.parseLong(userIdStr);
+                    String familyType = signUpRepository.findFamilyTypeById(userId);
+                    if (familyType != null && !familyTypeList.contains(familyType)) {
+                        familyTypeList.add(familyType);
+                    }
+                } catch (Exception e) {
+                    // 로그 혹은 예외 처리
+                }
+            }
+
             int completedPiecesCount = 0;
             try {
                 if (puzzle.getCompleted_pieces_id() != null) {
@@ -431,7 +444,7 @@ public class PuzzlePictureService {
             responses.add(new PuzzleInProgressResponse(
                     puzzle.getPuzzleId(),
                     puzzle.getCapture_image_path(),
-                    contributorsList,
+                    familyTypeList,  // contributorsList 대신 familyTypeList 사용
                     puzzle.getCategory().getCategory(),
                     completedPiecesCount,
                     puzzle.getSize() != null ? puzzle.getSize() : 0
@@ -454,12 +467,12 @@ public class PuzzlePictureService {
         List<Puzzle> puzzles = puzzleRepository.findByFamiliesIdAndCompleted(familyId, true);
         List<PuzzleCompletedResponse> responses = new ArrayList<>();
         ObjectMapper mapper = new ObjectMapper();
+
         for (Puzzle puzzle : puzzles) {
-            // contributors JSON -> List<String> 변환
-            List<String> contributorsList = new ArrayList<>();
+            List<String> userIdList = new ArrayList<>();
             try {
                 if (puzzle.getContributors() != null) {
-                    contributorsList = mapper.readValue(
+                    userIdList = mapper.readValue(
                             puzzle.getContributors(),
                             mapper.getTypeFactory().constructCollectionType(List.class, String.class)
                     );
@@ -468,18 +481,33 @@ public class PuzzlePictureService {
                 // parsing 실패 시 빈 리스트
             }
 
-            // solverId를 String으로 변환 후 합치기, 중복 방지
+            // solverId를 추가
             if (puzzle.getSolverId() != null) {
                 String solverIdStr = puzzle.getSolverId().toString();
-                if (!contributorsList.contains(solverIdStr)) {
-                    contributorsList.add(solverIdStr);
+                if (!userIdList.contains(solverIdStr)) {
+                    userIdList.add(solverIdStr);
                 }
             }
-            // 만약 contributors 최종 값을 퍼즐에 저장하고 싶다면:
+
+            // userId 리스트를 familyType 리스트로 변환 (중복 방지)
+            List<String> familyTypeList = new ArrayList<>();
+            for (String userIdStr : userIdList) {
+                try {
+                    Long userId = Long.parseLong(userIdStr);
+                    String familyType = signUpRepository.findFamilyTypeById(userId);
+                    if (familyType != null && !familyTypeList.contains(familyType)) {
+                        familyTypeList.add(familyType);
+                    }
+                } catch (Exception e) {
+                    // 예외 무시 또는 로깅
+                }
+            }
+
+            // contributors 필드에 familyType 리스트를 JSON 문자열로 저장
             try {
-                puzzle.setContributors(mapper.writeValueAsString(contributorsList));
+                puzzle.setContributors(mapper.writeValueAsString(familyTypeList));
                 puzzleRepository.save(puzzle);
-            } catch(Exception e) {
+            } catch (Exception e) {
                 // 예외 무시 또는 로깅
             }
 
@@ -487,7 +515,7 @@ public class PuzzlePictureService {
                     puzzle.getPuzzleId(),
                     puzzle.getImagePath(),
                     puzzle.getCategory().getCategory(),
-                    contributorsList,
+                    familyTypeList,
                     puzzle.getMessage()
             ));
         }
