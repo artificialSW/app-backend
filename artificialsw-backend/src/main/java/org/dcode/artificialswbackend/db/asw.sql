@@ -133,6 +133,8 @@ CREATE TABLE `puzzle_archive` (
                                   `category` varchar(255) NULL,
                                   `contributors` json DEFAULT NULL,
                                   `families_id` bigint NOT NULL,
+                                  `message` varchar(255) NULL,
+                                  `size` int DEFAULT NULL,
                                   `archived_at` DATETIME DEFAULT NULL,
                                   PRIMARY KEY (`id`),
                                   KEY `fk_puzzle_families` (`families_id`),
