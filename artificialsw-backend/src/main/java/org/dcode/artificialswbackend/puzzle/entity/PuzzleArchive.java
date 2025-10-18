@@ -15,6 +15,7 @@ public class PuzzleArchive {
     @Column(columnDefinition = "json")
     private String contributors;
     private Long familiesId;
+    @Column(name = "archived_at", columnDefinition = "DATETIME")
     private LocalDateTime archivedAt;
 
     public Long getId() {

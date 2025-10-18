@@ -569,7 +569,8 @@ public class PuzzlePictureService {
                     archive.getId(), // id를 puzzleId로 사용
                     archive.getImagePath(),
                     archive.getCategory(),
-                    contributorsList
+                    contributorsList,
+                    archive.getArchivedAt()
             ));
         }
         return responses;
