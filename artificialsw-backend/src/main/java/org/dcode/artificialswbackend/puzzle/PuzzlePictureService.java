@@ -548,8 +548,16 @@ public class PuzzlePictureService {
     }
 
     @Transactional
-    public List<PuzzleArchiveResponse> getArchivedPuzzles(Long familyId) {
-        List<PuzzleArchive> archives = puzzleArchiveRepository.findByFamiliesId(familyId);
+    public List<PuzzleArchiveResponse> getArchivedPuzzles(Long familyId, Integer year) {
+        List<PuzzleArchive> archives;
+        if (year == null) {
+            archives = puzzleArchiveRepository.findByFamiliesId(familyId);
+        } else {
+            LocalDateTime start = LocalDateTime.of(year, 1, 1, 0, 0);
+            LocalDateTime end = start.plusYears(1);
+            archives = puzzleArchiveRepository.findByFamiliesIdAndArchivedAtBetween(familyId, start, end);
+        }
+
         List<PuzzleArchiveResponse> responses = new ArrayList<>();
         ObjectMapper mapper = new ObjectMapper();
         for (PuzzleArchive archive : archives) {
@@ -562,11 +570,10 @@ public class PuzzlePictureService {
                     );
                 }
             } catch (Exception e) {
-                // 파싱 실패시 빈 리스트
+                // 파싱 실패시 빈 리스트 유지
             }
-
             responses.add(new PuzzleArchiveResponse(
-                    archive.getId(), // id를 puzzleId로 사용
+                    archive.getId(),
                     archive.getImagePath(),
                     archive.getCategory(),
                     contributorsList,
