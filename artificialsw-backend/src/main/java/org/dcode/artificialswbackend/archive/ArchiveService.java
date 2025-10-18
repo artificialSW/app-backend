@@ -2,12 +2,15 @@ package org.dcode.artificialswbackend.archive;
 
 import jakarta.transaction.Transactional;
 import org.dcode.artificialswbackend.archive.dto.ArchiveFruitResponse;
+import org.dcode.artificialswbackend.archive.dto.FruitResponse;
 import org.dcode.artificialswbackend.archive.entity.IslandArchives;
 import org.dcode.artificialswbackend.archive.entity.Tree;
 import org.dcode.artificialswbackend.archive.repository.IslandArchivesRepository;
 import org.dcode.artificialswbackend.archive.repository.TreeRepository;
 import org.dcode.artificialswbackend.puzzle.entity.Fruits;
+import org.dcode.artificialswbackend.puzzle.entity.Puzzle;
 import org.dcode.artificialswbackend.puzzle.repository.FruitsRepository;
+import org.dcode.artificialswbackend.puzzle.repository.PuzzleRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -125,4 +128,29 @@ public class ArchiveService {
                 .collect(Collectors.toList());
     }
 
+    @Service
+    public static class FruitService {
+        private final FruitsRepository fruitsRepository;
+        private final PuzzleRepository puzzleRepository;
+
+        public FruitService(FruitsRepository fruitsRepository, PuzzleRepository puzzleRepository) {
+            this.fruitsRepository = fruitsRepository;
+            this.puzzleRepository = puzzleRepository;
+        }
+
+        public FruitResponse getFruitDetails(Long fruitId, Long familyId) {
+            Fruits fruit = fruitsRepository.findById(fruitId)
+                    .orElseThrow(() -> new RuntimeException("과일을 찾을 수 없습니다."));
+
+            Integer puzzleId = fruit.getPuzzleId();
+            Puzzle puzzle = puzzleRepository.findById(puzzleId)
+                    .orElseThrow(() -> new RuntimeException("퍼즐 정보를 찾을 수 없습니다."));
+
+            return new FruitResponse(
+                    puzzle.getImagePath(),
+                    fruit.getCategory(),
+                    fruit.getMessage()
+            );
+        }
+    }
 }

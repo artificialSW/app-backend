@@ -1,6 +1,8 @@
 package org.dcode.artificialswbackend.archive;
 
 import org.dcode.artificialswbackend.archive.dto.ArchiveFruitResponse;
+import org.dcode.artificialswbackend.archive.dto.FruitRequest;
+import org.dcode.artificialswbackend.archive.dto.FruitResponse;
 import org.dcode.artificialswbackend.util.JwtUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,10 +14,12 @@ import java.util.Map;
 @RequestMapping("/api/tree")
 public class ArchiveController {
     private final ArchiveService archiveService;
+    private final ArchiveService.FruitService fruitService;
     private final JwtUtil jwtUtil;
 
-    public ArchiveController(ArchiveService archiveService, JwtUtil jwtUtil) {
+    public ArchiveController(ArchiveService archiveService, ArchiveService.FruitService fruitService, JwtUtil jwtUtil) {
         this.archiveService = archiveService;
+        this.fruitService = fruitService;
         this.jwtUtil = jwtUtil;
     }
 
@@ -63,6 +67,18 @@ public class ArchiveController {
         List<ArchiveFruitResponse> fruits = archiveService.getArchiveFruits(familyId, year, month, period, position);
 
         return ResponseEntity.ok(fruits);
+    }
+
+    @GetMapping("/fruit")
+    public ResponseEntity<FruitResponse> getFruit(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody FruitRequest fruitRequest
+    ) {
+        String token = authHeader.replace("Bearer ", "");
+        Long familyId = jwtUtil.validateAndGetFamilyId(token);
+
+        FruitResponse response = fruitService.getFruitDetails(fruitRequest.getFruitId(), familyId);
+        return ResponseEntity.ok(response);
     }
 
 }
