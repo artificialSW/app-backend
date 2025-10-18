@@ -8,4 +8,6 @@ import java.util.List;
 public interface FruitsRepository extends JpaRepository<Fruits, Long> {
     List<Fruits> findByTreeId(Long treeId);
     List<Fruits> findByPuzzleId(Integer puzzleId);
+
+    List<Fruits> findAllByTreeId(Long id);
 }
