@@ -15,6 +15,8 @@ public class PuzzleArchive {
     @Column(columnDefinition = "json")
     private String contributors;
     private Long familiesId;
+    private Integer size;
+    private String message;
     @Column(name = "archived_at", columnDefinition = "DATETIME")
     private LocalDateTime archivedAt;
 
@@ -64,5 +66,21 @@ public class PuzzleArchive {
 
     public void setArchivedAt(LocalDateTime archivedAt) {
         this.archivedAt = archivedAt;
+    }
+
+    public Integer getSize() {
+        return size;
+    }
+
+    public void setSize(Integer size) {
+        this.size = size;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 }

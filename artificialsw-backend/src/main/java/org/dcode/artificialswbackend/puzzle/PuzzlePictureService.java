@@ -398,15 +398,14 @@ public class PuzzlePictureService {
 
     @Transactional
     public List<PuzzleInProgressResponse> getInProgressPuzzles(Long familyId) {
-        // be_puzzle = 1, completed = false 인 puzzle 만 조회
         List<Puzzle> puzzles = puzzleRepository.findByFamiliesIdAndCompletedAndBePuzzle(familyId, false, 1);
         List<PuzzleInProgressResponse> responses = new ArrayList<>();
+
         for (Puzzle puzzle : puzzles) {
-            // contributors JSON -> List<String> 변환
-            List<String> contributorsList = new ArrayList<>();
+            List<String> userIdList = new ArrayList<>();
             try {
                 if (puzzle.getContributors() != null) {
-                    contributorsList = objectMapper.readValue(
+                    userIdList = objectMapper.readValue(
                             puzzle.getContributors(),
                             objectMapper.getTypeFactory().constructCollectionType(List.class, String.class)
                     );
@@ -415,7 +414,20 @@ public class PuzzlePictureService {
                 // parsing 실패 시 빈 리스트
             }
 
-            // completed_pieces_id JSON -> List<Integer> -> 길이
+            // userId -> familyType 변환
+            List<String> familyTypeList = new ArrayList<>();
+            for (String userIdStr : userIdList) {
+                try {
+                    Long userId = Long.parseLong(userIdStr);
+                    String familyType = signUpRepository.findFamilyTypeById(userId);
+                    if (familyType != null && !familyTypeList.contains(familyType)) {
+                        familyTypeList.add(familyType);
+                    }
+                } catch (Exception e) {
+                    // 로그 혹은 예외 처리
+                }
+            }
+
             int completedPiecesCount = 0;
             try {
                 if (puzzle.getCompleted_pieces_id() != null) {
@@ -432,7 +444,7 @@ public class PuzzlePictureService {
             responses.add(new PuzzleInProgressResponse(
                     puzzle.getPuzzleId(),
                     puzzle.getCapture_image_path(),
-                    contributorsList,
+                    familyTypeList,  // contributorsList 대신 familyTypeList 사용
                     puzzle.getCategory().getCategory(),
                     completedPiecesCount,
                     puzzle.getSize() != null ? puzzle.getSize() : 0
@@ -455,12 +467,12 @@ public class PuzzlePictureService {
         List<Puzzle> puzzles = puzzleRepository.findByFamiliesIdAndCompleted(familyId, true);
         List<PuzzleCompletedResponse> responses = new ArrayList<>();
         ObjectMapper mapper = new ObjectMapper();
+
         for (Puzzle puzzle : puzzles) {
-            // contributors JSON -> List<String> 변환
-            List<String> contributorsList = new ArrayList<>();
+            List<String> userIdList = new ArrayList<>();
             try {
                 if (puzzle.getContributors() != null) {
-                    contributorsList = mapper.readValue(
+                    userIdList = mapper.readValue(
                             puzzle.getContributors(),
                             mapper.getTypeFactory().constructCollectionType(List.class, String.class)
                     );
@@ -469,18 +481,33 @@ public class PuzzlePictureService {
                 // parsing 실패 시 빈 리스트
             }
 
-            // solverId를 String으로 변환 후 합치기, 중복 방지
+            // solverId를 추가
             if (puzzle.getSolverId() != null) {
                 String solverIdStr = puzzle.getSolverId().toString();
-                if (!contributorsList.contains(solverIdStr)) {
-                    contributorsList.add(solverIdStr);
+                if (!userIdList.contains(solverIdStr)) {
+                    userIdList.add(solverIdStr);
                 }
             }
-            // 만약 contributors 최종 값을 퍼즐에 저장하고 싶다면:
+
+            // userId 리스트를 familyType 리스트로 변환 (중복 방지)
+            List<String> familyTypeList = new ArrayList<>();
+            for (String userIdStr : userIdList) {
+                try {
+                    Long userId = Long.parseLong(userIdStr);
+                    String familyType = signUpRepository.findFamilyTypeById(userId);
+                    if (familyType != null && !familyTypeList.contains(familyType)) {
+                        familyTypeList.add(familyType);
+                    }
+                } catch (Exception e) {
+                    // 예외 무시 또는 로깅
+                }
+            }
+
+            // contributors 필드에 familyType 리스트를 JSON 문자열로 저장
             try {
-                puzzle.setContributors(mapper.writeValueAsString(contributorsList));
+                puzzle.setContributors(mapper.writeValueAsString(familyTypeList));
                 puzzleRepository.save(puzzle);
-            } catch(Exception e) {
+            } catch (Exception e) {
                 // 예외 무시 또는 로깅
             }
 
@@ -488,7 +515,7 @@ public class PuzzlePictureService {
                     puzzle.getPuzzleId(),
                     puzzle.getImagePath(),
                     puzzle.getCategory().getCategory(),
-                    contributorsList,
+                    familyTypeList,
                     puzzle.getMessage()
             ));
         }
@@ -497,33 +524,19 @@ public class PuzzlePictureService {
 
 
     @Transactional
-    public Map<String, Object> retryPuzzle(Integer puzzleId, Long familyId) {
-        // 1. 퍼즐 찾기 (familyId와 puzzleId가 일치하는 완성된 퍼즐)
-        Puzzle puzzle = puzzleRepository.findById(puzzleId)
-                .orElseThrow(() -> new IllegalArgumentException("퍼즐을 찾을 수 없습니다."));
-        if (!puzzle.getFamiliesId().equals(familyId)) {
+    public Map<String, Object> retryPuzzleFromArchive(Long puzzleArchiveId, Long familyId) {
+        // 1. 아카이브 퍼즐 찾기
+        PuzzleArchive archive = puzzleArchiveRepository.findById(puzzleArchiveId)
+                .orElseThrow(() -> new IllegalArgumentException("아카이브 퍼즐을 찾을 수 없습니다."));
+        if (!archive.getFamiliesId().equals(familyId)) {
             throw new IllegalArgumentException("가족 정보가 일치하지 않습니다.");
         }
-        // completed=1(완성된 퍼즐)인지 확인
-        if (!puzzle.isCompleted()) {
-            throw new IllegalStateException("이미 완성된 퍼즐만 재도전할 수 있습니다.");
-        }
 
-        // 2. 기존 퍼즐 정보 기억
-        String imageUrl = puzzle.getImagePath();
-        int size = puzzle.getSize() != null ? puzzle.getSize() : 0;
-
-        // 3. completed를 0(false)으로, 필요한 경우 중간 저장 필드 등도 초기화
-        puzzle.setCompleted(false);
-        puzzle.setContributors(null);
-        puzzle.setCompleted_pieces_id(null);
-        puzzleRepository.save(puzzle);
-
-        // 4. 응답 생성
+        // 2. 정보 반환
         return Map.of(
-                "message", "새로운 퍼즐이 시작되었습니다.",
-                "imageUrl", imageUrl,
-                "size", size
+                "message", archive.getMessage() != null ? archive.getMessage() : "",
+                "imageUrl", archive.getImagePath() != null ? archive.getImagePath() : "",
+                "size", archive.getSize() != null ? archive.getSize() : 0
         );
     }
 
@@ -545,7 +558,11 @@ public class PuzzlePictureService {
         archive.setContributors(puzzle.getContributors());
         archive.setFamiliesId(familyId);
         archive.setArchivedAt(LocalDateTime.now());
+        archive.setMessage(puzzle.getMessage());
+        archive.setSize(puzzle.getSize());
         puzzleArchiveRepository.save(archive);
+
+        puzzleRepository.delete(puzzle); // 퍼즐 삭제
     }
 
     @Transactional

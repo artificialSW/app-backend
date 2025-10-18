@@ -133,6 +133,8 @@ CREATE TABLE `puzzle_archive` (
                                   `category` varchar(255) NULL,
                                   `contributors` json DEFAULT NULL,
                                   `families_id` bigint NOT NULL,
+                                  `message` varchar(255) NULL,
+                                  `size` int DEFAULT NULL,
                                   `archived_at` DATETIME DEFAULT NULL,
                                   PRIMARY KEY (`id`),
                                   KEY `fk_puzzle_families` (`families_id`),
@@ -267,7 +269,7 @@ CREATE TABLE `fruits` (
                           PRIMARY KEY (`id`),
                           KEY `tree_id` (`tree_id`),
                           KEY `fk_fruits_puzzle` (`puzzle_id`),
-                          CONSTRAINT `fk_fruits_puzzle` FOREIGN KEY (`puzzle_id`) REFERENCES `puzzle` (`puzzle_id`),
+                          CONSTRAINT `fk_fruits_puzzle` FOREIGN KEY (`puzzle_id`) REFERENCES `puzzle` (`puzzle_id`)  ON DELETE SET NULL,
                           CONSTRAINT `fruits_ibfk_1` FOREIGN KEY (`tree_id`) REFERENCES `tree` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
