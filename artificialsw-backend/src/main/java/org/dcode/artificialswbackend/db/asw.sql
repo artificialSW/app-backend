@@ -267,7 +267,7 @@ CREATE TABLE `fruits` (
                           PRIMARY KEY (`id`),
                           KEY `tree_id` (`tree_id`),
                           KEY `fk_fruits_puzzle` (`puzzle_id`),
-                          CONSTRAINT `fk_fruits_puzzle` FOREIGN KEY (`puzzle_id`) REFERENCES `puzzle` (`puzzle_id`),
+                          CONSTRAINT `fk_fruits_puzzle` FOREIGN KEY (`puzzle_id`) REFERENCES `puzzle` (`puzzle_id`)  ON DELETE SET NULL,
                           CONSTRAINT `fruits_ibfk_1` FOREIGN KEY (`tree_id`) REFERENCES `tree` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
