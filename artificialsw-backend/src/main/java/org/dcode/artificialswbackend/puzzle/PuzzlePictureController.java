@@ -125,14 +125,14 @@ public class PuzzlePictureController {
     }
 
 
-    @PostMapping("/{puzzleId}/retry")
+    @PostMapping("/{archiveId}/retry")
     public ResponseEntity<Map<String, Object>> retryPuzzle(
             @RequestHeader("Authorization") String authHeader,
-            @PathVariable("puzzleId") Integer puzzleId
+            @PathVariable("archiveId") Integer archiveId
     ) {
         String token = authHeader.replace("Bearer ", "");
         Long familyId = jwtUtil.validateAndGetFamilyId(token);
-        Map<String, Object> resp = puzzlePictureService.retryPuzzle(puzzleId, familyId);
+        Map<String, Object> resp = puzzlePictureService.retryPuzzleFromArchive(Long.valueOf(archiveId), familyId);
         return ResponseEntity.ok(resp);
     }
 
