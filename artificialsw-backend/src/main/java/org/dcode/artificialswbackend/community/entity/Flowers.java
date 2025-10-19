@@ -66,21 +66,21 @@ public class Flowers {
             }
         }
         
-        public String getKoreanName() {
+        public String getEnglishName() {
             switch (this) {
-                case CAMELLIA: return "동백꽃";
-                case ACACIA: return "아카시아꽃";
-                case PLUM_BLOSSOM: return "매화꽃";
-                case PEAR_BLOSSOM: return "팥배꽃";
-                case CHERRY_BLOSSOM: return "벚꽃";
-                case MAGNOLIA: return "목련";
-                case ROSE: return "장미";
-                case HYDRANGEA: return "수국";
-                case TULIP: return "튤립";
-                case VIOLET: return "제비꽃";
-                case COSMOS: return "코스모스";
-                case SUNFLOWER: return "해바라기";
-                default: return "장미"; // 기본값
+                case CAMELLIA: return "camellia";
+                case ACACIA: return "acacia";
+                case PLUM_BLOSSOM: return "plum";
+                case PEAR_BLOSSOM: return "patbae";
+                case CHERRY_BLOSSOM: return "cherry";
+                case MAGNOLIA: return "magnolia";
+                case ROSE: return "rose";
+                case HYDRANGEA: return "hydrangea";
+                case TULIP: return "tulip";
+                case VIOLET: return "violet";
+                case COSMOS: return "cosmos";
+                case SUNFLOWER: return "sunflower";
+                default: return "rose"; // 기본값
             }
         }
         

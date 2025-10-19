@@ -21,4 +21,6 @@ public interface QuestionReferenceRepository extends JpaRepository<QuestionRefer
     Optional<QuestionReference> findByQuestionIdAndQuestionTypeAndFamilyId(@Param("questionId") Long questionId, @Param("questionType") QuestionReference.QuestionType questionType, @Param("familyId") Long familyId);
     
     List<QuestionReference> findByFamilyIdAndQuestionType(Long familyId, QuestionReference.QuestionType questionType);
+    
+    Optional<QuestionReference> findByIdAndFamilyId(Long id, Long familyId);
 }
