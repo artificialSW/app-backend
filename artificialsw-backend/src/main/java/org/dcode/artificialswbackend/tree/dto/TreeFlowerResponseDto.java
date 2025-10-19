@@ -5,14 +5,14 @@ import java.time.LocalDateTime;
 public class TreeFlowerResponseDto {
     private Long flowerId;
     private String flowerName; // 한국어 꽃 이름
-    private LocalDateTime createdAt;
+    private LocalDateTime archivedAt;
     
     public TreeFlowerResponseDto() {}
     
-    public TreeFlowerResponseDto(Long flowerId, String flowerName, LocalDateTime createdAt) {
+    public TreeFlowerResponseDto(Long flowerId, String flowerName, LocalDateTime archivedAt) {
         this.flowerId = flowerId;
         this.flowerName = flowerName;
-        this.createdAt = createdAt;
+        this.archivedAt = archivedAt;
     }
     
     public Long getFlowerId() {
@@ -31,11 +31,11 @@ public class TreeFlowerResponseDto {
         this.flowerName = flowerName;
     }
     
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public LocalDateTime getArchivedAt() {
+        return archivedAt;
     }
     
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setArchivedAt(LocalDateTime archivedAt) {
+        this.archivedAt = archivedAt;
     }
 }
