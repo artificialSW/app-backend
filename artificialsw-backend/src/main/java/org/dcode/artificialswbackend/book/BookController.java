@@ -22,7 +22,7 @@ public class BookController {
     }
 
     @GetMapping("/book/flower")
-    public ResponseEntity<List<FlowerBookResponseDto>> getFlowerBook(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<FlowerBookResponseDto> getFlowerBook(@RequestHeader("Authorization") String authHeader) {
         try {
             // JWT 토큰에서 Bearer 제거
             String token = authHeader.replace("Bearer ", "");
@@ -31,7 +31,7 @@ public class BookController {
             Long familyId = jwtUtil.validateAndGetFamilyId(token);
             
             // 꽃 도감 조회
-            List<FlowerBookResponseDto> flowerBook = bookService.getFlowerBook(familyId);
+            FlowerBookResponseDto flowerBook = bookService.getFlowerBook(familyId);
             
             return ResponseEntity.ok(flowerBook);
             

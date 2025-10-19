@@ -25,18 +25,18 @@ public class Flowers {
     private LocalDateTime createdAt;
     
     public enum FlowerType {
-        CAMELLIA("camellia"),      // 동백꽃
-        ROSE("rose"),              // 장미
-        ACACIA("acacia"),          // 아카시아꽃
-        HYDRANGEA("hydrangea"),    // 수국
-        PLUM_BLOSSOM("plum_blossom"), // 매화꽃
-        TULIP("tulip"),            // 튤립
-        PEAR_BLOSSOM("pear_blossom"), // 팥배꽃
-        VIOLET("violet"),          // 재비꽃
-        CHERRY_BLOSSOM("cherry_blossom"), // 벚꽃
-        COSMOS("cosmos"),          // 코스모스
-        MAGNOLIA("magnolia"),      // 목련
-        SUNFLOWER("sunflower");    // 해바라기
+        CAMELLIA("camellia"),      // 동백꽃 - 0
+        ACACIA("acacia"),          // 아카시아꽃 - 1
+        PLUM_BLOSSOM("plum_blossom"), // 매화꽃 - 2
+        PEAR_BLOSSOM("pear_blossom"), // 팥배꽃 - 3
+        CHERRY_BLOSSOM("cherry_blossom"), // 벚꽃 - 4
+        MAGNOLIA("magnolia"),      // 목련 - 5
+        ROSE("rose"),              // 장미 - 6
+        HYDRANGEA("hydrangea"),    // 수국 - 7
+        TULIP("tulip"),            // 튤립 - 8
+        VIOLET("violet"),          // 제비꽃 - 9
+        COSMOS("cosmos"),          // 코스모스 - 10
+        SUNFLOWER("sunflower");    // 해바라기 - 11
         
         private final String value;
         
@@ -51,37 +51,41 @@ public class Flowers {
         public static FlowerType fromKoreanName(String koreanName) {
             switch (koreanName) {
                 case "동백꽃": return CAMELLIA;
-                case "장미": return ROSE;
                 case "아카시아꽃": return ACACIA;
-                case "수국": return HYDRANGEA;
                 case "매화꽃": return PLUM_BLOSSOM;
-                case "튤립": return TULIP;
                 case "팥배꽃": return PEAR_BLOSSOM;
-                case "재비꽃": return VIOLET;
                 case "벚꽃": return CHERRY_BLOSSOM;
-                case "코스모스": return COSMOS;
                 case "목련": return MAGNOLIA;
+                case "장미": return ROSE;
+                case "수국": return HYDRANGEA;
+                case "튤립": return TULIP;
+                case "제비꽃": return VIOLET;
+                case "코스모스": return COSMOS;
                 case "해바라기": return SUNFLOWER;
                 default: return ROSE; // 기본값
             }
         }
         
-        public String getKoreanName() {
+        public String getEnglishName() {
             switch (this) {
-                case CAMELLIA: return "동백꽃";
-                case ROSE: return "장미";
-                case ACACIA: return "아카시아꽃";
-                case HYDRANGEA: return "수국";
-                case PLUM_BLOSSOM: return "매화꽃";
-                case TULIP: return "튤립";
-                case PEAR_BLOSSOM: return "팥배꽃";
-                case VIOLET: return "재비꽃";
-                case CHERRY_BLOSSOM: return "벚꽃";
-                case COSMOS: return "코스모스";
-                case MAGNOLIA: return "목련";
-                case SUNFLOWER: return "해바라기";
-                default: return "장미"; // 기본값
+                case CAMELLIA: return "camellia";
+                case ACACIA: return "acacia";
+                case PLUM_BLOSSOM: return "plum";
+                case PEAR_BLOSSOM: return "patbae";
+                case CHERRY_BLOSSOM: return "cherry";
+                case MAGNOLIA: return "magnolia";
+                case ROSE: return "rose";
+                case HYDRANGEA: return "hydrangea";
+                case TULIP: return "tulip";
+                case VIOLET: return "violet";
+                case COSMOS: return "cosmos";
+                case SUNFLOWER: return "sunflower";
+                default: return "rose"; // 기본값
             }
+        }
+        
+        public int getFlowerNumber() {
+            return this.ordinal(); // enum의 순서가 곧 번호
         }
     }
     
