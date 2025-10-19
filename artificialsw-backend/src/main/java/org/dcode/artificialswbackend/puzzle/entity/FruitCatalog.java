@@ -13,6 +13,9 @@ public class FruitCatalog {
     private boolean unlocked;
     private String fruitName;
 
+    @Column(name = "season")
+    private String season;
+
     public FruitCatalog() {
     }
 
@@ -38,5 +41,13 @@ public class FruitCatalog {
 
     public void setFruitName(String fruitName) {
         this.fruitName = fruitName;
+    }
+
+    public String getSeason() {
+        return season;
+    }
+
+    public void setSeason(String season) {
+        this.season = season;
     }
 }
