@@ -5,7 +5,9 @@ import org.dcode.artificialswbackend.util.JwtUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -33,6 +35,24 @@ public class BookController {
             
             return ResponseEntity.ok(flowerBook);
             
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/book/fruit")
+    public ResponseEntity<Map<String, List<Integer>>> getFruitBook(@RequestHeader("Authorization") String authHeader) {
+        try {
+            String token = authHeader.replace("Bearer ", "");
+            Long familyId = jwtUtil.validateAndGetFamilyId(token);
+
+            List<Integer> resolvedFruits = bookService.getResolvedFruits(familyId);
+
+            Map<String, List<Integer>> resp = new HashMap<>();
+            resp.put("resolvedFruits", resolvedFruits);
+
+            return ResponseEntity.ok(resp);  // 여기서 resp 객체(맵)를 반환
+
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }

@@ -3,6 +3,8 @@ package org.dcode.artificialswbackend.book;
 import org.dcode.artificialswbackend.book.dto.FlowerBookResponseDto;
 import org.dcode.artificialswbackend.community.entity.FlowerCatalog;
 import org.dcode.artificialswbackend.community.repository.FlowerCatalogRepository;
+import org.dcode.artificialswbackend.puzzle.entity.FamilyFruitStatus;
+import org.dcode.artificialswbackend.puzzle.repository.FamilyFruitStatusRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,9 +14,11 @@ import java.util.stream.Collectors;
 public class BookService {
 
     private final FlowerCatalogRepository flowerCatalogRepository;
+    private final FamilyFruitStatusRepository familyFruitStatusRepository;
 
-    public BookService(FlowerCatalogRepository flowerCatalogRepository) {
+    public BookService(FlowerCatalogRepository flowerCatalogRepository, FamilyFruitStatusRepository familyFruitStatusRepository) {
         this.flowerCatalogRepository = flowerCatalogRepository;
+        this.familyFruitStatusRepository = familyFruitStatusRepository;
     }
 
     public FlowerBookResponseDto getFlowerBook(Long familyId) {
@@ -28,5 +32,12 @@ public class BookService {
                 .collect(Collectors.toList());
         
         return new FlowerBookResponseDto(resolvedFlowers);
+    }
+
+    public List<Integer> getResolvedFruits(Long familyId) {
+        return familyFruitStatusRepository.findAllByFamilyIdAndUnlockedTrue(familyId)
+                .stream()
+                .map(status -> status.getFruitId().intValue())
+                .collect(Collectors.toList());
     }
 }

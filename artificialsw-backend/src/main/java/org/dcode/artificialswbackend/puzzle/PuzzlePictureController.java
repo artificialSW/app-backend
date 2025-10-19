@@ -132,7 +132,8 @@ public class PuzzlePictureController {
     ) {
         String token = authHeader.replace("Bearer ", "");
         Long familyId = jwtUtil.validateAndGetFamilyId(token);
-        Map<String, Object> resp = puzzlePictureService.retryPuzzle(puzzleId, familyId);
+
+        Map<String, Object> resp = puzzlePictureService.retryCompletedPuzzle(puzzleId, familyId);
         return ResponseEntity.ok(resp);
     }
 
@@ -148,10 +149,12 @@ public class PuzzlePictureController {
     }
 
     @GetMapping("/archive")
-    public ResponseEntity<List<PuzzleArchiveResponse>> getArchivedPuzzles(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<List<PuzzleArchiveResponse>> getArchivedPuzzles(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam(value = "year", required = false) Integer year) {
         String token = authHeader.replace("Bearer ", "");
         Long familyId = jwtUtil.validateAndGetFamilyId(token);
-        List<PuzzleArchiveResponse> responses = puzzlePictureService.getArchivedPuzzles(familyId);
+        List<PuzzleArchiveResponse> responses = puzzlePictureService.getArchivedPuzzles(familyId, year);
         return ResponseEntity.ok(responses);
     }
 

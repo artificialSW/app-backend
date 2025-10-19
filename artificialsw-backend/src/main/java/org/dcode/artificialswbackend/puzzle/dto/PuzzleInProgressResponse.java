@@ -1,9 +1,13 @@
 package org.dcode.artificialswbackend.puzzle.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 
 public class PuzzleInProgressResponse {
     private Integer puzzleId;
+
+    @JsonProperty("imageUrl")
     private String captureImageUrl;
     private List<String> contributors;
     private String category;
