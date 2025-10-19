@@ -149,7 +149,7 @@ public class ArchiveService {
             return new FruitResponse(
                     puzzle.getImagePath(),
                     fruit.getCategory(),
-                    fruit.getMessage()
+                    puzzle.getMessage()
             );
         }
     }
