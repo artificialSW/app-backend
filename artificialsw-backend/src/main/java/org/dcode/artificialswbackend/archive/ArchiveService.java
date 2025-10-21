@@ -106,6 +106,7 @@ public class ArchiveService {
         return islandArchivesRepository.findByFamilyIdAndYearAndMonthAndPeriod(familyId, year, month, period)
                 .map(IslandArchives::getId)
                 .orElseThrow(() -> new RuntimeException("오늘 날짜의 아카이브 레코드가 없습니다"));
+    }
     /**
      * API: /api/archives/main/{year}/{month}/{period}/{position}
      * - familyId는 토큰에서 가져와 매개변수로 받음
