@@ -48,7 +48,7 @@ public class Puzzle {
     private LocalDateTime lastSavedTime;
 
     @Column(name = "completed_time")
-    private LocalDateTime completedTime;
+    private LocalDateTime  completedTime;
 
     @Column(name = "uploader_id")
     private Integer uploaderId;

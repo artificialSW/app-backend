@@ -132,7 +132,8 @@ public class PuzzlePictureController {
     ) {
         String token = authHeader.replace("Bearer ", "");
         Long familyId = jwtUtil.validateAndGetFamilyId(token);
-        Map<String, Object> resp = puzzlePictureService.retryPuzzle(puzzleId, familyId);
+
+        Map<String, Object> resp = puzzlePictureService.retryCompletedPuzzle(puzzleId, familyId);
         return ResponseEntity.ok(resp);
     }
 

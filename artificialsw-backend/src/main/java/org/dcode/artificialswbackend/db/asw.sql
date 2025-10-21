@@ -133,6 +133,8 @@ CREATE TABLE `puzzle_archive` (
                                   `category` varchar(255) NULL,
                                   `contributors` json DEFAULT NULL,
                                   `families_id` bigint NOT NULL,
+                                  `message` varchar(255) NULL,
+                                  `size` int DEFAULT NULL,
                                   `archived_at` DATETIME DEFAULT NULL,
                                   PRIMARY KEY (`id`),
                                   KEY `fk_puzzle_families` (`families_id`),
@@ -231,12 +233,25 @@ CREATE TABLE `flower_catalog` (
 
 -- fruit_catalog 테이블 (family_id 불필요)
 CREATE TABLE `fruit_catalog` (
-                                 `id` bigint NOT NULL AUTO_INCREMENT,
-                                 `unlocked` tinyint(1) DEFAULT '0',
-                                 PRIMARY KEY (`id`)
+                                 `id` BIGINT NOT NULL AUTO_INCREMENT,
+                                 `fruit_name` VARCHAR(50) NOT NULL,
+                                 `season` ENUM('spring', 'summer', 'fall', 'winter') NOT NULL,
+                                 PRIMARY KEY (`id`),
+                                 UNIQUE KEY `uq_fruit_name` (`fruit_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
+CREATE TABLE `family_fruit_status` (
+                                       `id` BIGINT NOT NULL AUTO_INCREMENT,
+                                       `family_id` BIGINT NOT NULL,
+                                       `fruit_id` BIGINT NOT NULL,
+                                       `unlocked` TINYINT(1) DEFAULT 0,
+                                       `unlocked_at` TIMESTAMP NULL DEFAULT NULL,
+                                       PRIMARY KEY (`id`),
+                                       UNIQUE KEY `uq_family_fruit` (`family_id`, `fruit_id`),
+                                       CONSTRAINT `fk_family_fruit_family` FOREIGN KEY (`family_id`) REFERENCES `families` (`id`),
+                                       CONSTRAINT `fk_family_fruit_catalog` FOREIGN KEY (`fruit_id`) REFERENCES `fruit_catalog` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- flowers 테이블 (tree_id 통해 family_id 간접관리)
 CREATE TABLE `flowers` (
@@ -267,7 +282,7 @@ CREATE TABLE `fruits` (
                           PRIMARY KEY (`id`),
                           KEY `tree_id` (`tree_id`),
                           KEY `fk_fruits_puzzle` (`puzzle_id`),
-                          CONSTRAINT `fk_fruits_puzzle` FOREIGN KEY (`puzzle_id`) REFERENCES `puzzle` (`puzzle_id`),
+                          CONSTRAINT `fk_fruits_puzzle` FOREIGN KEY (`puzzle_id`) REFERENCES `puzzle` (`puzzle_id`)  ON DELETE SET NULL,
                           CONSTRAINT `fruits_ibfk_1` FOREIGN KEY (`tree_id`) REFERENCES `tree` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -313,23 +328,24 @@ DELIMITER ;
 
 
 -- fruit_catalog 초기값
-INSERT INTO fruit_catalog (unlocked, fruit_name) VALUES
-                                               (0, 'cherry'),
-                                               (0, 'strawberry'),
-                                               (0, 'peach'),
-                                               (0, 'raspberry'),
-                                               (0, 'mango'),
-                                               (0, 'pear'),
-                                               (0, 'blueberry'),
-                                               (0, 'oriental_melon'),
-                                               (0, 'persimmon'),
-                                               (0, 'fig'),
-                                               (0, 'grape'),
-                                               (0, 'mandarin'),
-                                               (0, 'yuja'),
-                                               (0, 'pomegranate'),
-                                               (0, 'apple'),
-                                               (0, 'plum');
+INSERT INTO fruit_catalog (fruit_name, season) VALUES
+                                                   ('cherry', 'spring'),
+                                                   ('strawberry', 'spring'),
+                                                   ('kiwi', 'spring'),
+                                                   ('raspberry', 'spring'),
+                                                   ('mango', 'summer'),
+                                                   ('peach', 'summer'),
+                                                   ('plum', 'summer'),
+                                                   ('blueberry', 'summer'),
+                                                   ('jujube', 'fall'),
+                                                   ('grape', 'fall'),
+                                                   ('pear', 'fall'),
+                                                   ('persimmon', 'fall'),
+                                                   ('yuja', 'winter'),
+                                                   ('pomegranate', 'winter'),
+                                                   ('apple', 'winter'),
+                                                   ('mandarin', 'winter');
+
 
 -- likes 테이블 (좋아요 관리)
 CREATE TABLE `likes` (

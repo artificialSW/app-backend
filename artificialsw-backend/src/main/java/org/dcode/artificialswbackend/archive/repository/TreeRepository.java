@@ -11,4 +11,6 @@ public interface TreeRepository extends JpaRepository<Tree, Long> {
     Optional<Tree> findByArchiveIdAndFamilyIdAndPositionAndTreeCategory(
             Long archiveId, Long familyId, Integer position, Tree.TreeCategory treeCategory
     );
+
+    Optional<Tree> findByArchiveIdAndPosition(Long archiveId, Integer position);
 }

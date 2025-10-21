@@ -179,6 +179,13 @@ public class CommunityService {
     }
 
     public CommentResponseDto saveComment(Long userId, CommentRequestDto request, Long familyId) {
+        // 디버깅용 로그 추가
+        System.out.println("DEBUG - saveComment called:");
+        System.out.println("  userId: " + userId);
+        System.out.println("  questionRefId: " + request.getQuestionRefId());
+        System.out.println("  content: " + request.getContent());
+        System.out.println("  familyId: " + familyId);
+        
         Comment comment = new Comment();
         comment.setQuestionRefId(request.getQuestionRefId());
         comment.setContent(request.getContent());
@@ -186,24 +193,41 @@ public class CommunityService {
         comment.setReplyTo(request.getReplyTo()); // null 가능
         comment.setFamilyId(familyId); // familyId 추가
 
-        Comment saved = commentRepository.save(comment);
-
-        // --- 추가: 개인 질문 답변 시 solved 처리 ---
-        // 1. question_reference에서 해당 ref id의 question type이 Personal인지 확인
-        questionReferenceRepository.findById(request.getQuestionRefId()).ifPresent(qRef -> {
+        // 저장 전 comment 객체 상태 확인
+        System.out.println("DEBUG - Before save:");
+        System.out.println("  comment.questionRefId: " + comment.getQuestionRefId());
+        System.out.println("  comment.familyId: " + comment.getFamilyId());
+        
+        // --- 꽃 생성 로직 추가 (댓글 저장 전에 실행) ---
+        System.out.println("DEBUG - Starting flower generation process for questionRefId: " + request.getQuestionRefId());
+        
+        // 1. question_reference에서 해당 ref id의 question type 확인
+        Optional<QuestionReference> qRefOpt = questionReferenceRepository.findById(request.getQuestionRefId());
+        System.out.println("DEBUG - QuestionReference found: " + qRefOpt.isPresent());
+        
+        qRefOpt.ifPresent(qRef -> {
+            System.out.println("DEBUG - Question type: " + qRef.getQuestionType());
+            System.out.println("DEBUG - Question ID: " + qRef.getQuestionId());
             if (qRef.getQuestionType() == QuestionReference.QuestionType.Personal) {
-                // 2. 해당 personal question 엔티티 조회
-                personalQuestionsRepository.findById(qRef.getQuestionId()).ifPresent(personalQuestion -> {
-                    // 3. receiver가 나(userId)면 solved true로 변경
-                    if (personalQuestion.getReceiver() != null && personalQuestion.getReceiver().equals(userId)) {
-                        personalQuestion.setSolved(true);
-                        personalQuestionsRepository.save(personalQuestion);
-                    }
-                });
+                System.out.println("DEBUG - Processing Personal question...");
+                // Personal 질문에 대한 꽃 생성 로직 (questionId 전달)
+                FlowerResultDto flowerResult = checkAndProcessPersonalQuestionCompletion(
+                    qRef.getQuestionId(), userId, familyId);
+                if (flowerResult != null) {
+                    System.out.println("🌸 Personal question flower created: " + flowerResult.getFlower());
+                }
+            } else if (qRef.getQuestionType() == QuestionReference.QuestionType.Public) {
+                // Public 질문에 대한 꽃 생성 로직 (questionRefId 전달)
+                FlowerResultDto flowerResult = checkAndProcessPublicQuestionCompletion(
+                    request.getQuestionRefId(), familyId);
+                if (flowerResult != null) {
+                    System.out.println("🌸 Public question flower created: " + flowerResult.getFlower());
+                }
             }
         });
         // --- 끝 ---
 
+        Comment saved = commentRepository.save(comment);
         return new CommentResponseDto(saved.getId(), saved.getContent());
     }
 
@@ -559,36 +583,76 @@ public class CommunityService {
      * Public Question에 모든 가족 구성원이 댓글을 달았는지 확인하고, 
      * 조건을 만족하면 외부 예측 API를 호출합니다.
      */
-    private FlowerResultDto checkAndProcessPersonalQuestionCompletion(Long questionRefId, Long commentUserId, Long familyId) {
+    private FlowerResultDto checkAndProcessPersonalQuestionCompletion(Long questionId, Long commentUserId, Long familyId) {
+        System.out.println("DEBUG - checkAndProcessPersonalQuestionCompletion called:");
+        System.out.println("  questionId: " + questionId);
+        System.out.println("  commentUserId: " + commentUserId);
+        System.out.println("  familyId: " + familyId);
+        
         // 1. 해당 question이 personal question인지 확인
-        Optional<PersonalQuestions> personalQuestionOpt = personalQuestionsRepository.findById(questionRefId);
+        Optional<PersonalQuestions> personalQuestionOpt = personalQuestionsRepository.findById(questionId);
+        System.out.println("DEBUG - PersonalQuestion found: " + personalQuestionOpt.isPresent());
         if (personalQuestionOpt.isEmpty()) {
+            System.out.println("DEBUG - PersonalQuestion not found, returning null");
             return null; // personal question이 아니면 처리하지 않음
         }
         
         PersonalQuestions personalQuestion = personalQuestionOpt.get();
+        System.out.println("DEBUG - PersonalQuestion details:");
+        System.out.println("  id: " + personalQuestion.getId());
+        System.out.println("  solved: " + personalQuestion.getSolved());
+        System.out.println("  receiver: " + personalQuestion.getReceiver());
+        System.out.println("  sender: " + personalQuestion.getSender());
         
         // 2. 이미 solved된 질문이면 처리하지 않음
         if (personalQuestion.getSolved() != null && personalQuestion.getSolved()) {
+            System.out.println("🌸 Question already solved, skipping flower creation");
             return null;
         }
         
         // 3. 댓글 작성자가 receiver인지 확인
+        System.out.println("DEBUG - Checking if comment writer is receiver:");
+        System.out.println("  personalQuestion.getReceiver(): " + personalQuestion.getReceiver());
+        System.out.println("  commentUserId: " + commentUserId);
+        System.out.println("  equals: " + personalQuestion.getReceiver().equals(commentUserId));
+        
         if (!personalQuestion.getReceiver().equals(commentUserId)) {
+            System.out.println("🌸 Comment writer is not receiver, skipping flower creation");
             return null; // receiver가 아니면 처리하지 않음
         }
         
-        // 4. receiver의 첫 댓글인지 확인 (기존 댓글 중 receiver가 작성한 것이 있는지 체크)
+        System.out.println("DEBUG - Comment writer is receiver, proceeding...");
+        
+        // 4. questionId로 questionRefId 찾기
+        Optional<QuestionReference> questionRefOpt = questionReferenceRepository.findByQuestionIdAndQuestionType(
+            questionId, QuestionReference.QuestionType.Personal);
+        if (questionRefOpt.isEmpty()) {
+            System.out.println("🌸 Question reference not found for questionId: " + questionId);
+            return null;
+        }
+        Long questionRefId = questionRefOpt.get().getId();
+        
+        // 5. receiver의 첫 댓글인지 확인 (기존 댓글 중 receiver가 작성한 것이 있는지 체크)
         List<Comment> existingComments = commentRepository.findByQuestionRefId(questionRefId);
+        System.out.println("DEBUG - Found " + existingComments.size() + " existing comments");
+        
         boolean hasReceiverComment = existingComments.stream()
                 .anyMatch(comment -> comment.getWriter().equals(commentUserId));
+        System.out.println("DEBUG - hasReceiverComment: " + hasReceiverComment);
+        System.out.println("DEBUG - commentUserId: " + commentUserId);
+        
+        for (Comment comment : existingComments) {
+            System.out.println("DEBUG - Comment writer: " + comment.getWriter() + ", content: " + comment.getContent());
+        }
         
         if (!hasReceiverComment) {
-            // 5. receiver의 첫 댓글이므로 solved = true로 업데이트
+            System.out.println("🌸 This is receiver's first comment, creating flower...");
+            
+            // 6. receiver의 첫 댓글이므로 solved = true로 업데이트
             personalQuestion.setSolved(true);
             personalQuestionsRepository.save(personalQuestion);
             
-            // 6. AI 호출하여 꽃 생성
+            // 7. AI 호출하여 꽃 생성
             String predictionResult = predictionService.sendPredictionRequest(personalQuestion.getContent());
             if (predictionResult != null) {
                 System.out.println("🌸 Personal question solved! Prediction result: " + predictionResult);
@@ -600,11 +664,19 @@ public class CommunityService {
                         familyId
                 );
                 
-                System.out.println("🌸 Flower created: " + flowerResult.getFlower() + 
-                                 ", New unlock: " + flowerResult.isNewlyUnlocked());
+                if (flowerResult != null) {
+                    System.out.println("🌸 Flower created: " + flowerResult.getFlower() + 
+                                     ", New unlock: " + flowerResult.isNewlyUnlocked());
+                } else {
+                    System.out.println("🌸 Failed to create flower");
+                }
                 
                 return flowerResult;
+            } else {
+                System.out.println("🌸 AI prediction failed");
             }
+        } else {
+            System.out.println("🌸 Receiver already has comments, skipping flower creation");
         }
         
         return null;
