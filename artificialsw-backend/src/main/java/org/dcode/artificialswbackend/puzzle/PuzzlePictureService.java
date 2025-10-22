@@ -635,23 +635,14 @@ public class PuzzlePictureService {
         int day = today.getDayOfMonth();
         int lastDay = YearMonth.now().atEndOfMonth().getDayOfMonth();
 
-        int setIndex;
-        if (day <= 5) {
-            setIndex = 0;
-        } else if (day <= 13) {
-            setIndex = 1;
-        } else if (day <= 20) {
-            setIndex = 2;
-        } else if (day < lastDay) {
-            setIndex = 3;
-        } else { // 마지막 날
-            setIndex = 4;
-        }
+        int segmentSize = (int) Math.ceil(lastDay / 5.0); // 한 구간 당 일수, 올림 처리
 
-        int startId = setIndex * 3 + 1; // 1-based id
-        int endId = Math.min(startId + 2, 100); // 최대 100개까지만
+        int setIndex = (day - 1) / segmentSize; // 0-based 구간 인덱스 (0 ~ 4)
 
-        // 카테고리 엔티티에서 id 범위에 해당하는 category만 추출
+        int startId = setIndex * 3 + 1; // 기존 로직에 맞춘 startId 계산
+        int endId = Math.min(startId + 2, 100);
+
+// id 범위에 맞는 카테고리 조회
         List<PuzzleCategory> categories = puzzleCategoryRepository.findByIdBetween((long) startId, (long) endId);
         return categories.stream()
                 .map(PuzzleCategory::getCategory)

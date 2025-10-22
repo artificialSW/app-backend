@@ -69,15 +69,15 @@ public class ArchiveController {
         return ResponseEntity.ok(fruits);
     }
 
-    @GetMapping("/fruit")
+    @GetMapping("/fruit/{fruitId}")
     public ResponseEntity<FruitResponse> getFruit(
             @RequestHeader("Authorization") String authHeader,
-            @RequestBody FruitRequest fruitRequest
+            @PathVariable Long fruitId
     ) {
         String token = authHeader.replace("Bearer ", "");
         Long familyId = jwtUtil.validateAndGetFamilyId(token);
 
-        FruitResponse response = fruitService.getFruitDetails(fruitRequest.getFruitId(), familyId);
+        FruitResponse response = fruitService.getFruitDetails(fruitId, familyId);
         return ResponseEntity.ok(response);
     }
 
