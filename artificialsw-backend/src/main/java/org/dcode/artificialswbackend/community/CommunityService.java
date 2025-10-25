@@ -362,7 +362,7 @@ public class CommunityService {
             // 새로운 likes 테이블에서 좋아요 수 조회
             long likesCount = likeRepository.countByTargetTypeAndTargetId(Like.TargetType.question, pq.getId());
             // sender의 role 정보 조회
-            String senderRole = "Unknown";
+            String senderRole = "알수없음";
             if (pq.getSender() != null) {
                 Optional<Users> senderUser = usersRepository.findById(pq.getSender());
                 if (senderUser.isPresent() && senderUser.get().getFamilyType() != null) {
@@ -830,7 +830,7 @@ public class CommunityService {
         .filter(user -> !user.getId().equals(excludeUserId))
         .map(user -> new FamilyMembersResponseDto.FamilyMemberDto(
             user.getId(),
-            convertFamilyTypeToEnglish(user.getFamilyType())
+            getFamilyTypeInKorean(user.getFamilyType())
         ))
         .collect(Collectors.toList());
     return new FamilyMembersResponseDto(memberDtos);
@@ -841,7 +841,7 @@ public class CommunityService {
      */
     private String getUserRole(Long userId) {
         if (userId == null) {
-            return "Unknown";
+            return "알수없음";
         }
         
         Optional<Users> userOpt = usersRepository.findById(userId);
@@ -849,26 +849,26 @@ public class CommunityService {
             return userOpt.get().getFamilyType();
         }
         
-        return "Unknown";
+        return "알수없음";
     }
 
-    private String convertFamilyTypeToEnglish(String familyType) {
+    private String getFamilyTypeInKorean(String familyType) {
         if (familyType == null) {
-            return "unknown";
+            return "알수없음";
         }
         return switch (familyType) {
-            case "아빠" -> "father";
-            case "엄마" -> "mother";
-            case "할아버지" -> "grandfather";
-            case "할머니" -> "grandmother";
-            case "아들" -> "son";
-            case "딸" -> "daughter";
-            case "삼촌" -> "uncle";
-            case "고모" -> "aunt";
-            case "이모" -> "aunt";
-            case "외할아버지" -> "grandfather";
-            case "외할머니" -> "grandmother";
-            default -> "unknown";
+            case "아빠" -> "아빠";
+            case "엄마" -> "엄마";
+            case "할아버지" -> "할아버지";
+            case "할머니" -> "할머니";
+            case "아들" -> "아들";
+            case "딸" -> "딸";
+            case "삼촌" -> "삼촌";
+            case "고모" -> "고모";
+            case "이모" -> "이모";
+            case "외할아버지" -> "외할아버지";
+            case "외할머니" -> "외할머니";
+            default -> "알수없음";
         };
     }
 }

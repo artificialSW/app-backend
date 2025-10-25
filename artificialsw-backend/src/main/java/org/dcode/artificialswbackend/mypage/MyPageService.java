@@ -172,7 +172,7 @@ public class MyPageService {
                         }
                     } else {
                         // question_reference를 찾을 수 없음
-                        questionType = "unknown";
+                        questionType = "알수없음";
                         questionContent = "질문을 찾을 수 없습니다.";
                     }
                     
@@ -262,7 +262,7 @@ public class MyPageService {
                         }
                     } else {
                         questionContent = "알 수 없는 질문 타입입니다.";
-                        questionType = "Unknown";
+                        questionType = "알수없음";
                     }
                     
                     return new MyLikedQuestionResponseDto(questionRefId, questionContent, questionType);
