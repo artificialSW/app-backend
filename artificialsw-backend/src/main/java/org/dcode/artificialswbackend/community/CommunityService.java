@@ -366,7 +366,7 @@ public class CommunityService {
             if (pq.getSender() != null) {
                 Optional<Users> senderUser = usersRepository.findById(pq.getSender());
                 if (senderUser.isPresent() && senderUser.get().getFamilyType() != null) {
-                    senderRole = senderUser.get().getFamilyType().toString();
+                    senderRole = senderUser.get().getFamilyType();
                 }
             }
             // isLiked 계산
@@ -846,22 +846,29 @@ public class CommunityService {
         
         Optional<Users> userOpt = usersRepository.findById(userId);
         if (userOpt.isPresent() && userOpt.get().getFamilyType() != null) {
-            return userOpt.get().getFamilyType().toString();
+            return userOpt.get().getFamilyType();
         }
         
         return "Unknown";
     }
 
-    private String convertFamilyTypeToEnglish(Users.FamilyType familyType) {
+    private String convertFamilyTypeToEnglish(String familyType) {
         if (familyType == null) {
             return "unknown";
         }
         return switch (familyType) {
-            case 아빠 -> "father";
-            case 엄마 -> "mother";
-            case 할아버지 -> "grandfather";
-            case 할머니 -> "grandmother";
-            case 자녀 -> "sibling";
+            case "아빠" -> "father";
+            case "엄마" -> "mother";
+            case "할아버지" -> "grandfather";
+            case "할머니" -> "grandmother";
+            case "아들" -> "son";
+            case "딸" -> "daughter";
+            case "삼촌" -> "uncle";
+            case "고모" -> "aunt";
+            case "이모" -> "aunt";
+            case "외할아버지" -> "grandfather";
+            case "외할머니" -> "grandmother";
+            default -> "unknown";
         };
     }
 }
