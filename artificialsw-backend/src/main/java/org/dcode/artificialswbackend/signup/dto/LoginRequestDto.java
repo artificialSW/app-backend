@@ -3,6 +3,7 @@ package org.dcode.artificialswbackend.signup.dto;
 public class LoginRequestDto {
     private String id; // 전화번호
     private String password;
+    private String token; // FCM 토큰 (선택사항)
 
     public LoginRequestDto() {}
 
@@ -20,5 +21,13 @@ public class LoginRequestDto {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 }

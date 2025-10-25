@@ -49,6 +49,10 @@ Thumbs.db
 # 환경 변수 파일
 .env
 
+# Firebase 서비스 계정 키 파일
+**/firebase-service-account.json
+firebase-service-account.json
+
 # 기타 빌드/캐시/임시 파일
 *.tmp
 *.swp
