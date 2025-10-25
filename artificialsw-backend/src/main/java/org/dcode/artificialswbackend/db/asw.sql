@@ -25,7 +25,7 @@ CREATE TABLE `users` (
                          `password` varchar(255) NOT NULL,
                          `nickname` varchar(50) NOT NULL,
                          `profile_photo` varchar(255) DEFAULT NULL,
-                         `family_type` enum('자녀','아빠','엄마','할아버지','할머니') DEFAULT NULL,
+                         `family_type` varchar(255) DEFAULT NULL,
                          `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
                          `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                          PRIMARY KEY (`id`),

@@ -38,8 +38,7 @@ public class Users {
     @Column(length = 255)
     private String profilePhoto;
 
-    @Enumerated(EnumType.STRING)
-    private FamilyType familyType;
+    private String familyType;
 
     private Timestamp createdAt;
 
@@ -47,10 +46,6 @@ public class Users {
 
     public enum Gender {
         M, F
-    }
-
-    public enum FamilyType {
-        자녀, 아빠, 엄마, 할아버지, 할머니
     }
 
     public Users() {}
@@ -136,11 +131,11 @@ public class Users {
         this.profilePhoto = profilePhoto;
     }
 
-    public FamilyType getFamilyType() {
+    public String getFamilyType() {
         return familyType;
     }
 
-    public void setFamilyType(FamilyType familyType) {
+    public void setFamilyType(String familyType) {
         this.familyType = familyType;
     }
 
