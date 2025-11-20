@@ -1,6 +1,9 @@
 package org.dcode.artificialswbackend.mypage.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class MyLikedQuestionResponseDto {
+    @JsonProperty("question_ref_id")
     private Long questionRefId;
     private String contents;
     private String questionType; // "Personal" 또는 "Public"

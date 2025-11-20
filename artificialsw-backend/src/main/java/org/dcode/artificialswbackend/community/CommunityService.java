@@ -747,10 +747,17 @@ public class CommunityService {
                     long likesCount = likeRepository.countByTargetTypeAndTargetId(Like.TargetType.question, pq.getId());
                     // 사용자가 이 질문에 좋아요를 눌렀는지 확인
                     boolean isLiked = likeRepository.existsByUserIdAndTargetTypeAndTargetId(userId, Like.TargetType.question, pq.getId());
+                    
+                    // sender와 receiver의 role 정보 조회
+                    String senderRole = getUserRole(pq.getSender());
+                    String receiverRole = getUserRole(pq.getReceiver());
+                    
                     Map<String, Object> questionData = new HashMap<>();
                     questionData.put("question_ref_id", qRef.getId());
                     questionData.put("content", pq.getContent());
+                    questionData.put("sender_role", senderRole);
                     questionData.put("sender", pq.getSender());
+                    questionData.put("receiver_role", receiverRole);
                     questionData.put("receiver", pq.getReceiver());
                     questionData.put("likes", likesCount);
                     questionData.put("comments", commentCount);
